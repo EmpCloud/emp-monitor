@@ -1,4 +1,7 @@
 import apiService from "@/services/api.service";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ─── Timezone Data (from legacy final-timezone.js) ──────────────────────────
 
@@ -193,7 +196,6 @@ const buildExportRows = (settings) => {
 
 export const exportToExcel = async (settings) => {
     try {
-        const XLSX = await import("xlsx");
         const rows = buildExportRows(settings);
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
@@ -210,7 +212,6 @@ export const exportToExcel = async (settings) => {
 
 export const exportToCSV = async (settings) => {
     try {
-        const XLSX = await import("xlsx");
         const rows = buildExportRows(settings);
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
@@ -227,8 +228,6 @@ export const exportToCSV = async (settings) => {
 
 export const exportToPDF = async (settings) => {
     try {
-        const { jsPDF } = await import("jspdf");
-        const autoTable = (await import("jspdf-autotable")).default;
         const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
 
         doc.setFontSize(14);

@@ -58,7 +58,7 @@ const EmpMobileTaskDetails = () => {
         const $el = $(datePickerRef.current);
         $el.daterangepicker({
             startDate: moment(filters.startDate), endDate: moment(filters.endDate),
-            minDate: moment().subtract(90, "days"), maxDate: moment(), dateLimit: { days: 30 },
+            minDate: moment().subtract(180, "days"), maxDate: moment(), dateLimit: { days: 31 },
             locale: { format: "MMM D, YYYY" },
             ranges: { Today: [moment(), moment()], Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")], "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")], "Last 30 Days": [moment().subtract(30, "days"), moment().subtract(1, "days")] },
             opens: "left", autoUpdateInput: true,

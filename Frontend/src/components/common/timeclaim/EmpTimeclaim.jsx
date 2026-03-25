@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Info, Calendar, Eye, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Search, Info, Calendar, Eye, Trash2, CheckCircle, XCircle, Plus } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,11 @@ import {
 import EmpTimeclaimLogo from "@/assets/reports/time_claim.svg";
 import { useTimeClaimStore } from "@/page/protected/admin/time-claim/timeClaimStore";
 import { useDateRangePicker } from "@/hooks/useDateRangePicker";
-import { REQUEST_TYPES, STATUS_MAP } from "@/page/protected/admin/time-claim/service";
+import {
+  REQUEST_TYPES, STATUS_MAP,
+  createIdleRequest, createOfflineRequest, createAttendanceRequest,
+  fetchIdleAppWebData, fetchTotalOfflineTime, fetchReasons,
+} from "@/page/protected/admin/time-claim/service";
 
 const REQUEST_TYPE_OPTIONS = [
   { key: "Idle", value: REQUEST_TYPES.IDLE },
@@ -49,7 +53,7 @@ const StatusBadge = ({ status }) => {
 
 // ─── View Request Modal ─────────────────────────────────────────────────────
 
-const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestType }) => {
+const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestType, isEmployee = false }) => {
   if (!row) return null;
 
   const isPending = row.status === 0;
@@ -119,7 +123,7 @@ const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestTyp
             </div>
           )}
         </div>
-        {isPending && (
+        {isPending && !isEmployee && (
           <DialogFooter className="gap-2">
             <Button onClick={() => onApprove(row)} className="bg-green-600 hover:bg-green-700 text-xs">
               <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
@@ -386,6 +390,237 @@ const AttendanceTable = ({ rows, tableLoading, onView }) => (
   </Table>
 );
 
+// ─── Create Request Modal ────────────────────────────────────────────────────
+
+const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [reason, setReason] = useState("");
+  const [reasons, setReasons] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [selectedApps, setSelectedApps] = useState([]);
+  const [offlineSlots, setOfflineSlots] = useState([]);
+  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [error, setError] = useState("");
+
+  const isIdle = requestType === REQUEST_TYPES.IDLE;
+  const isOffline = requestType === REQUEST_TYPES.OFFLINE;
+  const isAttendance = requestType === REQUEST_TYPES.ATTENDANCE;
+
+  useEffect(() => {
+    if (!open) return;
+    setDate(""); setStartTime(""); setEndTime(""); setReason("");
+    setActivities([]); setSelectedApps([]); setOfflineSlots([]); setSelectedSlots([]);
+    setError("");
+    fetchReasons(requestType).then((list) => setReasons(Array.isArray(list) ? list : []));
+  }, [open, requestType]);
+
+  const handleGetActivities = async () => {
+    if (!date || !startTime || !endTime) { setError("Date, start time and end time are required"); return; }
+    setLoadingActivities(true); setError("");
+    const res = await fetchIdleAppWebData({ date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}` });
+    setActivities(res?.code === 200 ? (res.data || []) : []);
+    setSelectedApps([]);
+    setLoadingActivities(false);
+  };
+
+  const handleGetOfflineSlots = async () => {
+    if (!date) { setError("Please select a date"); return; }
+    setLoadingActivities(true); setError("");
+    const res = await fetchTotalOfflineTime(date);
+    const slots = res?.code === 200 ? (res.data?.offlineEntities || res.data || []) : [];
+    setOfflineSlots(Array.isArray(slots) ? slots : []);
+    setSelectedSlots([]);
+    setLoadingActivities(false);
+  };
+
+  const toggleApp = (id) => setSelectedApps((prev) => prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]);
+  const toggleSlot = (idx) => setSelectedSlots((prev) => prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]);
+
+  const formatSec = (s) => {
+    const n = Number(s) || 0;
+    const h = Math.floor(n / 3600); const m = Math.floor((n % 3600) / 60); const sec = n % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  };
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) { setError("Reason is required"); return; }
+    setSaving(true); setError("");
+
+    let res;
+    if (isIdle) {
+      if (!date || !startTime || !endTime) { setError("Date and time range are required"); setSaving(false); return; }
+      res = await createIdleRequest({
+        date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}`,
+        request_reason: reason, requestValue: "1", requestId: "", attendanceId: "",
+        selectedApp: selectedApps,
+      });
+    } else if (isOffline) {
+      const selected = selectedSlots.map((idx) => offlineSlots[idx]).filter(Boolean);
+      if (!selected.length) { setError("Select at least one offline period"); setSaving(false); return; }
+      res = await createOfflineRequest({
+        selected_offline_timeclaim: selected.map((s) => ({
+          date, reason, offline_time: s.offlineTime || s.offline_time || 0,
+          start_time: s.from || s.start_time, end_time: s.to || s.end_time,
+        })),
+      });
+    } else if (isAttendance) {
+      if (!date || !startTime || !endTime) { setError("Date and time range are required"); setSaving(false); return; }
+      res = await createAttendanceRequest({
+        date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}`,
+        request_reason: reason, requestValue: "1", attendanceId: "",
+      });
+    }
+
+    setSaving(false);
+    if (res?.code === 200) {
+      onSuccess?.();
+      onClose(false);
+    } else {
+      setError(res?.msg || "Failed to create request");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create {isIdle ? "Idle" : isOffline ? "Offline" : isAttendance ? "Attendance" : "Break"} Request</DialogTitle>
+        </DialogHeader>
+
+        {error && <p className="text-red-500 text-xs bg-red-50 p-2 rounded">{error}</p>}
+
+        <div className="space-y-4">
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split("T")[0]} className="text-sm" />
+          </div>
+
+          {/* Time range (idle / attendance) */}
+          {(isIdle || isAttendance) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
+                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">End Time</label>
+                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="text-sm" />
+              </div>
+            </div>
+          )}
+
+          {/* Idle: Get Activities */}
+          {isIdle && (
+            <div>
+              <Button size="sm" variant="outline" onClick={handleGetActivities} disabled={loadingActivities} className="text-xs mb-2">
+                {loadingActivities ? "Loading..." : "Get Activity List"}
+              </Button>
+              {activities.length > 0 && (
+                <div className="max-h-40 overflow-y-auto border rounded text-xs">
+                  <table className="w-full">
+                    <thead className="bg-slate-100 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-1 text-left w-8"><input type="checkbox" onChange={(e) => setSelectedApps(e.target.checked ? activities.map((a) => a._id || a.activity_id) : [])} checked={selectedApps.length === activities.length && activities.length > 0} className="accent-blue-500" /></th>
+                        <th className="px-2 py-1 text-left">App / URL</th>
+                        <th className="px-2 py-1 text-left">Ranking</th>
+                        <th className="px-2 py-1 text-left">Idle Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activities.map((act) => {
+                        const id = act._id || act.activity_id;
+                        return (
+                          <tr key={id} className="border-t">
+                            <td className="px-2 py-1"><input type="checkbox" checked={selectedApps.includes(id)} onChange={() => toggleApp(id)} className="accent-blue-500" /></td>
+                            <td className="px-2 py-1 truncate max-w-[180px]">{act.url || "-"}</td>
+                            <td className="px-2 py-1">{act.prodRanking || "-"}</td>
+                            <td className="px-2 py-1">{formatSec(act.idleTime)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Offline: Get Slots */}
+          {isOffline && (
+            <div>
+              <Button size="sm" variant="outline" onClick={handleGetOfflineSlots} disabled={loadingActivities || !date} className="text-xs mb-2">
+                {loadingActivities ? "Loading..." : "Get Offline Periods"}
+              </Button>
+              {offlineSlots.length > 0 && (
+                <div className="max-h-40 overflow-y-auto border rounded text-xs">
+                  <table className="w-full">
+                    <thead className="bg-slate-100 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-1 w-8"><input type="checkbox" onChange={(e) => setSelectedSlots(e.target.checked ? offlineSlots.map((_, i) => i) : [])} checked={selectedSlots.length === offlineSlots.length && offlineSlots.length > 0} className="accent-blue-500" /></th>
+                        <th className="px-2 py-1 text-left">Start</th>
+                        <th className="px-2 py-1 text-left">End</th>
+                        <th className="px-2 py-1 text-left">Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {offlineSlots.map((slot, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="px-2 py-1"><input type="checkbox" checked={selectedSlots.includes(idx)} onChange={() => toggleSlot(idx)} className="accent-blue-500" /></td>
+                          <td className="px-2 py-1">{new Date(slot.from || slot.start_time).toLocaleTimeString()}</td>
+                          <td className="px-2 py-1">{new Date(slot.to || slot.end_time).toLocaleTimeString()}</td>
+                          <td className="px-2 py-1">{formatSec(slot.offlineTime || slot.offline_time)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reason */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Reason</label>
+            {reasons.length > 0 ? (
+              <select
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400"
+              >
+                <option value="">Select reason</option>
+                {reasons.map((r) => (
+                  <option key={r._id || r.reason_value} value={r.reason_name || r.reason_value}>{r.reason_name}</option>
+                ))}
+                <option value="__other">Other</option>
+              </select>
+            ) : null}
+            {(reasons.length === 0 || reason === "__other") && (
+              <Input
+                placeholder="Enter reason"
+                value={reason === "__other" ? "" : reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="mt-1 text-sm"
+              />
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 mt-2">
+          <Button variant="outline" onClick={() => onClose(false)} className="text-xs">Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-blue-500 hover:bg-blue-600 text-xs">
+            {saving ? "Submitting..." : "Submit Request"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Spinner = () => (
   <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
     <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -395,7 +630,7 @@ const Spinner = () => (
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-const EmpTimeclaim = () => {
+const EmpTimeclaim = ({ isEmployee = false }) => {
   const store = useTimeClaimStore();
   const {
     rows, totalDocs, filters, loading, tableLoading, autoApprove, selectedIds,
@@ -408,6 +643,7 @@ const EmpTimeclaim = () => {
   const [search, setSearch] = useState("");
   const [viewRow, setViewRow] = useState(null);
   const [deleteRow, setDeleteRow] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const debounceRef = useRef(null);
   const initialLoad = useRef(true);
 
@@ -518,8 +754,17 @@ const EmpTimeclaim = () => {
             <br />break, and attendance adjustments.
           </p>
         </div>
-        <div className="absolute right-0 -top-4 hidden lg:flex items-end gap-1 mr-2">
-          <img alt="timeclaim" className="w-24" src={EmpTimeclaimLogo} />
+        <div className="flex items-center gap-4">
+          <Button
+            size="lg"
+            className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-1" /> Create Request
+          </Button>
+          <div className="hidden lg:flex items-end gap-1">
+            <img alt="timeclaim" className="w-24" src={EmpTimeclaimLogo} />
+          </div>
         </div>
       </div>
 
@@ -574,23 +819,25 @@ const EmpTimeclaim = () => {
           </div>
         </div>
 
-        {/* Auto Approve */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Auto Approve</label>
-          <div className="flex items-center gap-2 h-10">
-            <button
-              onClick={handleAutoApproveToggle}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${autoApprove ? "bg-blue-500" : "bg-gray-300"}`}
-            >
-              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoApprove ? "translate-x-6" : "translate-x-1"}`} />
-            </button>
-            <span className="text-sm text-slate-600">{autoApprove ? "On" : "Off"}</span>
+        {/* Auto Approve (admin/manager only) */}
+        {!isEmployee && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Auto Approve</label>
+            <div className="flex items-center gap-2 h-10">
+              <button
+                onClick={handleAutoApproveToggle}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${autoApprove ? "bg-blue-500" : "bg-gray-300"}`}
+              >
+                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoApprove ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
+              <span className="text-sm text-slate-600">{autoApprove ? "On" : "Off"}</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Action Buttons */}
-      {selectedIds.length > 0 && (
+      {/* Action Buttons (admin/manager only) */}
+      {!isEmployee && selectedIds.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 mb-7">
           <Button size="lg" onClick={() => bulkAction(1)} className="rounded-md bg-green-600 hover:bg-green-700 px-5 text-xs font-semibold shadow-sm">
             <CheckCircle className="w-4 h-4 mr-1" /> Approve Selected ({selectedIds.length})
@@ -603,8 +850,9 @@ const EmpTimeclaim = () => {
 
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] text-gray-500 font-medium">Show</span>
           <Select value={String(filters.limit)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
               <SelectValue placeholder="10" />
@@ -616,6 +864,7 @@ const EmpTimeclaim = () => {
             </SelectContent>
           </Select>
           <span className="text-[13px] text-gray-500 font-medium">Entries</span>
+          </div>
         </div>
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -655,11 +904,18 @@ const EmpTimeclaim = () => {
         onApprove={handleApprove}
         onDecline={handleDecline}
         requestType={filters.requestType}
+        isEmployee={isEmployee}
       />
       <DeleteModal
         open={!!deleteRow}
         onClose={() => setDeleteRow(null)}
         onConfirm={handleDeleteConfirm}
+      />
+      <CreateRequestModal
+        open={createOpen}
+        onClose={setCreateOpen}
+        requestType={filters.requestType}
+        onSuccess={fetchData}
       />
     </div>
   );

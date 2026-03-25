@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Search, Info, Calendar } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
@@ -21,6 +21,7 @@ import {
 import EmpSystemLogsLogo from "@/assets/dlp/system-logs.svg"
 import { useSystemLogsStore } from "@/page/protected/admin/system-logs/systemLogsStore"
 import { useDlpFilters } from "@/hooks/useDlpFilters"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const DOWNLOAD_OPTIONS = [
   { label: "Select Option", value: "all" },
@@ -31,6 +32,19 @@ const DOWNLOAD_OPTIONS = [
 const EmpSystemLogs = () => {
   const store = useSystemLogsStore()
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading } = store
+  const [selectedRows, setSelectedRows] = useState([])
+
+  const pageRows = rows
+  const toggleAll = () => {
+    setSelectedRows((prev) =>
+      prev.length === pageRows.length ? [] : pageRows.map((r) => r._id)
+    )
+  }
+  const toggleRow = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+    )
+  }
 
   const {
     search, setSearch, downloadOption, datePickerRef,
@@ -123,14 +137,31 @@ const EmpSystemLogs = () => {
         <Table className="min-w-[1000px] w-full">
           <TableHeader>
             <TableRow className="bg-blue-50/80">
-              <TableHead className="text-xs font-semibold text-slate-700">Employee Name</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Employee ID</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Computer</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Location</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Department</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Title</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Date & Time</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Description</TableHead>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={
+                    pageRows.length > 0 &&
+                    selectedRows.length === pageRows.length
+                  }
+                  onCheckedChange={toggleAll}
+                  className="border-slate-300"
+                />
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">
+                Employee Name
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">
+                Computer
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">
+                Event Date
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">
+                Event Time (hr)
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-white bg-blue-400 text-center">
+                Description
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white">

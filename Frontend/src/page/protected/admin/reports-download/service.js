@@ -219,7 +219,7 @@ const getManagerEmployeeList = async ({
     try {
         const now = moment().tz(TIMEZONE);
         const payload = {
-            to_assigned_id: managerId,
+            to_assigned_id: Number(managerId),
             start_date: startDate || now.clone().subtract(7, "days").format("YYYY.MM.DD"),
             end_date: endDate || now.clone().subtract(1, "days").format("YYYY.MM.DD"),
             limit,

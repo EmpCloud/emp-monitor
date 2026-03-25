@@ -23,6 +23,9 @@ import EmpReportsDownloadLogo from "@/assets/reports/reports_download.svg"
 import { useReportsDownloadStore } from "@/page/protected/admin/reports-download/reportsDownloadStore"
 import { printSingleUserReport, exportReportPDF, CSV_COLUMN_OPTIONS, BROWSER_EXTRA_COLUMNS } from "@/page/protected/admin/reports-download/service"
 
+// Default store hook — can be overridden by passing `useStore` prop
+const _defaultStore = useReportsDownloadStore
+
 const avatarColors = [
   "bg-blue-500", "bg-cyan-500", "bg-amber-500", "bg-rose-500", "bg-sky-500",
 ]
@@ -58,7 +61,7 @@ function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
         endDate: moment(endDate),
         minDate: moment().subtract(180, "days"),
         maxDate: moment(),
-        dateLimit: { days: 30 },
+        dateLimit: { days: 31 },
         locale: { format: "MMM D, YYYY" },
         ranges: {
           "Today": [moment(), moment()],
@@ -274,7 +277,7 @@ function SortableHeader({ label, sortKey, currentSort, currentOrder, onSort }) {
 
 // ─── Main Component ────────────────────────────────────────────────
 
-const EmpReportsDownload = () => {
+const EmpReportsDownload = ({ useStore = _defaultStore }) => {
   const {
     employees, totalCount, loading,
     roles, locations, departments, downloadOptions,
@@ -286,7 +289,7 @@ const EmpReportsDownload = () => {
     toggleRow, toggleAll,
     updatePdfEligibility,
     downloadPDF, downloadCSV,
-  } = useReportsDownloadStore()
+  } = useStore()
 
   const [searchInput, setSearchInput] = useState("")
   const [toastMsg, setToastMsg] = useState(null)

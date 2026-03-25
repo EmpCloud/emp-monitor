@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Users, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,32 +10,121 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import useMonitoringControlStore from "@/page/protected/admin/monitoring-control/monitoringControlStore"
 
-const ROLES = [
-  { label: "See All Role", value: "all" },
-  { label: "Admin", value: "admin" },
-  { label: "Employee", value: "employee" },
-  { label: "Manager", value: "manager" },
-]
+const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
+  const {
+    roles,
+    locations,
+    departments,
+    employees,
+    editingGroup,
+    saving,
+    createGroupAction,
+    updateGroupAction,
+    loadLocations,
+    loadDepartments,
+    loadEmployees,
+  } = useMonitoringControlStore()
 
-const LOCATIONS = [
-  { label: "All Location", value: "all" },
-  { label: "Bangalore", value: "bangalore" },
-  { label: "Mumbai", value: "mumbai" },
-]
-
-const DEPARTMENTS = [
-  { label: "See All Role", value: "all" },
-  { label: "Developer", value: "developer" },
-  { label: "Testing", value: "testing" },
-]
-
-const CreateGroup = ({ open, onOpenChange }) => {
-  const [groupName, setGroupName] = useState("NR consult testing shift")
-  const [role, setRole] = useState("all")
-  const [location, setLocation] = useState("all")
-  const [department, setDepartment] = useState("all")
+  const [groupName, setGroupName] = useState("")
   const [note, setNote] = useState("")
+  const [roleId, setRoleId] = useState("all")
+  const [locationId, setLocationId] = useState("all")
+  const [departmentId, setDepartmentId] = useState("all")
+  const [employeeIds, setEmployeeIds] = useState([])
+  const [error, setError] = useState("")
+
+  // Populate form for edit mode
+  useEffect(() => {
+    if (open && isEdit && editingGroup) {
+      setGroupName(editingGroup.name || "")
+      setNote(editingGroup.note || "")
+      setRoleId(editingGroup.role_id ? String(editingGroup.role_id) : "all")
+      setLocationId(editingGroup.location_id ? String(editingGroup.location_id) : "all")
+      setDepartmentId(editingGroup.department_id ? String(editingGroup.department_id) : "all")
+      setEmployeeIds(editingGroup.employee_ids || [])
+    } else if (open && !isEdit) {
+      setGroupName("")
+      setNote("")
+      setRoleId("all")
+      setLocationId("all")
+      setDepartmentId("all")
+      setEmployeeIds([])
+    }
+    setError("")
+  }, [open, isEdit, editingGroup])
+
+  // Cascade: role → location
+  useEffect(() => {
+    if (open) loadLocations(roleId)
+  }, [roleId, open])
+
+  // Cascade: role + location → department
+  useEffect(() => {
+    if (open) loadDepartments(roleId, locationId)
+  }, [roleId, locationId, open])
+
+  // Cascade: role + location + department → employees
+  useEffect(() => {
+    if (open) loadEmployees(roleId, locationId, departmentId)
+  }, [roleId, locationId, departmentId, open])
+
+  const handleRoleChange = useCallback((val) => {
+    setRoleId(val)
+    setLocationId("all")
+    setDepartmentId("all")
+    setEmployeeIds([])
+  }, [])
+
+  const handleLocationChange = useCallback((val) => {
+    setLocationId(val)
+    setDepartmentId("all")
+    setEmployeeIds([])
+  }, [])
+
+  const handleDepartmentChange = useCallback((val) => {
+    setDepartmentId(val)
+    setEmployeeIds([])
+  }, [])
+
+  const handleSubmit = async () => {
+    if (!groupName.trim()) {
+      setError("Group name is required")
+      return
+    }
+    setError("")
+
+    const payload = {
+      name: groupName.trim(),
+      note: note.trim(),
+      role_id: roleId !== "all" ? roleId : "",
+      location_id: locationId !== "all" ? locationId : "",
+      department_id: departmentId !== "all" ? departmentId : "",
+      employee_ids: employeeIds.length > 0 ? employeeIds : [],
+    }
+
+    let res
+    if (isEdit && editingGroup) {
+      payload.group_id = editingGroup.group_id
+      res = await updateGroupAction(payload)
+    } else {
+      res = await createGroupAction(payload)
+    }
+
+    if (!res.success) {
+      if (res.code === 205) {
+        setError(res.message || "Duplicate employees found in another group. Overwrite?")
+      } else {
+        setError(res.message || "Failed to save group")
+      }
+    }
+  }
+
+  // Filter out "all" option for employee multi-select display
+  const selectedEmployeeLabels = employees
+    .filter((e) => e.value !== "all" && employeeIds.includes(e.value))
+    .map((e) => e.label)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,29 +137,35 @@ const CreateGroup = ({ open, onOpenChange }) => {
             </div>
             <div>
               <DialogTitle className="text-xl font-black text-white">
-                Group
+                {isEdit ? "Edit Group" : "Create Group"}
               </DialogTitle>
               <DialogDescription className="text-xs text-violet-200 mt-0.5">
-                &quot;Lorem ipsum quia dolor sit porro quisquam est
+                {isEdit
+                  ? "Modify group details and employee assignments"
+                  : "Set up a new monitoring group with specific rules"}
               </DialogDescription>
             </div>
           </DialogHeader>
         </div>
 
         <div className="px-6 py-6 space-y-7">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+
           {/* Group Name */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2 sm:min-w-[140px]">
               <span className="w-1 h-5 rounded-full bg-blue-500" />
-              <span className="text-sm font-semibold text-slate-700">
-                Group Name
-              </span>
+              <span className="text-sm font-semibold text-slate-700">Group Name</span>
             </div>
             <Input
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               className="h-10 rounded-lg border-slate-200 text-sm"
-              placeholder="NR consult testing shift"
+              placeholder="Enter group name"
             />
           </div>
 
@@ -78,78 +173,102 @@ const CreateGroup = ({ open, onOpenChange }) => {
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Role
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
                 <CustomSelect
-                  placeholder="See All Role"
-                  items={ROLES}
-                  selected={role}
-                  onChange={setRole}
+                  placeholder="All Roles"
+                  items={roles}
+                  selected={roleId}
+                  onChange={handleRoleChange}
                   width="full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Location
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
                 <CustomSelect
-                  placeholder="All Location"
-                  items={LOCATIONS}
-                  selected={location}
-                  onChange={setLocation}
+                  placeholder="All Locations"
+                  items={locations}
+                  selected={locationId}
+                  onChange={handleLocationChange}
                   width="full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Departments
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
                 <CustomSelect
-                  placeholder="See All Role"
-                  items={DEPARTMENTS}
-                  selected={department}
-                  onChange={setDepartment}
+                  placeholder="All Departments"
+                  items={departments}
+                  selected={departmentId}
+                  onChange={handleDepartmentChange}
                   width="full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Employees
-                </label>
-                <div className="flex items-center h-10">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-semibold">
-                    All Employees
-                  </span>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Employees</label>
+                <div className="flex items-center flex-wrap gap-1.5 min-h-[40px]">
+                  {employeeIds.length === 0 ? (
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-semibold">
+                      All Employees
+                    </span>
+                  ) : (
+                    selectedEmployeeLabels.map((label, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs"
+                      >
+                        {label}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Add New Employees Button */}
+          {/* Add Employees Selection */}
           <div>
-            <Button
-              size="lg"
-              className="rounded-full bg-red-500 hover:bg-red-600 px-6 text-xs font-semibold shadow-sm"
-            >
-              <UserPlus className="w-4 h-4" />
-              Add New Employess
-            </Button>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Select Employees
+            </label>
+            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-white">
+              {employees
+                .filter((e) => e.value !== "all")
+                .map((emp) => (
+                  <label
+                    key={emp.value}
+                    className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-slate-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={employeeIds.includes(emp.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setEmployeeIds((prev) => [...prev, emp.value])
+                        } else {
+                          setEmployeeIds((prev) => prev.filter((id) => id !== emp.value))
+                        }
+                      }}
+                      className="w-3.5 h-3.5 accent-blue-500"
+                    />
+                    <span className="text-xs text-slate-700">{emp.label}</span>
+                  </label>
+                ))}
+              {employees.filter((e) => e.value !== "all").length === 0 && (
+                <p className="text-xs text-slate-400 py-2 text-center">No employees found</p>
+              )}
+            </div>
           </div>
 
-          {/* Any Note */}
+          {/* Note */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="w-1 h-5 rounded-full bg-blue-500" />
-              <span className="text-sm font-semibold text-slate-700">
-                Any Note
-              </span>
+              <span className="text-sm font-semibold text-slate-700">Note</span>
             </div>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="New one"
-              rows={5}
+              placeholder="Optional note for this group"
+              rows={4}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
@@ -158,18 +277,21 @@ const CreateGroup = ({ open, onOpenChange }) => {
           <div className="flex justify-end gap-2 pt-2">
             <Button
               size="lg"
-              className="rounded-xl bg-violet-500 hover:bg-violet-600 px-5 text-xs font-semibold shadow-sm"
+              variant="outline"
+              className="rounded-xl px-5 text-xs font-semibold"
               onClick={() => onOpenChange(false)}
+              disabled={saving}
             >
-              <Users className="w-4 h-4" />
-              Create Group
+              Cancel
             </Button>
             <Button
               size="lg"
-              className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
-              onClick={() => onOpenChange(false)}
+              className="rounded-xl bg-violet-500 hover:bg-violet-600 px-5 text-xs font-semibold shadow-sm"
+              onClick={handleSubmit}
+              disabled={saving}
             >
-              Close
+              <Users className="w-4 h-4" />
+              {saving ? "Saving..." : isEdit ? "Update Group" : "Create Group"}
             </Button>
           </div>
         </div>

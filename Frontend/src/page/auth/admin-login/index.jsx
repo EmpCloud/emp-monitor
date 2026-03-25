@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminLogin } from "./service";
+import { adminLogin, adminForgotPassword } from "./service";
 import useAdminSession from "../../../sessions/adminSession";
 import bgIllustration from "@/assets/login-bg.png";
 import "./style.css";
@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+} from "@/components/ui/dialog";
+
 // ── Lucide React icons ────────────────────────────────────────────────────
 import {
   Eye,
@@ -19,6 +25,7 @@ import {
   Loader2,
   UserRound,
   Settings,
+  X,
 } from "lucide-react";
 
 /* ========================================================================
@@ -34,6 +41,24 @@ export const AdminLogin = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState({ type: "", text: "" });
+
+  const handleForgotSubmit = async () => {
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    setForgotMsg({ type: "", text: "" });
+    const res = await adminForgotPassword(forgotEmail.trim());
+    setForgotLoading(false);
+    if (res?.code === 200) {
+      setForgotMsg({ type: "success", text: res.msg || "Password reset link sent to your email." });
+      setForgotEmail("");
+    } else {
+      setForgotMsg({ type: "error", text: res?.msg || res?.message || "Failed to send reset link." });
+    }
+  };
 
   // ── Original handleSubmit — untouched ──────────────────────────────────
   const handleSubmit = async (e) => {
@@ -224,6 +249,7 @@ export const AdminLogin = () => {
                 <Button
                   type="button"
                   variant="ghost"
+                  onClick={() => { setForgotEmail(""); setForgotMsg({ type: "", text: "" }); setForgotOpen(true); }}
                   className="h-auto p-0 text-[13px] font-semibold text-[#2079FD]
                   hover:text-[#2079FD] hover:bg-transparent hover:underline
                   transition-opacity duration-200"
@@ -260,6 +286,60 @@ export const AdminLogin = () => {
         </div>
         {/* ── Login Card ──────────────────────────────────────────────── */}
       </main>
+
+      {/* ── Forgot Password Modal ── */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] rounded-2xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
+          {/* Header */}
+          <div
+            className="px-6 py-4 flex items-center justify-between"
+            style={{ background: "linear-gradient(135deg, #2079FD 0%, #5CE1FD 100%)" }}
+          >
+            <h2 className="text-white text-lg font-bold">Forgot Password :</h2>
+            <DialogClose className="text-white hover:text-white/80 transition-colors focus:outline-none">
+              <X className="h-5 w-5" />
+            </DialogClose>
+          </div>
+
+          {/* Body */}
+          <div className="px-6 pt-6 pb-4 space-y-4">
+            <Label className="text-[15px] font-semibold text-gray-800">
+              Email address
+            </Label>
+            <Input
+              type="email"
+              placeholder="Enter email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              className="h-12 rounded-xl border-gray-300 text-sm px-4 placeholder:text-gray-400"
+            />
+            <p className="text-[13px] text-gray-500">
+              We'll never share your email with anyone else.
+            </p>
+            {forgotMsg.text && (
+              <p className={`text-[13px] font-medium ${forgotMsg.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                {forgotMsg.text}
+              </p>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 flex items-center justify-end gap-3">
+            <DialogClose asChild>
+              <Button className="h-10 px-6 rounded-full bg-gray-300 hover:bg-gray-400 text-gray-700 text-[14px] font-semibold shadow-none">
+                Close
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleForgotSubmit}
+              disabled={!forgotEmail.trim() || forgotLoading}
+              className="h-10 px-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[14px] font-semibold disabled:opacity-50"
+            >
+              {forgotLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Sending...</> : "Submit"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

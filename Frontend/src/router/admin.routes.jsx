@@ -11,6 +11,8 @@ import EmployeeAttendancePage from '../page/protected/admin/employee-attendance'
 import EmployeeNotification       from '../page/protected/admin/employee-notification'
 import EmployeeInsights       from '../page/protected/admin/employee-insights'
 import EmployeeRealtimeInsights       from '../page/protected/admin/employee-realtime-insights'
+import EmployeeProfile               from '../page/protected/admin/employee-profile'
+import TrackUserSettings               from '../page/protected/admin/track-user-settings'
 
 
 // Standalone pages
@@ -61,96 +63,91 @@ import { AdminLayout } from '../page/protected/admin/Layout'
 import useAdminSession from '../sessions/adminSession'
 import { getSessionCookie } from '../lib/sessionCookie'
 
-const AdminRoutes = () => {
+// Standalone component so hooks have their own isolated instance
+export function AdminProtectedRoute({ children }) {
   const { admin, setAdmin } = useAdminSession()
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     const fromCookie = getSessionCookie()
-    if (fromCookie && fromCookie.data) {
+    if (fromCookie && fromCookie.data && fromCookie.is_admin === true) {
       setAdmin(fromCookie)
     }
     setHydrated(true)
   }, [setAdmin])
 
-  const isAuthenticated = () => Boolean(admin && admin.data)
-
-  const ProtectedRoute = ({ children }) => {
-    if (!hydrated) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      )
-    }
-    if (!isAuthenticated()) {
-      return <Navigate to="/admin-login" replace />
-    }
-    return <AdminLayout>{children}</AdminLayout>
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
+  if (!admin || !admin.data) {
+    return <Navigate to="/admin-login" replace />
+  }
+  return <AdminLayout>{children}</AdminLayout>
+}
 
-  const P = ({ Page }) => (
-    <ProtectedRoute>
-      <Page />
-    </ProtectedRoute>
-  )
-
+const AdminRoutes = () => {
   return (
     <>
       {/* ── Dashboard ── */}
-      <Route path="/admin/dashboard"             element={<P Page={Dashboard} />} />
+      <Route path="/admin/dashboard"             element={<AdminProtectedRoute><Dashboard /></AdminProtectedRoute>} />
 
       {/* ── Employees ── */}
-      <Route path="/admin/employee-details"      element={<P Page={EmployeeDetails} />} />
-      <Route path="/admin/comparison"       element={<P Page={EmployeeComparison} />} />
-      <Route path="/admin/attendance"       element={<P Page={EmployeeAttendancePage} />} />
-      <Route path="/admin/notification"     element={<P Page={EmployeeNotification} />} />
-      <Route path="/admin/insights"         element={<P Page={EmployeeInsights} />} />
-      <Route path="/admin/realtime"         element={<P Page={EmployeeRealtimeInsights} />} />
+      <Route path="/admin/employee-details"      element={<AdminProtectedRoute><EmployeeDetails /></AdminProtectedRoute>} />
+      <Route path="/admin/get-employee-details"  element={<AdminProtectedRoute><EmployeeProfile /></AdminProtectedRoute>} />
+      <Route path="/admin/comparison"            element={<AdminProtectedRoute><EmployeeComparison /></AdminProtectedRoute>} />
+      <Route path="/admin/attendance"            element={<AdminProtectedRoute><EmployeeAttendancePage /></AdminProtectedRoute>} />
+      <Route path="/admin/notification"          element={<AdminProtectedRoute><EmployeeNotification /></AdminProtectedRoute>} />
+      <Route path="/admin/insights"              element={<AdminProtectedRoute><EmployeeInsights /></AdminProtectedRoute>} />
+      <Route path="/admin/realtime"              element={<AdminProtectedRoute><EmployeeRealtimeInsights /></AdminProtectedRoute>} />
+      <Route path="/admin/track-user-settings"   element={<AdminProtectedRoute><TrackUserSettings /></AdminProtectedRoute>} />
 
       {/* ── Standalone ── */}
-      <Route path="/admin/timesheets"                  element={<P Page={Timesheets} />} />
-      <Route path="/admin/timeline"                    element={<P Page={Timeline} />} />
-      <Route path="/admin/livemonitoring"              element={<P Page={LiveMonitoring} />} />
-      <Route path="/admin/timeclaim"                   element={<P Page={TimeClaim} />} />
-      <Route path="/admin/clients"                     element={<P Page={Clients} />} />
+      <Route path="/admin/timesheets"                  element={<AdminProtectedRoute><Timesheets /></AdminProtectedRoute>} />
+      <Route path="/admin/timeline"                    element={<AdminProtectedRoute><Timeline /></AdminProtectedRoute>} />
+      <Route path="/admin/livemonitoring"              element={<AdminProtectedRoute><LiveMonitoring /></AdminProtectedRoute>} />
+      <Route path="/admin/timeclaim"                   element={<AdminProtectedRoute><TimeClaim /></AdminProtectedRoute>} />
+      <Route path="/admin/clients"                     element={<AdminProtectedRoute><Clients /></AdminProtectedRoute>} />
 
       {/* ── Reports ── */}
-      <Route path="/admin/reports/download"            element={<P Page={ReportsDownload} />} />
-      <Route path="/admin/reports/productivity"        element={<P Page={ProductivityReport} />} />
-      <Route path="/admin/reports/autoemail"           element={<P Page={AutoEmailReport} />} />
-      <Route path="/admin/reports/webappusage"         element={<P Page={WebAppUsage} />} />
-      <Route path="/admin/reports/systemactivitylog"   element={<P Page={SystemActivityLog} />} />
+      <Route path="/admin/reports/download"            element={<AdminProtectedRoute><ReportsDownload /></AdminProtectedRoute>} />
+      <Route path="/admin/reports/productivity"        element={<AdminProtectedRoute><ProductivityReport /></AdminProtectedRoute>} />
+      <Route path="/admin/reports/autoemail"           element={<AdminProtectedRoute><AutoEmailReport /></AdminProtectedRoute>} />
+      <Route path="/admin/reports/webappusage"         element={<AdminProtectedRoute><WebAppUsage /></AdminProtectedRoute>} />
+      <Route path="/admin/reports/systemactivitylog"   element={<AdminProtectedRoute><SystemActivityLog /></AdminProtectedRoute>} />
 
       {/* ── DLP ── */}
-      <Route path="/admin/dlp/usb"                     element={<P Page={USBDetection} />} />
-      <Route path="/admin/dlp/systemlogs"              element={<P Page={SystemLogs} />} />
-      <Route path="/admin/dlp/screenshotlogs"          element={<P Page={ScreenShotLogs} />} />
-      <Route path="/admin/dlp/emailactivitylogs"       element={<P Page={EmailActivityLogs} />} />
-      <Route path="/admin/dlp/printlogs"               element={<P Page={PrintLogs} />} />
+      <Route path="/admin/dlp/usb"                     element={<AdminProtectedRoute><USBDetection /></AdminProtectedRoute>} />
+      <Route path="/admin/dlp/systemlogs"              element={<AdminProtectedRoute><SystemLogs /></AdminProtectedRoute>} />
+      <Route path="/admin/dlp/screenshotlogs"          element={<AdminProtectedRoute><ScreenShotLogs /></AdminProtectedRoute>} />
+      <Route path="/admin/dlp/emailactivitylogs"       element={<AdminProtectedRoute><EmailActivityLogs /></AdminProtectedRoute>} />
+      <Route path="/admin/dlp/printlogs"               element={<AdminProtectedRoute><PrintLogs /></AdminProtectedRoute>} />
 
       {/* ── Settings ── */}
-      <Route path="/admin/settings/location"           element={<P Page={LocationDepartment} />} />
-      <Route path="/admin/settings/storage"            element={<P Page={StorageTypes} />} />
-      <Route path="/admin/settings/productivity"       element={<P Page={ProductivityRules} />} />
-      <Route path="/admin/settings/roles"              element={<P Page={RolesPermissions} />} />
-      <Route path="/admin/settings/shift"              element={<P Page={ShiftManagement} />} />
-      <Route path="/admin/settings/monitoring"         element={<P Page={MonitoringControl} />} />
-      <Route path="/admin/settings/localization"       element={<P Page={Localization} />} />
+      <Route path="/admin/settings/location"           element={<AdminProtectedRoute><LocationDepartment /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/storage"            element={<AdminProtectedRoute><StorageTypes /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/productivity"       element={<AdminProtectedRoute><ProductivityRules /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/roles"              element={<AdminProtectedRoute><RolesPermissions /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/shift"              element={<AdminProtectedRoute><ShiftManagement /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/monitoring"         element={<AdminProtectedRoute><MonitoringControl /></AdminProtectedRoute>} />
+      <Route path="/admin/settings/localization"       element={<AdminProtectedRoute><Localization /></AdminProtectedRoute>} />
 
       {/* ── Behaviour ── */}
-      <Route path="/admin/behaviour/alerts"            element={<P Page={Alerts} />} />
-      <Route path="/admin/behaviour/alertpolicies"     element={<P Page={AlertPolicies} />} />
-      <Route path="/admin/behaviour/alertnotification" element={<P Page={AlertNotification} />} />
+      <Route path="/admin/behaviour/alerts"            element={<AdminProtectedRoute><Alerts /></AdminProtectedRoute>} />
+      <Route path="/admin/behaviour/alertpolicies"     element={<AdminProtectedRoute><AlertPolicies /></AdminProtectedRoute>} />
+      <Route path="/admin/behaviour/alertnotification" element={<AdminProtectedRoute><AlertNotification /></AdminProtectedRoute>} />
 
       {/* ── Mobile Task ── */}
-      <Route path="/admin/mobiletask/clientuser"      element={<P Page={MobileTaskClients} />} />
-      <Route path="/admin/mobiletask/task"            element={<P Page={MobileTaskDetails} />} />
-      <Route path="/admin/mobiletask/geolocation"     element={<P Page={MobileTaskGeolocation} />} />
+      <Route path="/admin/mobiletask/clientuser"       element={<AdminProtectedRoute><MobileTaskClients /></AdminProtectedRoute>} />
+      <Route path="/admin/mobiletask/task"             element={<AdminProtectedRoute><MobileTaskDetails /></AdminProtectedRoute>} />
+      <Route path="/admin/mobiletask/geolocation"      element={<AdminProtectedRoute><MobileTaskGeolocation /></AdminProtectedRoute>} />
 
       {/* ── Reseller ── */}
-      <Route path="/admin/reseller/dashboard"         element={<P Page={ResellerDashboard} />} />
-      <Route path="/admin/reseller/settings"          element={<P Page={ResellerSettings} />} />
+      <Route path="/admin/reseller/dashboard"          element={<AdminProtectedRoute><ResellerDashboard /></AdminProtectedRoute>} />
+      <Route path="/admin/reseller/settings"           element={<AdminProtectedRoute><ResellerSettings /></AdminProtectedRoute>} />
     </>
   )
 }

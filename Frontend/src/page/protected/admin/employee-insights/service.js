@@ -18,21 +18,33 @@ export const getEmployeesList = async ({
   roleId = "all",
   locationId = "all",
   departmentId = "all",
+  managerId,
 } = {}) => {
   try {
-    const payload = {
-      status: "",
-      shift_id: -1,
+    const isAssignedMode = Number.isFinite(Number(managerId)) && Number(managerId) > 0;
+    const common = {
       location_id: locationId !== "all" ? locationId : "",
       department_id: departmentId !== "all" ? departmentId : "",
       role_id: roleId !== "all" ? roleId : "",
-      day: new Date().toISOString().slice(0, 10),
       limit: 500,
       skip: 0,
       name: "",
     };
 
-    const { data } = await apiService.apiInstance.post(`/user/fetch-users`, payload);
+    const payload = isAssignedMode
+      ? {
+          to_assigned_id: Number(managerId),
+          ...common,
+        }
+      : {
+          status: "",
+          shift_id: -1,
+          day: new Date().toISOString().slice(0, 10),
+          ...common,
+        };
+
+    const endpoint = isAssignedMode ? `/user/get-assigned-employee` : `/user/fetch-users`;
+    const { data } = await apiService.apiInstance.post(endpoint, payload);
     let options = [{ value: "all", label: "See All Employee" }];
 
     const list =
@@ -45,7 +57,7 @@ export const getEmployeesList = async ({
       options = [
         ...options,
         ...list.map((emp, idx) => {
-          const id = emp.id ?? emp.u_id ?? idx + 1;
+          const id = emp.user_id ?? emp.id ?? emp.u_id ?? idx + 1;
           const fullName = `${emp.first_name || ""} ${emp.last_name || ""}`.trim();
           return {
             value: String(id),

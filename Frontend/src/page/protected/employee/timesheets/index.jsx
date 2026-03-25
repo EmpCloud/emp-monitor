@@ -1,0 +1,25 @@
+import { Clock } from "lucide-react";
+import useEmployeeSession from "../../../../sessions/employeeSession";
+import TimesheetsTab      from "../../admin/employee-profile/TimesheetsTab";
+
+export default function EmployeeTimesheets() {
+  const { employee } = useEmployeeSession();
+  const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+          <Clock size={20} className="text-blue-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-[#2B3674]">Timesheets</h1>
+          <p className="text-xs text-[#A3AED0]">Your work hours and attendance</p>
+        </div>
+      </div>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <TimesheetsTab employee={employeeData} />
+      </div>
+    </div>
+  );
+}

@@ -1,34 +1,35 @@
-const ADMIN_SESSION_COOKIE = 'admin_session'
-const SESSION_MAX_AGE_SECONDS = 4 * 60 * 60 // 4 hours
+const SESSION_KEY = 'emp_session'
 
 /**
- * Set admin session in cookie (4hr expiry).
- * @param {object} data - Session data to store (will be JSON stringified).
+ * Persist session data across page refreshes.
+ * Uses localStorage (not cookies) to avoid the 4 KB browser cookie limit —
+ * the API response includes large permissionData / feature arrays that exceed it.
  */
 export function setSessionCookie(data) {
-  localStorage.setItem("token", data.data);
-  const value = encodeURIComponent(JSON.stringify(data))
-  const maxAge = SESSION_MAX_AGE_SECONDS
-  document.cookie = `${ADMIN_SESSION_COOKIE}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`
+  if (!data) return
+  localStorage.setItem('token', data.data)            // auth token for API calls
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data)) // full session for hydration
 }
 
 /**
- * Get admin session from cookie, or null if missing/expired/invalid.
+ * Retrieve the stored session, or null if none / invalid.
  * @returns {object|null}
  */
 export function getSessionCookie() {
-  const match = document.cookie.match(new RegExp(`(^| )${ADMIN_SESSION_COOKIE}=([^;]+)`))
-  if (!match) return null
   try {
-    return JSON.parse(decodeURIComponent(match[2]))
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
   } catch {
     return null
   }
 }
 
 /**
- * Remove admin session cookie.
+ * Remove the stored session (logout / role-switch cleanup).
  */
 export function clearSessionCookie() {
-  document.cookie = `${ADMIN_SESSION_COOKIE}=; path=/; max-age=0`
+  localStorage.removeItem(SESSION_KEY)
+  // token is removed separately by clearEmployee(); keep it here for safety
+  localStorage.removeItem('token')
 }

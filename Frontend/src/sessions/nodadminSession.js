@@ -7,10 +7,13 @@ const useNonAdminSession = create((set) => ({
     if (nonAdmin) setSessionCookie(nonAdmin)
     set({ nonAdmin })
   },
+  // Full logout: clears storage + state
   clearNonAdmin: () => {
     clearSessionCookie()
     set({ nonAdmin: null })
   },
+  // Role-switch: only reset Zustand state, leave storage for the new session
+  resetNonAdmin: () => set({ nonAdmin: null }),
 }))
 
 export default useNonAdminSession

@@ -13,7 +13,7 @@ import {
 } from "./service";
 
 const TZ = "Asia/Kolkata";
-const defaultStart = moment().tz(TZ).subtract(6, "days").format("YYYY-MM-DD");
+const defaultStart = moment().tz(TZ).format("YYYY-MM-DD");
 const defaultEnd = moment().tz(TZ).format("YYYY-MM-DD");
 
 export const useWebAppUsageStore = create((set, get) => ({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import empLogo from "@/assets/emp.png";
 import smallempLogo from "@/assets/smallemp.png";
 import {
@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import AppMenuItems from "./AppMenuItems";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import downloadIcon from "@/assets/agentdwnld.png";
+import apiService from "@/services/api.service";
 
 const menuItems = [
   // Singular items (no children)
@@ -46,7 +48,6 @@ const menuItems = [
       { title: "Employees Details", url: "/admin/employee-details" },
       { title: "Employee Comparison", url: "/admin/comparison" },
       { title: "Employee Attendance", url: "/admin/attendance" },
-      { title: "Employee Notification", url: "/admin/notification" },
       { title: "Employee Insights", url: "/admin/insights" },
       { title: "Real Time Track", url: "/admin/realtime" },
     ],
@@ -123,9 +124,60 @@ const menuItems = [
   },
 ];
 
+const normalizeResellerStats = (payload = {}) => {
+  const rawExpiry = String(payload.expiry_date || "").replace(/"/g, "").trim();
+  const formattedExpiry = rawExpiry
+    ? new Date(rawExpiry).toLocaleDateString("en-GB")
+    : "-";
+
+  return {
+    totalLicenses: Number(payload.total_licenses_count) || 0,
+    usedLicenses: Number(payload.total_licenses_used_by_me) || 0,
+    leftLicenses: Number(payload.left_over_licenses) || 0,
+    expiryDate: formattedExpiry === "Invalid Date" ? rawExpiry || "-" : formattedExpiry,
+  };
+};
+
 export function AppSidebar() {
   const { open } = useSidebar();
   const [openKey, setOpenKey] = useState(null);
+  const [licenseStats, setLicenseStats] = useState({
+    totalLicenses: 0,
+    usedLicenses: 0,
+    leftLicenses: 0,
+    expiryDate: "-",
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadResellerStats = async () => {
+      try {
+        const { data } = await apiService.apiInstance.get("/settings/reseller-stats", {
+          signal: controller.signal,
+        });
+        if (data?.code !== 200 || !data?.data) return;
+
+        const nextStats = normalizeResellerStats(data.data);
+        setLicenseStats((prev) => (
+          prev.totalLicenses === nextStats.totalLicenses &&
+          prev.usedLicenses === nextStats.usedLicenses &&
+          prev.leftLicenses === nextStats.leftLicenses &&
+          prev.expiryDate === nextStats.expiryDate
+        ) ? prev : nextStats);
+      } catch (error) {
+        if (error?.name !== "CanceledError" && error?.name !== "AbortError") {
+          console.error("Reseller stats fetch failed:", error);
+        }
+      }
+    };
+
+    loadResellerStats();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   return (
     <Sidebar collapsible="icon">
@@ -173,9 +225,10 @@ export function AppSidebar() {
         {/* <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:opacity-90 hover:shadow-blue-300">
           
         </button> */}
-        <ShimmerButton >
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-orange-400 to-pink-500 shadow-sm">
-            <Download className="h-3.5 w-3.5 text-white" />
+        <ShimmerButton className=" flex items-center justify-center gap-2 shadow-sm border-2 border-blue-600 text-md " >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full  shadow-sm">
+            <img src={downloadIcon} alt="download" />
+
           </span>
           <p>
 
@@ -184,20 +237,20 @@ export function AppSidebar() {
         </ShimmerButton>
 
         {/* License Information Card */}
-        <div className="mt-1 rounded-2xl bg-linear-to-b from-[#4f72b8] to-[#3a539b] p-4 text-center text-white">
+        <div className="mt-1 rounded-3xl bg-[linear-gradient(160deg,#94B6E1_0%,#1D4381_100%)] p-4 text-center text-white">
           <div className="mb-2 flex justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl shadow-outer ">
-              <img src={smallempLogo} alt="" />
-            </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl shadow-[0_0_20px_9px_rgba(255,255,255,0.6)] ">
+                <img src={smallempLogo} alt=""  />
+              </div>
           </div>
           <p className="mb-1 text-sm font-semibold">License information</p>
           <p className="text-xs leading-relaxed text-blue-100">
-            Used 33 out of 1200 Licenses,
+            Used {licenseStats.usedLicenses} out of {licenseStats.totalLicenses} Licenses,
             <br />
-            1167 - Licenses left &amp; Expires on
+            {licenseStats.leftLicenses} - Licenses left &amp; Expires on
           </p>
           <div className="mt-3 inline-block rounded-full border border-white/30 bg-white/10 px-4 py-1 text-xs font-semibold">
-            01/12/2026
+            {licenseStats.expiryDate}
           </div>
         </div>
       </SidebarFooter>

@@ -8,7 +8,7 @@ export const ShimmerButton = React.forwardRef((
     shimmerSize = "0.05em",
     shimmerDuration = "3s",
     borderRadius = "100px",
-    background = "linear-gradient(90deg,#245DFF,#1375FB)",
+    background = "linear-gradient(180deg,#245DFF,#1375FB)",
     className,
     children,
     ...props

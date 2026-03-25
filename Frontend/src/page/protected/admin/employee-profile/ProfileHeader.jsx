@@ -1,0 +1,85 @@
+import { Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useDateRangePicker } from "@/hooks/useDateRangePicker";
+import { useLocation, useNavigate } from "react-router-dom";
+
+export default function ProfileHeader({ employee, startDate, endDate, onDateChange, showActions = true, onEdit }) {
+  const name = employee?.name || "Employee";
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { ref: datePickerRef } = useDateRangePicker({
+    startDate,
+    endDate,
+    ready: true,
+    onChange: (start, end) => {
+      onDateChange?.(start, end);
+    },
+  });
+
+  const handleSettingsClick = () => {
+    const employeeId = employee?.id ?? employee?.user_id ?? employee?.u_id;
+    if (!employeeId) return;
+
+    const basePath = location.pathname.startsWith("/non-admin") ? "/non-admin" : "/admin";
+    navigate(`${basePath}/track-user-settings?employee_id=${encodeURIComponent(employeeId)}`);
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Left: Avatar + Info */}
+      <div className="flex items-center gap-4">
+        {/* Avatar with gradient ring */}
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #f97316, #eab308, #22c55e, #3b82f6)",
+              padding: "3px",
+            }}
+          >
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+              {name.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl text-gray-800 leading-tight">
+            <span className="font-extrabold">{name}</span>
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-sm text-gray-500">Employee Full Details</span>
+            {showActions && (
+              <>
+                <Badge
+                  className="text-[10px] bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-md px-2 py-0.5 cursor-pointer"
+                  onClick={onEdit}
+                >
+                  Edit
+                </Badge>
+                <Badge
+                  className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white border-0 rounded-md px-2 py-0.5 cursor-pointer"
+                  onClick={handleSettingsClick}
+                >
+                  Settings
+                </Badge>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Date Range Picker */}
+      <div className="relative self-start sm:self-center">
+        <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+        <input
+          ref={datePickerRef}
+          type="text"
+          readOnly
+          className="pl-9 pr-8 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 transition-colors focus:outline-none focus:border-blue-300 w-full sm:w-auto min-w-[270px]"
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">▼</span>
+      </div>
+    </div>
+  );
+}

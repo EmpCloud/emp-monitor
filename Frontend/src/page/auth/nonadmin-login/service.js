@@ -28,5 +28,14 @@ const NonAdminLogin = async ({ email, password }) => {
   }
 };
 
-export { NonAdminLogin };
+const forgotPassword = async (email) => {
+  try {
+    const { data } = await apiService.apiInstance.post("/password/forgot-password", { email });
+    return data;
+  } catch (error) {
+    return { code: 500, msg: error?.response?.data?.message || "Something went wrong" };
+  }
+};
+
+export { NonAdminLogin, forgotPassword };
 

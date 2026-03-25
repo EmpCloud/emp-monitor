@@ -190,65 +190,97 @@ export const getShifts = async () => {
   }
 };
 
+const DAY_ABBR_EXPORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES_EXPORT = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+
+/**
+ * Build the day-cell status string — mirrors DownloadSheet() in employee_attendance.js exactly.
+ */
+const buildDayStatus = (dayData) => {
+  if (!dayData?.log) return "-";
+  const { isWorkDay, log } = dayData;
+  let status = "";
+  if (isWorkDay) {
+    if (log.late && log.lateTime > 0) status = log.late + "/";
+    status += log.marker ?? "";
+    if (log.earlyLogout && log.earlyLogout_duration > 0) status += "/" + log.earlyLogout;
+    if (log.overtime && log.overTime_duration > 0) status += "/" + log.overtime;
+  } else {
+    status = log.marker ?? "";
+    if (log.overtime && log.overTime_duration > 0) status += "/" + log.overtime;
+  }
+  return status || "-";
+};
+
 export const exportAttendanceExcel = async (params = {}) => {
   try {
-    delete params.limit;
-    delete params.skip;
+    const dateVal = Number(params.date);
+    const queryParams = { ...params };
+    delete queryParams.limit;
+    delete queryParams.skip;
 
     const response = await apiService.apiInstance.get(`/employee/attendance`, {
-      params,
+      params: queryParams,
     });
 
     const rawData = response.data?.data;
+    if (!rawData) return { success: false };
 
-    if (!rawData) {
-      return { success: false };
+    // Derive year/month from dateValue (e.g. 202603 → year=2026, month=2 [0-indexed])
+    const str   = String(dateVal);
+    const year  = parseInt(str.slice(0, 4), 10);
+    const month = parseInt(str.slice(4, 6), 10) - 1;
+
+    // Build ordered day headers: ["1.Thu", "2.Fri", ...]  — matches DownloadSheet xlsHeader logic
+    const xlsHeader = ["Employee Name", "Location", "Department", "Shift", "Employee Code"];
+    const dayMeta   = []; // [{ day, field }]
+    const d = new Date(year, month, 1);
+    let i = 1;
+    while (d.getMonth() === month) {
+      const field = `${i}.${DAY_ABBR_EXPORT[d.getDay()]}`;
+      xlsHeader.push(field);
+      dayMeta.push({ day: i, field });
+      d.setDate(d.getDate() + 1);
+      i++;
     }
+    xlsHeader.push("Present", "Late", "Half_leave", "Absent", "Overtime", "Day-Off", "Early-Logout");
 
-    const monthYear = formatMonthYear(params.date);
-    const fileName = `Employees_Attendance_${monthYear}.xlsx`;
+    // Flatten response — same iteration as $.each(response.data, (i) => { $.each(response.data[i], ...) })
+    const monthKey = String(dateVal);
+    const list = rawData[monthKey] ?? [];
 
-    const headerMap = {
-      P: "Present",
-      A: "Absent",
-      L: "Late",
-      H: "Half_Leave",
-      O: "Overtime",
-      D: "Day-Off",
-      EL: "Early-Logout",
-      shift: "Shift",
-      date: "Date",
-    };
+    const xlsRows = list.map((emp) => {
+      const row = {};
+      row["Employee Name"]  = `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim() || emp.full_name || "-";
+      row["Location"]       = emp.location || "-";
+      row["Department"]     = emp.department ?? emp.departament ?? "-";
+      row["Shift"]          = emp.shift ?? "-";
+      row["Employee Code"]  = emp.emp_code ?? "-";
 
-    const formattedData = Object.values(rawData)
-      .filter((val) => Array.isArray(val))
-      .flat()
-      .map((item) => {
-        const newItem = {};
-
-        Object.keys(item).forEach((key) => {
-          const lowerKey = key.toLowerCase();
-
-          if (lowerKey.includes("shift") || lowerKey === "date") {
-            return;
-          }
-
-          let newKey = headerMap[key] || key;
-          let value = item[key];
-
-          newItem[newKey] =
-            value === null || value === undefined || value === "" ? "-" : value;
+      if (typeof emp.date === "object" && emp.date !== null) {
+        dayMeta.forEach(({ day, field }) => {
+          row[field] = buildDayStatus(emp.date[day]);
         });
+      } else {
+        dayMeta.forEach(({ field }) => { row[field] = "-"; });
+      }
 
-        newItem["Shift"] = "-";
-        newItem["Date"] = "-";
+      row["Present"]      = emp.P  ?? 0;
+      row["Late"]         = emp.L  ?? 0;
+      row["Half_leave"]   = emp.H  ?? 0;
+      row["Absent"]       = emp.A  ?? 0;
+      row["Overtime"]     = emp.O  ?? 0;
+      row["Day-Off"]      = emp.D  ?? 0;
+      row["Early-Logout"] = emp.EL ?? 0;
+      return row;
+    });
 
-        return newItem;
-      });
-
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-    const workbook = XLSX.utils.book_new();
-
+    const fileName  = `Employees_Attendance_${MONTH_NAMES_EXPORT[month]}_${year}.xlsx`;
+    const worksheet = XLSX.utils.json_to_sheet(xlsRows, { header: xlsHeader });
+    const workbook  = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
     XLSX.writeFile(workbook, fileName);
 

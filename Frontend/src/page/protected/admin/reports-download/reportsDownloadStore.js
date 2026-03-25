@@ -16,8 +16,8 @@ import {
 } from "./service";
 
 const TIMEZONE = "Asia/Kolkata";
-const defaultStart = moment().tz(TIMEZONE).subtract(7, "days").format("YYYY-MM-DD");
-const defaultEnd = moment().tz(TIMEZONE).subtract(1, "days").format("YYYY-MM-DD");
+const defaultStart = moment().tz(TIMEZONE).format("YYYY-MM-DD");
+const defaultEnd = moment().tz(TIMEZONE).format("YYYY-MM-DD");
 
 export const useReportsDownloadStore = create((set, get) => ({
     // ─── Data ──────────────────────────────────────────────────

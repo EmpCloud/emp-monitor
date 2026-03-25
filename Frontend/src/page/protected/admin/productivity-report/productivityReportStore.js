@@ -8,12 +8,18 @@ import {
     exportCSV,
     exportPDF
 } from "./service";
+import { getSessionCookie } from "@/lib/sessionCookie";
 
-// Default: last 7 days (matching old JS)
-const defaultStart = moment().tz("Asia/Kolkata").subtract(7, "days").format("YYYY-MM-DD");
-const defaultEnd = moment().tz("Asia/Kolkata").subtract(1, "days").format("YYYY-MM-DD");
+const defaultStart = moment().tz("Asia/Kolkata").format("YYYY-MM-DD");
+const defaultEnd = moment().tz("Asia/Kolkata").format("YYYY-MM-DD");
 
 export const useProductivityReportStore = create((set, get) => ({
+    resolveManagerId: () => {
+        const session = getSessionCookie();
+        if (!session || session.is_admin) return null;
+        return Number(session.user_id ?? session.id ?? 0) || null;
+    },
+
 
     rows: [],
     totalCount: 0,
@@ -72,7 +78,7 @@ export const useProductivityReportStore = create((set, get) => ({
             const [locationRes, departmentRes, employeeRes] = await Promise.all([
                 getLocations(),
                 getDepartments(),
-                getEmployees()
+                getEmployees({ managerId: get().resolveManagerId() })
             ]);
 
             set({
@@ -100,6 +106,8 @@ export const useProductivityReportStore = create((set, get) => ({
                 startDate: filters.startDate,
                 endDate: filters.endDate,
                 locationId: filters.location,
+                departmentId: filters.department,
+                employeeId: filters.employee,
             });
 
             set({
@@ -125,7 +133,11 @@ export const useProductivityReportStore = create((set, get) => ({
 
     fetchEmployeesByLocDept: async (locationId, departmentId) => {
         try {
-            const employees = await getEmployees({ locationId, departmentId });
+            const employees = await getEmployees({
+                locationId,
+                departmentId,
+                managerId: get().resolveManagerId(),
+            });
             set({ employees });
         } catch (error) {
             console.error("Employees Fetch Error:", error);
@@ -137,7 +149,9 @@ export const useProductivityReportStore = create((set, get) => ({
         await exportCSV({
             startDate: filters.startDate,
             endDate: filters.endDate,
-            locationId: filters.location
+            locationId: filters.location,
+            departmentId: filters.department,
+            employeeId: filters.employee,
         });
     },
 
@@ -146,7 +160,9 @@ export const useProductivityReportStore = create((set, get) => ({
         await exportPDF({
             startDate: filters.startDate,
             endDate: filters.endDate,
-            locationId: filters.location
+            locationId: filters.location,
+            departmentId: filters.department,
+            employeeId: filters.employee,
         });
     }
 

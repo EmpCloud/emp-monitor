@@ -13,6 +13,7 @@ const Customreport = ({
   buttonText = "View Report",
   showMaximize = false,
   showDownload = false,
+  onViewReport,
 }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -36,6 +37,7 @@ const Customreport = ({
         <Button
           variant="outline"
           className="text-blue-500 border-blue-200 hover:bg-blue-50 font-semibold rounded-lg px-4 text-sm h-9"
+          onClick={onViewReport}
         >
           {buttonText}
         </Button>

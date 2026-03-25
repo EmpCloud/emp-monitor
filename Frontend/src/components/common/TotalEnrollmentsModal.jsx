@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Table,
@@ -38,9 +39,36 @@ export default function TotalEnrollmentsModal({
   employees = [],
   loading = false,
 }) {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
   const pageSize = 10;
+
+  const getEmployeeId = (emp) =>
+    emp?.id ?? emp?.u_id ?? emp?.employee_id ?? emp?.employeeId ?? emp?._id;
+
+  const handleEmployeeClick = (emp) => {
+    const empId = getEmployeeId(emp);
+    if (!empId) return;
+    onClose();
+    navigate(`/admin/get-employee-details?id=${empId}`, {
+      state: {
+        employee: {
+          id: empId,
+          name: getEmployeeName(emp),
+          email: getEmployeeEmail(emp),
+          empCode: getEmployeeCode(emp),
+          department: getEmployeeDepartment(emp),
+          location: getEmployeeLocation(emp),
+          role: emp?.role || "Employee",
+          shift: emp?.shift_name || "-",
+          os: emp?.system_architecture || "Windows",
+          computer: emp?.computer_name || emp?.username || "N/A",
+          version: emp?.software_version || "N/A",
+        },
+      },
+    });
+  };
 
   const filtered = useMemo(() => {
     const q = (query || "").trim().toLowerCase();
@@ -197,7 +225,10 @@ export default function TotalEnrollmentsModal({
                     className="border-b border-dashed border-gray-200 last:border-0 hover:bg-blue-50/30 transition-colors"
                   >
                     <TableCell className="py-3.5 px-5 w-[22%]">
-                      <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer group"
+                        onClick={() => handleEmployeeClick(row)}
+                      >
                         <img
                           src={
                             row?.avatar ??
@@ -207,7 +238,7 @@ export default function TotalEnrollmentsModal({
                           alt={getEmployeeName(row)}
                           className="w-8 h-8 rounded-full border border-gray-200 object-cover bg-white shrink-0"
                         />
-                        <span className="font-medium text-gray-700 whitespace-nowrap">
+                        <span className="font-medium text-gray-700 whitespace-nowrap group-hover:text-blue-600 group-hover:underline transition-colors">
                           {getEmployeeName(row)}
                         </span>
                       </div>

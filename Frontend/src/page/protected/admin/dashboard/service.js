@@ -694,6 +694,29 @@ const getDepartmentPerformance = async ({
     }
 };
 
+/**
+ * Fetch detailed web/app activity for productive/non-productive employees.
+ * POST /dashboard/get-web-app-activity-productive-employees
+ */
+const getWebAppActivityForEmployees = async ({
+    employeeIds = [],
+    by = "today",
+    timezone = "Asia/Kolkata",
+} = {}) => {
+    try {
+        const { startDate, endDate } = buildTopAppWebRange(by, timezone);
+        const { data } = await apiService.apiInstance.post(
+            "/dashboard/get-web-app-activity-productive-employees",
+            { employeeIds, startDate, endDate }
+        );
+        const activities = data?.data?.webAppActivities ?? data?.data ?? [];
+        return { stats: Array.isArray(activities) ? activities : [], raw: data };
+    } catch (error) {
+        console.error("WebApp Activity API Error:", error);
+        return { stats: [], raw: null };
+    }
+};
+
 export {
     getDashboardStats,
     getDashboardEmployeesByType,
@@ -708,5 +731,6 @@ export {
     getRandomActiveUsers,
     getRandomNonActiveUsers,
     getLocationPerformance,
-    getDepartmentPerformance
+    getDepartmentPerformance,
+    getWebAppActivityForEmployees
 };

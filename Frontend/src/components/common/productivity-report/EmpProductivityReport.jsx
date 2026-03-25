@@ -71,16 +71,18 @@ const EmpProductivityReport = () => {
         endDate: moment(filters.endDate),
         minDate: moment().subtract(180, "days"),
         maxDate: moment(),
-        dateLimit: { days: 30 },
         locale: { format: "MMM D, YYYY" },
         ranges: {
+          "Today": [moment(), moment()],
+          "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
           "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")],
-          "This Month": [moment().startOf("month"), moment().endOf("month")],
+          "This Month": [moment().startOf("month"), moment()],
           "Last Month": [
             moment().subtract(1, "month").startOf("month"),
             moment().subtract(1, "month").endOf("month"),
           ],
           "Quarterly": [moment().subtract(90, "days"), moment()],
+          "All": [moment().subtract(180, "days"), moment()],
         },
         opens: "left",
         autoUpdateInput: true,
@@ -123,7 +125,9 @@ const EmpProductivityReport = () => {
     filters.limit,
     filters.startDate,
     filters.endDate,
-    filters.location
+    filters.location,
+    filters.department,
+    filters.employee
   ])
 
   const handleLocationChange = useCallback((value) => {

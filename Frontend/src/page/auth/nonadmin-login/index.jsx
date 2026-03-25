@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { NonAdminLogin } from "./service";
+import { NonAdminLogin, forgotPassword } from "./service";
 import useNonAdminSession from "@/sessions/useNonAdminSession";
+import useEmployeeSession from "@/sessions/employeeSession";
+import useAdminSession    from "@/sessions/adminSession";
 import userBgIllustration from "@/assets/user-bg.png";
 import "./style.css";
 import empLogo from "@/assets/emp.png";
@@ -12,7 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 // ── Lucide React icons ────────────────────────────────────────────────────
-import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Loader2, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /* ========================================================================
@@ -25,10 +32,30 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { setNonAdmin } = useNonAdminSession();
+  const { setEmployee } = useEmployeeSession();
+  const { setAdmin }    = useAdminSession();
 
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState({ type: "", text: "" });
+
+  const handleForgotSubmit = async () => {
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    setForgotMsg({ type: "", text: "" });
+    const res = await forgotPassword(forgotEmail.trim());
+    setForgotLoading(false);
+    if (res?.code === 200) {
+      setForgotMsg({ type: "success", text: res.msg || "Password reset link sent to your email." });
+      setForgotEmail("");
+    } else {
+      setForgotMsg({ type: "error", text: res?.msg || res?.message || "Failed to send reset link." });
+    }
+  };
 
   // ── Original handleSubmit — untouched ──────────────────────────────────
   const handleSubmit = async (e) => {
@@ -48,9 +75,21 @@ export const Login = () => {
         return;
       }
 
-      setNonAdmin(result);
-      // TODO: update this route when non-admin dashboard is available
-      navigate("/login");
+      // Route based on role flags in the API response.
+      // Employees → employee session + employee dashboard.
+      // Managers / teamleads → non-admin session (dashboard TBD).
+      // Mirror Laravel logic: route by role string, not boolean flags
+      const role = (result.role || "").toLowerCase().replace(/\s+/g, "");
+      if (role === "employee") {
+        setEmployee(result);
+        navigate("/employee/dashboard");
+      } else if (result.is_admin) {
+        setAdmin(result);
+        navigate("/admin/dashboard");
+      } else {
+        setNonAdmin(result);
+        navigate("/non-admin/dashboard");
+      }
     } catch (err) {
       setError("Unexpected error during login.");
       // eslint-disable-next-line no-console
@@ -206,6 +245,7 @@ export const Login = () => {
                   className="h-auto p-0 text-[13px] font-semibold text-[#2079FD]
                   hover:text-[#2079FD] hover:bg-transparent hover:underline
                   transition-opacity duration-200"
+                  onClick={() => { setForgotEmail(""); setForgotMsg({ type: "", text: "" }); setForgotOpen(true); }}
                 >
                   Forgot password?
                 </Button>
@@ -247,6 +287,57 @@ export const Login = () => {
         </div>
         {/* ── Login Card ──────────────────────────────────────────────── */}
       </main>
+
+      {/* ── Forgot Password Modal ── */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] rounded-2xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
+          <div
+            className="px-6 py-4 flex items-center justify-between"
+            style={{ background: "linear-gradient(135deg, #2079FD 0%, #5CE1FD 100%)" }}
+          >
+            <h2 className="text-white text-lg font-bold">Forgot Password :</h2>
+            <DialogClose className="text-white hover:text-white/80 transition-colors focus:outline-none">
+              <X className="h-5 w-5" />
+            </DialogClose>
+          </div>
+
+          <div className="px-6 pt-6 pb-4 space-y-4">
+            <Label className="text-[15px] font-semibold text-gray-800">
+              Email address
+            </Label>
+            <Input
+              type="email"
+              placeholder="Enter email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              className="h-12 rounded-xl border-gray-300 text-sm px-4 placeholder:text-gray-400"
+            />
+            <p className="text-[13px] text-gray-500">
+              We'll never share your email with anyone else.
+            </p>
+            {forgotMsg.text && (
+              <p className={`text-[13px] font-medium ${forgotMsg.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                {forgotMsg.text}
+              </p>
+            )}
+          </div>
+
+          <div className="px-6 py-4 flex items-center justify-end gap-3">
+            <DialogClose asChild>
+              <Button className="h-10 px-6 rounded-full bg-gray-300 hover:bg-gray-400 text-gray-700 text-[14px] font-semibold shadow-none">
+                Close
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleForgotSubmit}
+              disabled={!forgotEmail.trim() || forgotLoading}
+              className="h-10 px-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[14px] font-semibold disabled:opacity-50"
+            >
+              {forgotLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Sending...</> : "Submit"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

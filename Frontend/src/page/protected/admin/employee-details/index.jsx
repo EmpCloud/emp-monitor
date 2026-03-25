@@ -1,77 +1,88 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import EmployeeDetailsTable from "@/components/common/employee-details/EmployeeDetails";
 import EmployeeFilter from "@/components/common/employee-details/EmployeeFilter";
-import { fetchEmployees, mapEmployeeForTable } from "./service";
+import { fetchEmployees, mapEmployeeForTable, fetchFilterOptions } from "./service";
 
-const LOCATIONS = [
-  { value: "all", label: "All Locations" },
-];
+// Tab → activeStatus sent to the API
+const TAB_STATUS = { active: "1", suspended: "2", deleted: "3" };
 
-const DEPARTMENTS = [
-  { value: "all", label: "All Departments" },
-];
-
-const ROLES = [
-  { value: "all", label: "All Roles" },
-];
-
-const SHIFTS = [
-  { value: "all", label: "All Shifts" },
-];
+const ALL_ROLES       = [{ value: "all", label: "All Roles" }];
+const ALL_LOCATIONS   = [{ value: "all", label: "All Locations" }];
+const ALL_DEPARTMENTS = [{ value: "all", label: "All Departments" }];
+const ALL_SHIFTS      = [{ value: "all", label: "All Shifts" }];
 
 const EmployeeDetails = () => {
-  const [locationValue, setLocationValue] = useState("all");
+  const [activeTab, setActiveTab]             = useState("active");
+  const [locationValue, setLocationValue]     = useState("all");
   const [departmentValue, setDepartmentValue] = useState("all");
-  const [roleValue, setRoleValue] = useState("all");
-  const [shiftValue, setShiftValue] = useState("all");
+  const [roleValue, setRoleValue]             = useState("all");
+  const [shiftValue, setShiftValue]           = useState("all");
+
+  // Filter dropdown options
+  const [roles, setRoles]           = useState(ALL_ROLES);
+  const [locations, setLocations]   = useState(ALL_LOCATIONS);
+  const [departments, setDepartments] = useState(ALL_DEPARTMENTS);
+  const [shifts, setShifts]         = useState(ALL_SHIFTS);
+
+  // Raw options without the "All" prefix — passed to modals
+  const [rawRoles, setRawRoles]         = useState([]);
+  const [rawLocations, setRawLocations] = useState([]);
+  const [rawShifts, setRawShifts]       = useState([]);
 
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]     = useState(false);
 
-  const loadEmployees = async () => {
+  // Load filter options once on mount
+  useEffect(() => {
+    fetchFilterOptions().then(({ roles: r, locations: l, departments: d, shifts: s }) => {
+      if (r.length) { setRoles([...ALL_ROLES, ...r]);       setRawRoles(r); }
+      if (l.length) { setLocations([...ALL_LOCATIONS, ...l]); setRawLocations(l); }
+      if (d.length)   setDepartments([...ALL_DEPARTMENTS, ...d]);
+      if (s.length) { setShifts([...ALL_SHIFTS, ...s]);     setRawShifts(s); }
+    });
+  }, []);
+
+  const loadEmployees = useCallback(async () => {
     setLoading(true);
     try {
-      const { employees: rawEmployees } = await fetchEmployees({
-        locationId: locationValue === "all" ? "" : locationValue,
-        departmentId: departmentValue === "all" ? "" : departmentValue,
-        roleId: roleValue === "all" ? "" : roleValue,
-        shiftId: shiftValue === "all" ? -1 : shiftValue
+      const { employees: raw } = await fetchEmployees({
+        activeStatus:  TAB_STATUS[activeTab],
+        locationId:    locationValue   === "all" ? "" : locationValue,
+        departmentId:  departmentValue === "all" ? "" : departmentValue,
+        roleId:        roleValue       === "all" ? "" : roleValue,
+        shiftId:       shiftValue      === "all" ? -1 : shiftValue,
       });
-
-      const mapped = rawEmployees.map((emp, idx) =>
-        mapEmployeeForTable(emp, idx)
-      );
-
-      setEmployees(mapped);
+      setEmployees(raw.map(mapEmployeeForTable));
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, locationValue, departmentValue, roleValue, shiftValue]);
 
-  useEffect(() => {
-    loadEmployees();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationValue, departmentValue, roleValue, shiftValue]);
+  useEffect(() => { loadEmployees(); }, [loadEmployees]);
 
   return (
-    <div className="bg-slate-200 w-full p-5">
+    <div className="bg-slate-200 w-full p-5 min-h-screen">
       <EmployeeDetailsTable
         employees={employees}
         loading={loading}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onRefresh={loadEmployees}
+        filterData={{ roles: rawRoles, locations: rawLocations, shifts: rawShifts }}
         filter={
           <EmployeeFilter
-            locations={LOCATIONS}
-            departments={DEPARTMENTS}
+            roles={roles}
+            locations={locations}
+            departments={departments}
+            shifts={shifts}
+            roleValue={roleValue}
             locationValue={locationValue}
             departmentValue={departmentValue}
+            shiftValue={shiftValue}
+            onRoleChange={setRoleValue}
             onLocationChange={setLocationValue}
             onDepartmentChange={setDepartmentValue}
-            onRoleChange={setRoleValue}
             onShiftChange={setShiftValue}
-            roles={ROLES}
-            shifts={SHIFTS}
-            roleValue={roleValue}
-            shiftValue={shiftValue}
           />
         }
       />

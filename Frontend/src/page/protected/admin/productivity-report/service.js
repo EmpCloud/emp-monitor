@@ -14,6 +14,8 @@ const getProductivityList = async ({
     startDate,
     endDate,
     locationId = "All",
+    departmentId = "all",
+    employeeId = "all",
     timezone = "Asia/Kolkata"
 } = {}) => {
     try {
@@ -21,8 +23,24 @@ const getProductivityList = async ({
         const start = startDate || now.clone().subtract(7, "days").format("YYYY-MM-DD");
         const end = endDate || now.clone().subtract(1, "days").format("YYYY-MM-DD");
 
+        const query = new URLSearchParams({
+            skip: String(skip),
+            limit: String(limit),
+            startDate: start,
+            endDate: end,
+            location_id: String(locationId),
+        });
+
+        if (departmentId && departmentId !== "all") {
+            query.set("department_id", String(departmentId));
+        }
+
+        if (employeeId && employeeId !== "all") {
+            query.set("employee_id", String(employeeId));
+        }
+
         const { data } = await apiService.apiInstance.get(
-            `/report/productivity-list-new?skip=${skip}&limit=${limit}&startDate=${start}&endDate=${end}&location_id=${locationId}`
+            `/report/productivity-list-new?${query.toString()}`
         );
 
         if (data?.code === 200 && Array.isArray(data?.data) && data.data.length > 0) {
@@ -117,24 +135,37 @@ const getDepartments = async (locationId) => {
     }
 };
 
-const getEmployees = async ({ locationId, departmentId } = {}) => {
+const getEmployees = async ({ locationId, departmentId, managerId } = {}) => {
     try {
-        const { data } = await apiService.apiInstance.post(`/user/fetch-users`, {
-            status: "",
-            shift_id: -1,
-            location_id: locationId || "",
-            department_id: departmentId || "",
-            role_id: "",
-            day: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
-            limit: 500,
-            skip: 0,
-            name: ""
-        });
+        const isAssignedMode = Number.isFinite(Number(managerId)) && Number(managerId) > 0;
+        const payload = isAssignedMode
+            ? {
+                to_assigned_id: Number(managerId),
+                location_id: locationId || "",
+                department_id: departmentId || "",
+                role_id: "",
+                limit: 500,
+                skip: 0,
+                name: ""
+            }
+            : {
+                status: "",
+                shift_id: -1,
+                location_id: locationId || "",
+                department_id: departmentId || "",
+                role_id: "",
+                day: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
+                limit: 500,
+                skip: 0,
+                name: ""
+            };
+        const endpoint = isAssignedMode ? `/user/get-assigned-employee` : `/user/fetch-users`;
+        const { data } = await apiService.apiInstance.post(endpoint, payload);
         let temp = [{ value: "all", label: "All Employees" }];
         const users = data?.data?.user_data ?? [];
         if (Array.isArray(users) && users.length) {
             const employees = users.map((emp) => ({
-                value: String(emp.id || emp.u_id || emp._id),
+                value: String(emp.user_id || emp.id || emp.u_id || emp._id),
                 label: emp.full_name || emp.name || `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || emp.email || "-"
             }));
             temp = [...temp, ...employees];
@@ -181,20 +212,22 @@ const EXPORT_HEADERS = [
 ];
 
 /** Fetch ALL rows for export */
-const fetchAllRowsForExport = async ({ startDate, endDate, locationId }) => {
+const fetchAllRowsForExport = async ({ startDate, endDate, locationId, departmentId, employeeId }) => {
     const res = await getProductivityList({
         skip: 0,
         limit: 10000,
         startDate,
         endDate,
-        locationId
+        locationId,
+        departmentId,
+        employeeId,
     });
     return res.rows;
 };
 
 /** Export as XLSX — matches old saveCSV() */
-const exportCSV = async ({ startDate, endDate, locationId, rows: existingRows } = {}) => {
-    const rows = existingRows || await fetchAllRowsForExport({ startDate, endDate, locationId });
+const exportCSV = async ({ startDate, endDate, locationId, departmentId, employeeId, rows: existingRows } = {}) => {
+    const rows = existingRows || await fetchAllRowsForExport({ startDate, endDate, locationId, departmentId, employeeId });
     if (!rows.length) return;
 
     const csvData = [EXPORT_HEADERS.map((h) => h.label)];
@@ -209,8 +242,8 @@ const exportCSV = async ({ startDate, endDate, locationId, rows: existingRows } 
 };
 
 /** Export as PDF — using jsPDF + autoTable (matching timesheet pattern) */
-const exportPDF = async ({ startDate, endDate, locationId, rows: existingRows } = {}) => {
-    const rows = existingRows || await fetchAllRowsForExport({ startDate, endDate, locationId });
+const exportPDF = async ({ startDate, endDate, locationId, departmentId, employeeId, rows: existingRows } = {}) => {
+    const rows = existingRows || await fetchAllRowsForExport({ startDate, endDate, locationId, departmentId, employeeId });
     if (!rows.length) return;
 
     const headers = EXPORT_HEADERS.map((h) => h.label);

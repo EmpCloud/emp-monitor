@@ -19,4 +19,13 @@ const adminLogin = async ({ email, password }) => {
 };
 
 
-export { adminLogin };
+const adminForgotPassword = async (email) => {
+    try {
+        const { data } = await apiService.apiInstance.post('/password/admin/reset', { email });
+        return data;
+    } catch (error) {
+        return { code: 500, msg: error?.response?.data?.message || 'Something went wrong' };
+    }
+};
+
+export { adminLogin, adminForgotPassword };

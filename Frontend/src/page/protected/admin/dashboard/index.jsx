@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 
 import Stats from "@/components/common/Stats";
 import ActivitySnapshot from "@/components/common/Snapshot";
@@ -20,6 +20,7 @@ import TopNonProductiveEmployees from "@/components/common/NonProductive";
 import Customreport from "@/components/common/elements/Customreport";
 import CustomTab from "@/components/common/elements/CustomTab";
 
+import ViewReportModal from "@/components/common/elements/ViewReportModal";
 import DashboardFilter from "./DashboardFilter";
 import PerformanceFilter from "./PerformanceFilter";
 
@@ -59,6 +60,19 @@ const Dashboard = () => {
     fetchLocationPerformance,
     fetchDepartmentPerformance
   } = useDashboardStore();
+
+  const [reportModal, setReportModal] = useState({ open: false, title: "", mode: "employee_activity", employees: [], staticData: null, by: "today" });
+
+  const openViewReport = useCallback((title, opts = {}) => {
+    setReportModal({
+      open: true,
+      title,
+      mode: opts.mode || "employee_activity",
+      employees: opts.employees || [],
+      staticData: opts.staticData || null,
+      by: opts.by || "today",
+    });
+  }, []);
 
   useEffect(() => {
     loadDashboard();
@@ -221,6 +235,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Productive Employees - Time Usage", { employees: productiveEmployees, by: filters.productiveBy })}
               />
             }
             filter={
@@ -254,6 +269,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Non-Productive Employees - Time Usage", { employees: unproductiveEmployees, by: filters.unproductiveBy })}
               />
             }
             filter={
@@ -283,6 +299,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Active Employees", { mode: "timesheet", staticData: activeEmployees, by: filters.activeBy })}
               />
             }
             filter={
@@ -311,6 +328,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Non-Active Employees", { mode: "timesheet", staticData: nonActiveEmployees, by: filters.nonActiveBy })}
               />
             }
             filter={
@@ -339,6 +357,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Location Performance", { mode: "performance", staticData: locationPerformance?.rows || [] })}
               />
             }
             filter={
@@ -364,6 +383,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Department Performance", { mode: "performance", staticData: departmentPerformance?.rows || [] })}
               />
             }
             filter={
@@ -388,6 +408,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Website Usage", { mode: "web_app", staticData: webUsage?.today || [] })}
               />
             }
           />
@@ -403,12 +424,23 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onViewReport={() => openViewReport("Top Application Usage", { mode: "web_app", staticData: appUsage?.today || [] })}
               />
             }
           />
         </div>
 
       </div>
+
+      <ViewReportModal
+        open={reportModal.open}
+        onOpenChange={(v) => setReportModal((prev) => ({ ...prev, open: v }))}
+        title={reportModal.title}
+        mode={reportModal.mode}
+        employees={reportModal.employees}
+        staticData={reportModal.staticData}
+        by={reportModal.by}
+      />
 
     </div>
 

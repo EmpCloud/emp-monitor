@@ -1,76 +1,16 @@
-# Frontend (React + Vite)
+# React + Vite
 
-This is the EMP Monitor frontend application built with React and Vite.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Prerequisites
+Currently, two official plugins are available:
 
-- Node.js `20+` (recommended)
-- npm `10+` (recommended)
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Setup
+## React Compiler
 
-From repository root:
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```bash
-cd Frontend
-npm install
-```
+## Expanding the ESLint configuration
 
-## Run
-
-### Development
-
-```bash
-npm run dev
-```
-
-Vite will print the local URL (usually `http://localhost:5173`).
-
-### Production Build
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Lint
-
-```bash
-npm run lint
-```
-
-## Tech Stack
-
-- React `19`
-- Vite `7`
-- React Router `7`
-- Tailwind CSS `4`
-- Axios for API communication
-- Zustand for state management
-
-## API and Socket Configuration
-
-At the moment, frontend endpoints are hardcoded in `src/services/api.service.js`:
-
-- `BASE_URL`: main backend API
-- `BACKEND_V4_URL`: login/auth API
-- `SOCKET_BASE_URL`: websocket endpoint
-
-If you need to point to another environment, update those constants.
-
-## Common Issues
-
-- **Port already in use**: run Vite on another port:
-  - `npm run dev -- --port 5174`
-- **CORS/API errors**: verify backend services are reachable and URLs in `src/services/api.service.js` are correct.
-- **WebSocket not connecting**: check `SOCKET_BASE_URL` protocol/domain and backend socket service health.
-
-## Notes
-
-- The project currently does not use frontend `.env` variables for API URLs.
-- Keep production endpoint updates consistent across all constants in `src/services/api.service.js`.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

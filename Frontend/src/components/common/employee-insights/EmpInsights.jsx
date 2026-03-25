@@ -10,6 +10,7 @@ import {
   getLocations,
   getRoles,
 } from "@/page/protected/admin/employee-insights/service"
+import { getSessionCookie } from "@/lib/sessionCookie"
 
 
 
@@ -62,6 +63,8 @@ const DATE_RANGES = [
 ];
 
 const EmpInsights = () => {
+  const session = getSessionCookie()
+  const managerId = session?.is_admin ? null : session?.user_id ?? session?.id ?? null
   const today = new Date().toISOString().split("T")[0]
   const [roles, setRoles] = useState(ROLES)
   const [locations, setLocations] = useState(LOCATIONS)
@@ -105,6 +108,7 @@ const EmpInsights = () => {
         roleId: role,
         locationId: location,
         departmentId: department,
+        managerId,
       })
       if (Array.isArray(employeesRes?.stats) && employeesRes.stats.length) {
         setEmployees(employeesRes.stats)
@@ -120,7 +124,7 @@ const EmpInsights = () => {
     }
 
     fetchEmployees()
-  }, [role, location, department])
+  }, [role, location, department, managerId])
 
   useEffect(() => {
     const fetchInsights = async () => {

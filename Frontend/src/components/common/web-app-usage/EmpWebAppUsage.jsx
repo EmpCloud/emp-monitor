@@ -84,7 +84,7 @@ function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
         endDate: moment(endDate),
         minDate: moment().subtract(180, "days"),
         maxDate: moment(),
-        dateLimit: { days: 30 },
+        dateLimit: { days: 31 },
         locale: {
           format: "MMM D, YYYY",
         },
