@@ -73,7 +73,9 @@ export default function SSOGate({ children }) {
           accessToken
         );
 
-        navigate('/dashboard', { replace: true });
+        // Navigate based on role
+        const isAdmin = res.data.is_admin;
+        navigate(isAdmin ? '/admin/dashboard' : '/non-admin/dashboard', { replace: true });
       } catch (err) {
         if (cancelled) return;
         console.error('SSO login failed:', err);
