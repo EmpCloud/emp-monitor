@@ -900,8 +900,10 @@ class AuthService {
    * response in the format SSOGate expects.
    */
   async ssoLogin(req, res, next) {
+    console.log('SSO: handler entered');
     try {
       const { token } = req.body;
+      console.log('SSO: token received, length:', token ? token.length : 0);
       if (!token) {
         return res.status(400).json({ code: 400, error: 'Bad Request', message: 'SSO token is required', data: null });
       }
@@ -913,8 +915,10 @@ class AuthService {
       }
 
       const { sub: cloudUserId, org_id, email, first_name, last_name, role: cloudRole } = decoded;
+      console.log('SSO: decoded token - userId:', cloudUserId, 'email:', email, 'orgId:', org_id);
 
       // 2. Validate the user exists in the empcloud database
+      console.log('SSO: about to query empcloud DB...');
       const pool = getEmpCloudPool();
       try {
         const [rows] = await pool.execute(
