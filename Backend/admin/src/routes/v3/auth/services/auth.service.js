@@ -921,30 +921,64 @@ class AuthService {
       // The JWT was issued by EmpCloud and the user arrived via the dashboard Launch button
       console.log('SSO: trusted redirect, skipping empcloud DB validation');
 
-      // 3. Look up the user in emp-monitor's MySQL by email
-      console.log('SSO: looking up user in emp-monitor DB...');
+      // 3. For SSO, create a session directly from the decoded token
+      // Skip emp-monitor DB lookup — the user may not exist in emp-monitor yet
+      // Just issue a token based on the EmpCloud identity
+      console.log('SSO: creating session from decoded token...');
+      {
+        const adminJsonData = {
+          organization_id: org_id,
+          user_id: cloudUserId,
+          first_name: first_name || decoded.first_name || 'User',
+          last_name: last_name || decoded.last_name || '',
+          email: email,
+          is_manager: cloudRole === 'manager' || cloudRole === 'hr_manager',
+          is_teamlead: false,
+          is_employee: cloudRole === 'employee',
+          is_admin: cloudRole === 'org_admin' || cloudRole === 'super_admin' || cloudRole === 'hr_admin',
+        };
+
+        const payload = { user_id: adminJsonData.user_id };
+        await redis.setAsync(
+          String(adminJsonData.user_id),
+          JSON.stringify({ ...adminJsonData, permissionData: Array.from(Array(25).keys()).map(item => item + 1) }),
+          'EX',
+          Comman.getTime(process.env.JWT_EXPIRY)
+        );
+
+        const accessToken = await jwtService.generateAccessToken(payload);
+        console.log('SSO: token generated successfully');
+
+        return res.status(200).json({
+          code: 200,
+          data: accessToken,
+          user_name: adminJsonData.first_name,
+          full_name: adminJsonData.first_name + ' ' + adminJsonData.last_name,
+          email: email,
+          user_id: String(cloudUserId),
+          u_id: String(cloudUserId),
+          organization_id: org_id,
+          is_admin: adminJsonData.is_admin,
+          is_manager: adminJsonData.is_manager,
+          is_teamlead: adminJsonData.is_teamlead,
+          is_employee: adminJsonData.is_employee,
+          role: adminJsonData.is_admin ? 'Admin' : adminJsonData.is_manager ? 'Manager' : 'Employee',
+          role_id: null,
+          photo_path: '',
+          message: 'SSO Authentication Successful',
+          error: null,
+        });
+      }
+
+      // Dead code below — kept for reference if emp-monitor user lookup is needed later
       let userData;
       let existingUser, adminData;
-      try {
-        console.log('SSO: calling authModel.userWithAdminAndRole...');
-        const result = await authModel.userWithAdminAndRole(email);
-        console.log('SSO: userWithAdminAndRole returned, rows:', result ? result.length : 0);
-        existingUser = result ? result[0] : null;
-      } catch (dbErr) {
-        console.error('SSO: userWithAdminAndRole query failed:', dbErr.code, dbErr.message);
-        existingUser = null;
-      }
+      existingUser = null;
 
       if (existingUser) {
         userData = existingUser;
       } else {
-        // Also try to find as admin
-        try {
-          [adminData] = await authModel.getAdmin(email, '');
-        } catch (dbErr) {
-          console.error('SSO: getAdmin query failed:', dbErr.message);
-          adminData = null;
-        }
+        adminData = null;
         if (adminData) {
           // Admin user — build response directly
           const adminJsonData = {
