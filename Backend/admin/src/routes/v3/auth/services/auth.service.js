@@ -915,17 +915,18 @@ class AuthService {
       const { sub: cloudUserId, org_id, email, first_name, last_name, role: cloudRole } = decoded;
 
       // 2. Validate the user exists in the empcloud database
-      const empcloudConn = await getEmpCloudConnection();
+      const pool = getEmpCloudPool();
       try {
-        const [rows] = await empcloudConn.execute(
+        const [rows] = await pool.execute(
           'SELECT id, email, first_name, last_name FROM users WHERE id = ? AND email = ? LIMIT 1',
           [cloudUserId, email]
         );
         if (!rows || rows.length === 0) {
           return res.status(403).json({ code: 403, error: 'Forbidden', message: 'User not found in EmpCloud. SSO denied.', data: null });
         }
-      } finally {
-        await empcloudConn.end();
+      } catch (dbErr) {
+        console.error('SSO: empcloud DB query failed:', dbErr.message);
+        return res.status(500).json({ code: 500, error: 'Internal Error', message: 'Failed to validate user in EmpCloud', data: null });
       }
 
       // 3. Look up the user in emp-monitor's MySQL by email
@@ -1117,14 +1118,22 @@ module.exports = new AuthService();
  * Creates a one-off connection to the empcloud database for SSO user validation.
  * The connection should be closed by the caller after use.
  */
-async function getEmpCloudConnection() {
-  return mysql2.createConnection({
-    host: process.env.EMPCLOUD_DB_HOST || 'localhost',
-    port: parseInt(process.env.EMPCLOUD_DB_PORT || '3306', 10),
-    user: process.env.EMPCLOUD_DB_USER || 'empcloud',
-    password: process.env.EMPCLOUD_DB_PASSWORD || 'EmpCloud2026',
-    database: process.env.EMPCLOUD_DB_NAME || 'empcloud',
-  });
+let empcloudPool = null;
+function getEmpCloudPool() {
+  if (!empcloudPool) {
+    empcloudPool = mysql2.createPool({
+      host: process.env.EMPCLOUD_DB_HOST || 'localhost',
+      port: parseInt(process.env.EMPCLOUD_DB_PORT || '3306', 10),
+      user: process.env.EMPCLOUD_DB_USER || 'empcloud',
+      password: process.env.EMPCLOUD_DB_PASSWORD || 'EmpCloud2026',
+      database: process.env.EMPCLOUD_DB_NAME || 'empcloud',
+      waitForConnections: true,
+      connectionLimit: 5,
+      queueLimit: 0,
+      connectTimeout: 5000,
+    });
+  }
+  return empcloudPool;
 }
 
 function generateOTP() {  
