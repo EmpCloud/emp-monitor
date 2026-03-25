@@ -930,13 +930,24 @@ class AuthService {
 
       // 3. Look up the user in emp-monitor's MySQL by email
       let userData;
-      const [existingUser] = await authModel.userWithAdminAndRole(email);
+      let existingUser, adminData;
+      try {
+        [existingUser] = await authModel.userWithAdminAndRole(email);
+      } catch (dbErr) {
+        console.error('SSO: userWithAdminAndRole query failed:', dbErr.message);
+        existingUser = null;
+      }
 
       if (existingUser) {
         userData = existingUser;
       } else {
         // Also try to find as admin
-        const [adminData] = await authModel.getAdmin(email, '');
+        try {
+          [adminData] = await authModel.getAdmin(email, '');
+        } catch (dbErr) {
+          console.error('SSO: getAdmin query failed:', dbErr.message);
+          adminData = null;
+        }
         if (adminData) {
           // Admin user — build response directly
           const adminJsonData = {
