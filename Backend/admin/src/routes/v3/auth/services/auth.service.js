@@ -922,12 +922,16 @@ class AuthService {
       console.log('SSO: trusted redirect, skipping empcloud DB validation');
 
       // 3. Look up the user in emp-monitor's MySQL by email
+      console.log('SSO: looking up user in emp-monitor DB...');
       let userData;
       let existingUser, adminData;
       try {
-        [existingUser] = await authModel.userWithAdminAndRole(email);
+        console.log('SSO: calling authModel.userWithAdminAndRole...');
+        const result = await authModel.userWithAdminAndRole(email);
+        console.log('SSO: userWithAdminAndRole returned, rows:', result ? result.length : 0);
+        existingUser = result ? result[0] : null;
       } catch (dbErr) {
-        console.error('SSO: userWithAdminAndRole query failed:', dbErr.message);
+        console.error('SSO: userWithAdminAndRole query failed:', dbErr.code, dbErr.message);
         existingUser = null;
       }
 
