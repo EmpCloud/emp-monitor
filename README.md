@@ -11,7 +11,7 @@
 
 <p align="center">
   <!-- <img src="https://github.com/EmpCloud/EmpMonitor/actions/workflows/main.yml/badge.svg" alt="Build Status"> -->
-  <img src="https://img.shields.io/github/license/EmpCloud/EmpMonitor" alt="License: MIT">
+  <img src="https://img.shields.io/github/license/EmpCloud/EmpMonitor" alt="License: AGPL-3.0">
   <img src="https://img.shields.io/github/last-commit/EmpCloud/EmpMonitor" alt="Last Commit">
   <img src="https://img.shields.io/github/issues/EmpCloud/EmpMonitor" alt="GitHub Issues">
   <img src="https://img.shields.io/github/forks/EmpCloud/EmpMonitor" alt="GitHub Forks">
