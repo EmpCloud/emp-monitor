@@ -29,7 +29,7 @@
     "dependencies": {
         "@hapi/joi": "^17.1.1",
         "@nestjs/common": "^11.1.17",
-        "@nestjs/core": "^9.0.6",
+        "@nestjs/core": "^9.0.7",
         "@nestjs/platform-express": "^11.1.17",
         "async": "^3.2.6",
         "aws-sdk": "^2.1693.0",
@@ -48,7 +48,7 @@
         "migrate-mongo": "7.2.1",
         "moment-timezone": "^0.5.48",
         "mongoose": "^9.3.2",
-        "mysql2": "^3.9.8",
+        "mysql2": "^3.20.0",
         "nest-event": "^1.0.8",
         "nest-router": "^1.0.9",
         "nestjs-redis": "^1.2.8",
