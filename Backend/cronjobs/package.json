@@ -40,7 +40,7 @@
 		"moment": "^2.24.0",
 		"moment-range": "^4.0.2",
 		"moment-timezone": "^0.5.31",
-		"mongoose": "^8.9.5",
+		"mongoose": "^9.3.3",
 		"mongoose-double": "0.0.1",
 		"mysql": "^2.18.1",
 		"node-fetch": "^2.7.0",
