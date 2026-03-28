@@ -936,6 +936,7 @@ class AuthService {
           is_teamlead: false,
           is_employee: cloudRole === 'employee',
           is_admin: cloudRole === 'org_admin' || cloudRole === 'super_admin' || cloudRole === 'hr_admin',
+          cloud_role: cloudRole,
         };
 
         const payload = { user_id: adminJsonData.user_id };
@@ -948,6 +949,17 @@ class AuthService {
 
         const accessToken = await jwtService.generateAccessToken(payload);
         console.log('SSO: token generated successfully');
+
+        // Map cloud roles to emp-monitor role strings for frontend RBAC
+        const roleMap = {
+          super_admin: 'Admin',
+          org_admin: 'Admin',
+          hr_admin: 'Admin',
+          hr_manager: 'Manager',
+          manager: 'Manager',
+          employee: 'Employee',
+        };
+        const displayRole = roleMap[cloudRole] || 'Employee';
 
         return res.status(200).json({
           code: 200,
@@ -962,7 +974,8 @@ class AuthService {
           is_manager: adminJsonData.is_manager,
           is_teamlead: adminJsonData.is_teamlead,
           is_employee: adminJsonData.is_employee,
-          role: adminJsonData.is_admin ? 'Admin' : adminJsonData.is_manager ? 'Manager' : 'Employee',
+          role: displayRole,
+          cloud_role: cloudRole,
           role_id: null,
           photo_path: '',
           message: 'SSO Authentication Successful',
