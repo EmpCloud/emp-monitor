@@ -12,6 +12,6 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: ['dev-v4.empmonitor.com']
+    allowedHosts: ['dev-v4.empmonitor.com', 'testmonitor.empcloud.com']
   }
 })

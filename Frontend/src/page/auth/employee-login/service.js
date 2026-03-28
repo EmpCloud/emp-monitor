@@ -2,7 +2,7 @@ import apiService from '../../../services/api.service';
 
 /**
  * Employee login via POST /auth/user
- * Endpoint: https://service.dev.empmonitor.com/api/v3/auth/user
+ * Endpoint: {BASE_URL}/auth/user
  *
  * The API returns the full user object directly (not a JWT):
  *   { code, data: "token_string", user_id, u_id, full_name, email, role, roles, ... }
