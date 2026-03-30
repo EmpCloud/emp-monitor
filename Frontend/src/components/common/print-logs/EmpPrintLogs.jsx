@@ -132,8 +132,9 @@ const EmpPrintLogs = () => {
           </div>
 
           <div className="border-l-2 border-blue-500 pl-4">
-            <h2 className="text-2xl text-slate-900">
-              <span className="font-black">Print </span> Logs
+            <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+              <span className="font-semibold">Print</span>{" "}
+              <span className="font-normal text-gray-500">Logs</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
               &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet

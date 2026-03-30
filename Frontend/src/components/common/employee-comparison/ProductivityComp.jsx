@@ -299,9 +299,9 @@ const ProductivityComp = () => {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-800">
-            <span className="font-black">Productivity</span>{" "}
-            <span className="font-light">Comparison</span>
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">Productivity</span>{" "}
+            <span className="font-normal text-gray-500">Comparison</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-xs leading-tight">
             &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci&quot;

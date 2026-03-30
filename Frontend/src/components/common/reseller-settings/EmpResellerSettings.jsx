@@ -94,7 +94,7 @@ const EmpResellerSettings = () => {
                 <div className="flex items-center gap-2">
                     <img alt="settings" className="w-20 h-20" src={EmpResellerSettingsLogo} />
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-2xl font-semibold text-slate-900">Reseller Settings</h2>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Reseller</span>{" "}<span className="font-normal text-gray-500">Settings</span></h2>
                         <p className="text-xs text-gray-400 mt-1">Email template & branding settings</p>
                     </div>
                 </div>

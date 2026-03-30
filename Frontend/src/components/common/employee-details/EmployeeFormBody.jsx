@@ -86,17 +86,17 @@ export default function EmployeeFormBody({
             </button>
           </div>
         </Field>
-        <Field label="Mobile Number">
+        <Field label="Mobile Number" error={errors.mobile || errors.countryCode}>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 h-11 px-3 rounded-xl border border-gray-300 bg-white flex-shrink-0">
+            <div className={`flex items-center gap-1 h-11 px-3 rounded-xl border bg-white flex-shrink-0 ${errors.countryCode ? "border-red-400" : "border-gray-300"}`}>
               <span className="text-[13px] text-gray-500">+</span>
               <Input type="text" value={form.countryCode}
-                onChange={(e) => set("countryCode", e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => set("countryCode", e.target.value.replace(/\D/g, "").slice(0, 4))}
                 className="h-7 w-10 border-0 shadow-none text-[13px] px-1 text-center focus-visible:ring-0" />
             </div>
             <Input type="tel" placeholder="Phone Number" value={form.mobile}
-              onChange={(e) => set("mobile", e.target.value)}
-              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 flex-1" />
+              onChange={(e) => set("mobile", e.target.value.replace(/\D/g, ""))}
+              className={`h-11 rounded-xl text-[13px] px-5 flex-1 ${errors.mobile ? "border-red-400" : "border-gray-300"}`} />
           </div>
         </Field>
       </div>

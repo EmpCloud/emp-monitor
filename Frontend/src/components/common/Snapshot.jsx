@@ -94,7 +94,7 @@ export default function ActivitySnapshot({ data }) {
 
   return (
     <>
-      <div className="bg-white rounded-[21px] shadow-md w-full h-full p-6">
+      <div className="bg-white flex flex-col rounded-[21px] shadow-md w-full h-full p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
@@ -104,11 +104,11 @@ export default function ActivitySnapshot({ data }) {
         </div>
 
         {/* Chart + Legend */}
-        <div className="flex flex-col sm:flex-row items-center gap-6 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-center flex-1 gap-6 flex-wrap">
           {/* Chart / Empty State */}
-          <div className="relative shrink-0" style={{ width: 260, height: 260 }}>
+          <div className="relative flex-1 w-full h-full" style={{  }}>
             {Array.isArray(data) && data.some((item) => Number(item?.value || 0) > 0) ? (
-              <div ref={chartRef} className="w-full h-full" />
+              <div ref={chartRef} className="w-full min-w-50 min-h-50 flex-1 h-full" />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-center text-slate-400">
                 <div className="text-3xl mb-2">📊</div>
@@ -121,7 +121,7 @@ export default function ActivitySnapshot({ data }) {
           </div>
 
           {/* Legend */}
-          <div className="2xl:flex flex-col gap-4 flex-1 hidden ">
+          <div className="2xl:flex w-fit flex-col gap-4 flex-1 hidden ">
             {LEGEND_ITEMS.map((item) => (
               <div key={item.label} className="flex items-center gap-3">
                 <div

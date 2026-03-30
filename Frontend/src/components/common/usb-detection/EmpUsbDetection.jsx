@@ -1,5 +1,5 @@
 import React from "react"
-import { Search, Info, Calendar } from "lucide-react"
+import { Search, Info } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import {
 import EmpUsbDetectionLogo from "@/assets/dlp/usb-detection.svg"
 import { useUsbDetectionStore } from "@/page/protected/admin/usb-detection/usbDetectionStore"
 import { useDlpFilters } from "@/hooks/useDlpFilters"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 
 const DOWNLOAD_OPTIONS = [
   { label: "Select Option", value: "all" },
@@ -33,7 +34,7 @@ const EmpUsbDetection = () => {
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading } = store
 
   const {
-    search, setSearch, downloadOption, datePickerRef,
+    search, setSearch, downloadOption, handleDateRangeChange,
     totalPages, currentPage,
     handleLocationChange, handleDepartmentChange, handleEmployeeChange,
     handlePageSizeChange, handlePageChange, handleDownload,
@@ -57,8 +58,8 @@ const EmpUsbDetection = () => {
           <img alt="usb-detection" className="w-24 h-24" src={EmpUsbDetectionLogo} />
         </div>
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">USB Detection</span>
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">USB Detection</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Monitor and log all USB device connections and file transfer activities across managed endpoints.
@@ -85,10 +86,11 @@ const EmpUsbDetection = () => {
             Select Date Ranges :
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input ref={datePickerRef} type="text" readOnly className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer" />
-          </div>
+          <DateRangeCalendar
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            onChange={handleDateRangeChange}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Download</label>

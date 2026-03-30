@@ -309,9 +309,9 @@ const EmpRolesPermission = () => {
                         <img alt="roles-permissions" className="w-24 h-24" src={EmpRolesPermissionLogo} />
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h1 className="text-[18px] text-slate-900">
-                            <span className="font-bold">Roles and</span>{" "}
-                            <span className="font-normal text-slate-600">Permissions</span>
+                        <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                            <span className="font-semibold">Roles</span>{" "}
+                            <span className="font-normal text-gray-500">and Permissions</span>
                         </h1>
                         <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
                             Manage user roles, access levels and<br />

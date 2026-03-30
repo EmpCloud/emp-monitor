@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import * as XLSX from "xlsx";
 import { bulkUpdateEmployees } from "@/page/protected/admin/employee-details/service";
 
 export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
@@ -64,9 +65,19 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
 
           <p className="text-[14px] text-gray-600 leading-relaxed">
             Note: Upload file only in <strong>.xlsx</strong> format.{" "}
-            <a href="#" className="text-blue-600 font-bold hover:underline" onClick={(e) => e.preventDefault()}>
+            <button
+              type="button"
+              className="text-blue-600 font-bold hover:underline"
+              onClick={() => {
+                const headers = [["Unique ID", "First Name", "Last Name", "Email", "Emp Code", "Role", "Location", "Department", "Shift"]];
+                const ws = XLSX.utils.aoa_to_sheet(headers);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Template");
+                XLSX.writeFile(wb, "bulk_update_template.xlsx");
+              }}
+            >
               Download
-            </a>{" "}User List template.
+            </button>{" "}User List template.
           </p>
 
           {result && (

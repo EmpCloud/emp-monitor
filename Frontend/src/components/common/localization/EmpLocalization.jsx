@@ -135,8 +135,8 @@ const EmpLocalization = () => {
                         <img alt="localization" className="w-42 h-32" src={EmpLocalizationLogo} />
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-2xl text-slate-900">
-                            <span className="font-black">Localization</span>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                            <span className="font-semibold">Localization</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
                             Configure language, timezone and regional format settings for your organization.

@@ -77,12 +77,10 @@ import EmployeeTimeClaim from './page/protected/employee/time-claim'
 
 // Protected route guards
 import { AdminProtectedRoute, NonAdminProtectedRoute, EmployeeProtectedRoute } from './router/protected-routes'
-import SSOGate from './components/SSOGate'
 
 function App() {
   return (
     <BrowserRouter>
-      <SSOGate>
       <Routes>
         {/* ── Public auth routes ── */}
         <Route path="/admin-login"    element={<AdminLogin />} />
@@ -168,7 +166,6 @@ function App() {
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-      </SSOGate>
     </BrowserRouter>
   )
 }

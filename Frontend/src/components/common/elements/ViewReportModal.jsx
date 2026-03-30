@@ -183,8 +183,8 @@ const ViewReportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-0 gap-0 border-0">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 rounded-t-2xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-0 gap-0 border border-[#8F96FF]/45 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/10 [&>button]:rounded-full">
+        <div className="bg-linear-to-r from-[#7E8CF6] to-[#713FF7] px-6 py-5 rounded-t-lg border-b border-[#C8CFFF]/55">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-white">
               {title || "View Report"}

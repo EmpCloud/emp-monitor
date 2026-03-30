@@ -1,0 +1,137 @@
+/* ── Floating orb ── */
+@keyframes floatingOrb {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* ── Pulse ring on orb ── */
+@keyframes pulseRing {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── Loader dots ── */
+@keyframes loaderDots {
+  0%, 80%, 100% { transform: scale(0); }
+  40%           { transform: scale(1); }
+}
+
+/* ───────────── Classes ───────────── */
+
+.emp-ai-floating-orb {
+  animation: floatingOrb 3s ease-in-out infinite;
+}
+
+.emp-ai-pulse-ring {
+  animation: pulseRing 1.5s ease-out infinite;
+}
+
+.emp-ai-loader-dot {
+  animation: loaderDots 1.4s infinite ease-in-out both;
+}
+.emp-ai-loader-dot:nth-child(1) { animation-delay: -0.32s; }
+.emp-ai-loader-dot:nth-child(2) { animation-delay: -0.16s; }
+
+/* ── GPU layer promotion for the modal during animations ── */
+.emp-ai-animating {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ── Gradient border modal ── */
+.emp-ai-modal {
+  border: 2px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(135deg, #38bdf8, #3b82f6, #06b6d4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* ── Smooth genie animation ── */
+.emp-ai-modal {
+  will-change: transform, opacity, clip-path, border-radius;
+  contain: paint;
+}
+
+@keyframes empAiGenieMinimize {
+  0% {
+    transform: var(--genie-base-transform) translate3d(0, 0, 0) scale(1, 1);
+    opacity: 1;
+    border-radius: 16px;
+    clip-path: inset(0 0 0 0 round 16px);
+    filter: blur(0);
+  }
+  35% {
+    transform: var(--genie-base-transform) translate3d(calc(var(--genie-dx) * 0.28), calc(var(--genie-dy) * 0.28), 0) scale(0.78, 0.92);
+    border-radius: 20px;
+    clip-path: inset(0 0 0 0 round 20px);
+  }
+  70% {
+    transform: var(--genie-base-transform) translate3d(calc(var(--genie-dx) * 0.72), calc(var(--genie-dy) * 0.72), 0) scale(0.38, 0.56);
+    border-radius: 28px;
+    clip-path: inset(0 0 0 0 round 28px);
+    opacity: 0.96;
+  }
+  100% {
+    transform: var(--genie-base-transform) translate3d(var(--genie-dx), var(--genie-dy), 0) scale(0.08, 0.08);
+    border-radius: 999px;
+    clip-path: inset(0 0 0 0 round 999px);
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes empAiGenieRestore {
+  0% {
+    transform: var(--genie-base-transform) translate3d(var(--genie-dx), var(--genie-dy), 0) scale(0.08, 0.08);
+    opacity: 0;
+    border-radius: 999px;
+    clip-path: inset(0 0 0 0 round 999px);
+    filter: blur(1px);
+  }
+  30% {
+    transform: var(--genie-base-transform) translate3d(calc(var(--genie-dx) * 0.72), calc(var(--genie-dy) * 0.72), 0) scale(0.35, 0.54);
+    opacity: 0.98;
+    border-radius: 30px;
+    clip-path: inset(0 0 0 0 round 30px);
+  }
+  65% {
+    transform: var(--genie-base-transform) translate3d(calc(var(--genie-dx) * 0.28), calc(var(--genie-dy) * 0.28), 0) scale(0.8, 0.94);
+    border-radius: 20px;
+    clip-path: inset(0 0 0 0 round 20px);
+  }
+  100% {
+    transform: var(--genie-base-transform) translate3d(0, 0, 0) scale(1, 1);
+    opacity: 1;
+    border-radius: 16px;
+    clip-path: inset(0 0 0 0 round 16px);
+    filter: blur(0);
+  }
+}
+
+.emp-ai-genie-minimize {
+  animation: empAiGenieMinimize 520ms cubic-bezier(0.2, 0.82, 0.18, 1) forwards;
+}
+
+.emp-ai-genie-restore {
+  animation: empAiGenieRestore 520ms cubic-bezier(0.2, 0.82, 0.18, 1) forwards;
+}
+
+@keyframes empAiBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes empAiBackdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.emp-ai-backdrop-in {
+  animation: empAiBackdropIn 220ms ease-out forwards;
+}
+
+.emp-ai-backdrop-out {
+  animation: empAiBackdropOut 220ms ease-in forwards;
+}

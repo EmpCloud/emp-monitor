@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Settings, Info, Camera, Shield, Cpu, DollarSign } from "lucide-react";
+import { ArrowLeft, Settings, Info, Camera, Shield, Cpu, DollarSign, X, Loader2 } from "lucide-react";
 import { fetchEmployeeInfo } from "../employee-profile/service";
-import { fetchUserTrackSettings, fetchSettingsOptions, saveUserTrackSettings, parseTrackSettings, buildSavePayload } from "./service";
+import { fetchUserTrackSettings, fetchSettingsOptions, fetchGroups, saveUserTrackSettings, parseTrackSettings, buildSavePayload } from "./service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CustomSelect from "@/components/common/elements/CustomSelect";
@@ -50,7 +50,7 @@ const Section = ({ title, icon, children }) => (
   </div>
 );
 
-const FeatureRow = ({ label, value, onChange, hasAdvanced, infoIcon, showAdvancedColumn = false }) => (
+const FeatureRow = ({ label, value, onChange, hasAdvanced, onAdvancedClick, infoIcon, showAdvancedColumn = false }) => (
   <div className={`py-2.5 border-b border-slate-50 last:border-0 ${showAdvancedColumn ? "grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2" : "flex items-center"}`}>
     <span className={`text-[12px] text-gray-600 flex items-center gap-1 font-medium min-w-0 ${showAdvancedColumn ? "" : "flex-1"}`}>
       {label}
@@ -62,19 +62,51 @@ const FeatureRow = ({ label, value, onChange, hasAdvanced, infoIcon, showAdvance
     {showAdvancedColumn && (
       <div className="flex justify-end">
         {hasAdvanced ? (
-          <Button size="xs" className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
+          <Button size="xs" onClick={() => onAdvancedClick?.(label)} className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
             Advanced Settings
           </Button>
         ) : null}
       </div>
     )}
     {!showAdvancedColumn && hasAdvanced ? (
-      <Button size="xs" className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
+      <Button size="xs" onClick={() => onAdvancedClick?.(label)} className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
         Advanced Settings
       </Button>
     ) : null}
   </div>
 );
+
+const TagInput = ({ value = [], onChange, placeholder = "Type and press Enter" }) => {
+  const [input, setInput] = useState("");
+  const handleKeyDown = (e) => {
+    if ((e.key === "Enter" || e.key === ",") && input.trim()) {
+      e.preventDefault();
+      const newVal = input.trim().replace(/,$/,"");
+      if (newVal && !value.includes(newVal)) onChange([...value, newVal]);
+      setInput("");
+    }
+  };
+  const remove = (idx) => onChange(value.filter((_, i) => i !== idx));
+  return (
+    <div className="border border-gray-200 rounded-lg p-2 bg-white min-h-[40px]">
+      <div className="flex flex-wrap gap-1.5 mb-1.5">
+        {value.map((tag, idx) => (
+          <span key={idx} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-0.5 rounded-md border border-blue-200">
+            {tag}
+            <button type="button" onClick={() => remove(idx)} className="text-blue-400 hover:text-red-500"><X size={10} /></button>
+          </span>
+        ))}
+      </div>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={value.length === 0 ? placeholder : ""}
+        className="w-full text-[12px] border-0 outline-none bg-transparent py-0.5"
+      />
+    </div>
+  );
+};
 
 const SCENARIOS = [
   { key: "unlimited", label: "Unlimited" },
@@ -109,6 +141,14 @@ export default function TrackEmp() {
   // Settings options from API
   const [ssOptions, setSsOptions] = useState([]);
   const [idleOptions, setIdleOptions] = useState([]);
+  const [breakOptions, setBreakOptions] = useState([]);
+  const [settingTypeItems, setSettingTypeItems] = useState([
+    { label: "Custom", value: "3" },
+    { label: "Default", value: "1" },
+  ]);
+  const [advancedPanel, setAdvancedPanel] = useState(null); // "Web Used" | "Screenshots" | null
+  const [advSaving, setAdvSaving] = useState(false);
+  const [advMsg, setAdvMsg] = useState({ type: "", text: "" });
 
   // Parsed settings state
   const [settings, setSettings] = useState(null);
@@ -134,24 +174,42 @@ export default function TrackEmp() {
     Promise.all([
       fetchUserTrackSettings(employeeId),
       fetchSettingsOptions(),
-    ]).then(([settingsRes, optionsRes]) => {
+      fetchGroups(),
+    ]).then(([settingsRes, optionsRes, groupsRes]) => {
       if (settingsRes?.code === 200) {
         setSettings(parseTrackSettings(settingsRes));
       }
 
-      const opts = optionsRes?.data ?? optionsRes ?? {};
+      const opts = optionsRes?.data?.data ?? optionsRes?.data ?? optionsRes ?? {};
       if (opts.screenshotFrequency) {
         setSsOptions(opts.screenshotFrequency.map((o) => ({
-          label: `${o.value || o} per hour`,
+          label: o.name || `${o.value} Per Hour`,
           value: String(o.value ?? o),
         })));
       }
       if (opts.idleTime) {
         setIdleOptions(opts.idleTime.map((o) => ({
-          label: `${o.value || o} min`,
+          label: o.name || `${o.value} Min`,
           value: String(o.value ?? o),
         })));
       }
+      if (opts.beakTime) {
+        setBreakOptions(opts.beakTime.map((o) => ({
+          label: o.name || `${o.value} Min`,
+          value: String(o.value ?? o),
+        })));
+      }
+
+      // Build "Setting Applied" dropdown: Custom, Default, + groups
+      const items = [
+        { label: "Custom", value: "3" },
+        { label: "Default", value: "1" },
+      ];
+      const groups = Array.isArray(groupsRes) ? groupsRes : [];
+      groups.forEach((g) => {
+        items.push({ label: g.name, value: `group_${g.group_id}` });
+      });
+      setSettingTypeItems(items);
     });
   }, [employeeId]);
 
@@ -169,6 +227,23 @@ export default function TrackEmp() {
       return copy;
     });
   }, []);
+
+  const handleAdvanceSave = async () => {
+    if (!settings || !employeeId) return;
+    setAdvSaving(true);
+    setAdvMsg({ type: "", text: "" });
+
+    const payload = buildSavePayload({ employeeId, state: settings });
+    const res = await saveUserTrackSettings(payload);
+
+    setAdvSaving(false);
+    if (res?.code === 200) {
+      setAdvMsg({ type: "success", text: res.msg || "Advanced settings saved" });
+      setTimeout(() => { setAdvancedPanel(null); setAdvMsg({ type: "", text: "" }); }, 1000);
+    } else {
+      setAdvMsg({ type: "error", text: res?.msg || res?.message || "Failed to save" });
+    }
+  };
 
   const handleSave = async () => {
     if (!settings || !employeeId) return;
@@ -266,9 +341,17 @@ export default function TrackEmp() {
                 <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
                   <Settings size={10} className="text-gray-400" /> Setting Applied to the user
                 </label>
-                <CustomSelect placeholder="Select" items={[
-                  { label: "Custom", value: "1" }, { label: "Default", value: "2" }, { label: "Group Based", value: "3" },
-                ]} selected={settings.settingType} onChange={(v) => set("settingType", v)} width />
+                <CustomSelect placeholder="Select" items={settingTypeItems}
+                  selected={settings.settingType === "2" ? `group_${settings.groupId}` : settings.settingType}
+                  onChange={(v) => {
+                    if (v.startsWith("group_")) {
+                      set("settingType", "2");
+                      set("groupId", v.replace("group_", ""));
+                    } else {
+                      set("settingType", v);
+                      set("groupId", "1");
+                    }
+                  }} width />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-gray-500">Visibility</label>
@@ -297,8 +380,8 @@ export default function TrackEmp() {
                 </div>
                 <FeatureRow label="Key Strokes" value={settings.features.keyStrokes} onChange={(v) => set("features.keyStrokes", v)} showAdvancedColumn />
                 <FeatureRow label="Real Time Track" value={settings.features.realTimeTrack} onChange={(v) => set("features.realTimeTrack", v)} showAdvancedColumn />
-                <FeatureRow label="Web Used" value={settings.features.webUsed} onChange={(v) => set("features.webUsed", v)} hasAdvanced showAdvancedColumn />
-                <FeatureRow label="Screenshots" value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced showAdvancedColumn />
+                <FeatureRow label="Web Used" value={settings.features.webUsed} onChange={(v) => set("features.webUsed", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
+                <FeatureRow label="Screenshots" value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
                 <FeatureRow label="Screen Recording" value={settings.features.screenRecording} onChange={(v) => set("features.screenRecording", v)} showAdvancedColumn />
                 <FeatureRow label="Screen Recording With Voice" value={settings.features.screenRecordingWithVoice} onChange={(v) => set("features.screenRecordingWithVoice", v)} infoIcon showAdvancedColumn />
                 <FeatureRow label="File Upload Detection" value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
@@ -313,6 +396,81 @@ export default function TrackEmp() {
                 <FeatureRow label="Screen Casting" value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
                 <FeatureRow label="Webcam Cast" value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
               </div>
+              {advancedPanel && (
+                <div className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center" onClick={() => setAdvancedPanel(null)}>
+                  <div className="bg-white rounded-2xl shadow-2xl w-[min(640px,92vw)] max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                      <h3 className="text-[15px] font-bold text-gray-800">{advancedPanel}: Edit Settings</h3>
+                      <button onClick={() => setAdvancedPanel(null)} className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600"><X size={16} /></button>
+                    </div>
+                    <div className="px-6 py-5 space-y-5">
+                      {advancedPanel === "Web Used" && (
+                        <>
+                          <div className="space-y-1.5">
+                            <label className="text-[12px] font-bold text-gray-700">Block Websites</label>
+                            <TagInput
+                              value={settings.tracking?.domain?.websiteBlockList ?? []}
+                              onChange={(v) => set("tracking.domain.websiteBlockList", v)}
+                              placeholder="Type website URL and press Enter"
+                            />
+                            <p className="text-[10px] text-gray-400">Add website URLs to block for this employee</p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[12px] font-bold text-gray-700">Block Applications</label>
+                            <TagInput
+                              value={settings.tracking?.domain?.appBlockList ?? []}
+                              onChange={(v) => set("tracking.domain.appBlockList", v)}
+                              placeholder="Type application name and press Enter"
+                            />
+                            <p className="text-[10px] text-gray-400">Add application names to block for this employee</p>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={settings.disableAllWebsites} onChange={(e) => set("disableAllWebsites", e.target.checked)} className="w-4 h-4 rounded accent-blue-500" />
+                            <span className="text-[12px] font-medium text-gray-700">Disable access to all websites</span>
+                          </label>
+                          {settings.disableAllWebsites && (
+                            <div className="space-y-1.5">
+                              <label className="text-[12px] font-bold text-gray-700">Exclude Websites</label>
+                              <TagInput
+                                value={settings.tracking?.domain?.excludeWebsiteList ?? []}
+                                onChange={(v) => set("tracking.domain.excludeWebsiteList", v)}
+                                placeholder="Type website URL to exclude and press Enter"
+                              />
+                            </div>
+                          )}
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked={settings.loginFromOtherSystem} onChange={(e) => set("loginFromOtherSystem", e.target.checked)} className="w-4 h-4 rounded accent-blue-500" />
+                            <span className="text-[12px] font-medium text-gray-700">Allow login from other system</span>
+                          </label>
+                        </>
+                      )}
+                      {advancedPanel === "Screenshots" && (
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-bold text-gray-700">Enable Screen Recording on Website Visit</label>
+                          <TagInput
+                            value={settings.screenRecordWebsites ?? []}
+                            onChange={(v) => set("screenRecordWebsites", v)}
+                            placeholder="Type website URL and press Enter"
+                          />
+                          <p className="text-[10px] text-gray-400">Screen recording will start when the employee visits these websites</p>
+                        </div>
+                      )}
+                      {advMsg.text && (
+                        <div className={`p-3 rounded-lg text-[12px] font-medium ${advMsg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                          {advMsg.text}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                      <Button onClick={handleAdvanceSave} disabled={advSaving} className="h-9 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold gap-2">
+                        {advSaving && <Loader2 size={13} className="animate-spin" />}
+                        Save
+                      </Button>
+                      <Button variant="outline" onClick={() => { setAdvancedPanel(null); setAdvMsg({ type: "", text: "" }); }} className="h-9 px-5 rounded-lg text-[12px] font-semibold">Cancel</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Section>
 
             <div className="space-y-4">
@@ -407,10 +565,9 @@ export default function TrackEmp() {
                   Break Time <Info size={11} className="text-red-300" />
                 </label>
                 <div className="rounded-xl border-2 border-red-200 bg-red-50 overflow-hidden">
-                  <CustomSelect placeholder="Select" items={[
-                    { label: "No Break Time", value: "0" }, { label: "15 Minutes", value: "15" },
-                    { label: "30 Minutes", value: "30" }, { label: "45 Minutes", value: "45" },
-                    { label: "60 Minutes", value: "60" },
+                  <CustomSelect placeholder="Select" items={breakOptions.length ? breakOptions : [
+                    { label: "No Break Time", value: "0" }, { label: "30 Min", value: "30" },
+                    { label: "60 Min", value: "60" },
                   ]} selected={settings.breakInMinute} onChange={(v) => set("breakInMinute", v)} width />
                 </div>
               </div>

@@ -109,6 +109,11 @@ const EmployeeTimesheet = () => {
     }, [setFilter])
 
     const handleDateRangeChange = useCallback((start, end) => {
+        if (!start || !end) {
+            setFilter("startDate", "")
+            setFilter("endDate", "")
+            return
+        }
         setFilter("startDate", moment(start).format("YYYY-MM-DD"))
         setFilter("endDate", moment(end).format("YYYY-MM-DD"))
     }, [setFilter])
@@ -192,7 +197,7 @@ const EmployeeTimesheet = () => {
                         value={String(pagination.pageSize)}
                         onValueChange={handlePageSizeChange}
                     >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
+                        <SelectTrigger className="h-8 w-[70px] text-[13px] rounded-lg border-gray-200">
                             <SelectValue placeholder="10" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">

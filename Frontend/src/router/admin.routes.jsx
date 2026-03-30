@@ -63,16 +63,6 @@ import { AdminLayout } from '../page/protected/admin/Layout'
 import useAdminSession from '../sessions/adminSession'
 import { getSessionCookie } from '../lib/sessionCookie'
 
-function normalizeRole(role) {
-  return (role || '').toLowerCase().replace(/\s+/g, '')
-}
-
-function isEmployeeSession(session) {
-  if (!session) return false
-  const role = normalizeRole(session.role)
-  return role === 'employee' || session.is_employee === true
-}
-
 // Standalone component so hooks have their own isolated instance
 export function AdminProtectedRoute({ children }) {
   const { admin, setAdmin } = useAdminSession()
@@ -80,7 +70,7 @@ export function AdminProtectedRoute({ children }) {
 
   useEffect(() => {
     const fromCookie = getSessionCookie()
-    if (fromCookie && fromCookie.data && fromCookie.is_admin === true && !isEmployeeSession(fromCookie)) {
+    if (fromCookie && fromCookie.data && fromCookie.is_admin === true) {
       setAdmin(fromCookie)
     }
     setHydrated(true)
@@ -95,13 +85,6 @@ export function AdminProtectedRoute({ children }) {
   }
   if (!admin || !admin.data) {
     return <Navigate to="/admin-login" replace />
-  }
-  // Double-check: block employees even if Zustand store was somehow set
-  if (isEmployeeSession(admin)) {
-    return <Navigate to="/employee/dashboard" replace />
-  }
-  if (admin.is_admin !== true) {
-    return <Navigate to="/login" replace />
   }
   return <AdminLayout>{children}</AdminLayout>
 }

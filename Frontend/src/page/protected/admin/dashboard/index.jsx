@@ -21,6 +21,7 @@ import Customreport from "@/components/common/elements/Customreport";
 import CustomTab from "@/components/common/elements/CustomTab";
 
 import ViewReportModal from "@/components/common/elements/ViewReportModal";
+import EmpAiAssistant from "@/components/common/aempaiassistant";
 import DashboardFilter from "./DashboardFilter";
 import PerformanceFilter from "./PerformanceFilter";
 
@@ -62,6 +63,13 @@ const Dashboard = () => {
   } = useDashboardStore();
 
   const [reportModal, setReportModal] = useState({ open: false, title: "", mode: "employee_activity", employees: [], staticData: null, by: "today" });
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  const [aiContext, setAiContext] = useState(null);
+
+  const openAiAssistant = useCallback((ctx) => {
+    setAiContext(ctx);
+    setAiAssistantOpen(true);
+  }, []);
 
   const openViewReport = useCallback((title, opts = {}) => {
     setReportModal({
@@ -235,6 +243,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Productive Employees")}
                 onViewReport={() => openViewReport("Top Productive Employees - Time Usage", { employees: productiveEmployees, by: filters.productiveBy })}
               />
             }
@@ -269,6 +278,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Non Productive Employees")}
                 onViewReport={() => openViewReport("Top Non-Productive Employees - Time Usage", { employees: unproductiveEmployees, by: filters.unproductiveBy })}
               />
             }
@@ -299,6 +309,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Active Employees")}
                 onViewReport={() => openViewReport("Top Active Employees", { mode: "timesheet", staticData: activeEmployees, by: filters.activeBy })}
               />
             }
@@ -328,6 +339,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Non Active Employees")}
                 onViewReport={() => openViewReport("Top Non-Active Employees", { mode: "timesheet", staticData: nonActiveEmployees, by: filters.nonActiveBy })}
               />
             }
@@ -357,6 +369,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Location Performance")}
                 onViewReport={() => openViewReport("Location Performance", { mode: "performance", staticData: locationPerformance?.rows || [] })}
               />
             }
@@ -383,6 +396,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Department Performance")}
                 onViewReport={() => openViewReport("Department Performance", { mode: "performance", staticData: departmentPerformance?.rows || [] })}
               />
             }
@@ -408,6 +422,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Website Usage")}
                 onViewReport={() => openViewReport("Top Website Usage", { mode: "web_app", staticData: webUsage?.today || [] })}
               />
             }
@@ -424,6 +439,7 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
+                onAiClick={() => openAiAssistant("Top 10 Application Usage")}
                 onViewReport={() => openViewReport("Top Application Usage", { mode: "web_app", staticData: appUsage?.today || [] })}
               />
             }
@@ -440,6 +456,12 @@ const Dashboard = () => {
         employees={reportModal.employees}
         staticData={reportModal.staticData}
         by={reportModal.by}
+      />
+
+      <EmpAiAssistant
+        open={aiAssistantOpen}
+        onClose={() => setAiAssistantOpen(false)}
+        context={aiContext}
       />
 
     </div>

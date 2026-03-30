@@ -6,14 +6,16 @@ export const useGpsStore = create((set, get) => ({
     geoLog: [],
     taskTime: null,
     selectedEmployee: "",
-    selectedDate: new Date().toISOString().split("T")[0],
+    /** YYYY-MM-DD — must match getGeoLog / getTaskTime param names */
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
     statusFilter: "all",
     loading: false,
     mapLoading: false,
     error: null,
 
     setSelectedEmployee: (v) => set({ selectedEmployee: v }),
-    setSelectedDate: (v) => set({ selectedDate: v }),
+    setDateRange: (startDate, endDate) => set({ startDate, endDate }),
 
     setStatusFilter: (v) => {
         set({ statusFilter: v });
@@ -33,12 +35,13 @@ export const useGpsStore = create((set, get) => ({
     },
 
     fetchGpsData: async () => {
-        const { selectedEmployee, selectedDate } = get();
+        const { selectedEmployee, startDate, endDate } = get();
         if (!selectedEmployee) { set({ error: "Select an employee" }); return; }
+        if (!startDate || !endDate) { set({ error: "Select a date range" }); return; }
         set({ mapLoading: true, error: null });
         const [geoLog, taskTime] = await Promise.all([
-            getGeoLog({ employeeId: selectedEmployee, start_date: selectedDate, end_date: selectedDate }),
-            getTaskTime({ employeeId: selectedEmployee, start_date: selectedDate, end_date: selectedDate }),
+            getGeoLog({ employeeId: selectedEmployee, startDate, endDate }),
+            getTaskTime({ employeeId: selectedEmployee, startDate, endDate }),
         ]);
         set({ geoLog, taskTime, mapLoading: false });
     },

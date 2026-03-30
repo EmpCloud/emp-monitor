@@ -1,6 +1,5 @@
-import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useDateRangePicker } from "@/hooks/useDateRangePicker";
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function ProfileHeader({ employee, startDate, endDate, onDateChange, showActions = true, onEdit }) {
@@ -8,14 +7,10 @@ export default function ProfileHeader({ employee, startDate, endDate, onDateChan
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { ref: datePickerRef } = useDateRangePicker({
-    startDate,
-    endDate,
-    ready: true,
-    onChange: (start, end) => {
-      onDateChange?.(start, end);
-    },
-  });
+  const handleDateRangeChange = (start, end) => {
+    if (!start || !end) return;
+    onDateChange?.(start, end);
+  };
 
   const handleSettingsClick = () => {
     const employeeId = employee?.id ?? employee?.user_id ?? employee?.u_id;
@@ -69,16 +64,13 @@ export default function ProfileHeader({ employee, startDate, endDate, onDateChan
         </div>
       </div>
 
-      {/* Right: Date Range Picker */}
-      <div className="relative self-start sm:self-center">
-        <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-        <input
-          ref={datePickerRef}
-          type="text"
-          readOnly
-          className="pl-9 pr-8 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-300 transition-colors focus:outline-none focus:border-blue-300 w-full sm:w-auto min-w-[270px]"
+      {/* Right: Date Range */}
+      <div className="self-start sm:self-center">
+        <DateRangeCalendar
+          startDate={startDate}
+          endDate={endDate}
+          onChange={handleDateRangeChange}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">▼</span>
       </div>
     </div>
   );

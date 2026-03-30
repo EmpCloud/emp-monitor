@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Search, Info, Calendar } from "lucide-react"
+import { Search, Info } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import {
 import EmpSystemLogsLogo from "@/assets/dlp/system-logs.svg"
 import { useSystemLogsStore } from "@/page/protected/admin/system-logs/systemLogsStore"
 import { useDlpFilters } from "@/hooks/useDlpFilters"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 import { Checkbox } from "@/components/ui/checkbox"
 
 const DOWNLOAD_OPTIONS = [
@@ -47,7 +48,7 @@ const EmpSystemLogs = () => {
   }
 
   const {
-    search, setSearch, downloadOption, datePickerRef,
+    search, setSearch, downloadOption, handleDateRangeChange,
     totalPages, currentPage,
     handleLocationChange, handleDepartmentChange, handleEmployeeChange,
     handlePageSizeChange, handlePageChange, handleDownload,
@@ -71,8 +72,8 @@ const EmpSystemLogs = () => {
           <img alt="system-logs" className="w-24 h-24" src={EmpSystemLogsLogo} />
         </div>
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">System </span> Logs
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">System </span> Logs
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Detailed system-level logs for security auditing and compliance.
@@ -100,8 +101,11 @@ const EmpSystemLogs = () => {
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input ref={datePickerRef} type="text" readOnly className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer" />
+            <DateRangeCalendar
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onChange={handleDateRangeChange}
+            />
           </div>
         </div>
         <div>

@@ -154,7 +154,7 @@ const EmpInsights = () => {
         {/* Header */}
         <div className="flex relative items-start justify-between gap-4 mb-7">
           <div className="border-l-2 border-blue-500 pl-4">
-            <h2 className="text-2xl text-slate-900">
+            <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
               <span className="font-semibold">Employee</span> Insights
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-5">
@@ -208,7 +208,27 @@ const EmpInsights = () => {
           }}
           onPageSizeChange={undefined}
           onDownloadCsv={() => {
-            // wire actual CSV export when API is available
+            if (!insightStats) return;
+            const headers = ["Period", "Office Time", "Productive", "Unproductive", "Neutral", "Active Time", "Productivity"];
+            const rows = ["today", "yesterday", "organization"].map((key) => {
+              const s = insightStats[key];
+              if (!s) return null;
+              return [
+                key.charAt(0).toUpperCase() + key.slice(1),
+                s.officeTime, s.productiveTime, s.unproductiveTime,
+                s.neutralTime, s.activeTime, s.productivityText,
+              ].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",");
+            }).filter(Boolean);
+            const csv = [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `employee_insights_${selectedDate}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
           }}
         />
       </div>

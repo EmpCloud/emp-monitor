@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Search,
   BarChart3,
@@ -29,12 +30,36 @@ const avatarColors = [
 ];
 
 const EmpRealtimeInsights = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const routeBase = location.pathname.startsWith("/non-admin") ? "/non-admin" : "/admin";
   const [search, setSearch] = useState("");
   const [sliderMin, setSliderMin] = useState(0);
   const [sliderMax, setSliderMax] = useState(100);
   const [showMinTooltip, setShowMinTooltip] = useState(false);
   const [showMaxTooltip, setShowMaxTooltip] = useState(false);
   const [selectedId, setSelectedId] = useState(2);
+
+  const handleAnalytics = (emp) => {
+    navigate(`${routeBase}/get-employee-details?id=${emp.id}`, { state: { employee: emp } });
+  };
+
+  const handleDownloadReport = () => {
+    const headers = ["Name", "Email", "Productivity"];
+    const rows = filteredEmployees.map((e) =>
+      [e.name, e.email, e.productivity].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `realtime_insights_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const filteredEmployees = MOCK_EMPLOYEES.filter((emp) =>
     emp.name.toLowerCase().includes(search.toLowerCase()),
@@ -46,9 +71,9 @@ const EmpRealtimeInsights = () => {
         {/* Header */}
         <div className="flex relative flex-wrap items-start justify-between gap-4 mb-10">
           <div className="border-l-2 border-blue-500 pl-4">
-            <h2 className="text-2xl text-slate-900">
+            <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
               <span className="font-semibold">Employee&apos;s Real</span>{" "}
-              <span className="font-light">Time Insights</span>
+              <span className="font-normal text-gray-500">Time Insights</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
               &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
@@ -257,10 +282,10 @@ const EmpRealtimeInsights = () => {
 
                   {/* Footer action icons */}
                   <div className="flex items-center justify-center absolute bottom-0 right-0 bg-[#159DD8] rounded-tl-xl rounded-br-md px-3 py-0.5 gap-2 mt-3">
-                    <button className=" flex items-center justify-center transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); handleAnalytics(emp); }} className="flex items-center justify-center transition-colors" title="Analytics">
                       <Maximize2 className="w-3 text-white" />
                     </button>
-                    <button className="flex items-center justify-center transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); handleDownloadReport(); }} className="flex items-center justify-center transition-colors" title="Download Report">
                       <Download className="w-3 text-white" />
                     </button>
                   </div>

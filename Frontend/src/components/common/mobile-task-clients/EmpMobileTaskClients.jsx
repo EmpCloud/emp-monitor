@@ -76,7 +76,7 @@ const EmpMobileTaskClients = () => {
                 <div className="flex items-center gap-2">
                     <img alt="projects" className="w-20 h-20" src={EmpMobileTaskClientsLogo} />
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-2xl font-semibold text-slate-900">Projects & Users</h2>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Projects</span>{" "}<span className="font-normal text-gray-500">& Users</span></h2>
                         <p className="text-xs text-gray-400 mt-1">Manage projects and assign employees</p>
                     </div>
                 </div>

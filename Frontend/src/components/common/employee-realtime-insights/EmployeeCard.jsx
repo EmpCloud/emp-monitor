@@ -26,7 +26,7 @@ const statusColorMap = {
     offline: "bg-red-500",
 }
 
-function EmployeeCard({ emp, isSelected, onSelect, idx }) {
+function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx }) {
     const activity = emp.activity
 
     const handleClick = useCallback(() => onSelect(emp.id), [onSelect, emp.id])
@@ -142,10 +142,10 @@ function EmployeeCard({ emp, isSelected, onSelect, idx }) {
 
             {/* Footer icons */}
             <div className="flex items-center gap-2 border-t border-slate-100 pt-2.5">
-                <button className="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onDownload?.(emp); }} title="Download" className="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors">
                     <Download className="w-3 h-3 text-emerald-600" />
                 </button>
-                <button className="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onAnalytics?.(emp); }} title="Analytics" className="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors">
                     <BarChart3 className="w-3 h-3 text-blue-500" />
                 </button>
                 {activity?.latitude && activity?.longitude && (

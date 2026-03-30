@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Info, Calendar, Eye, Trash2, CheckCircle, XCircle, Plus } from "lucide-react";
+import { Search, Info, Eye, Trash2, CheckCircle, XCircle, Plus } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import EmpTimeclaimLogo from "@/assets/reports/time_claim.svg";
 import { useTimeClaimStore } from "@/page/protected/admin/time-claim/timeClaimStore";
-import { useDateRangePicker } from "@/hooks/useDateRangePicker";
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import {
   REQUEST_TYPES, STATUS_MAP,
   createIdleRequest, createOfflineRequest, createAttendanceRequest,
@@ -647,15 +647,11 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
   const debounceRef = useRef(null);
   const initialLoad = useRef(true);
 
-  // Date range picker
-  const datePicker = useDateRangePicker({
-    startDate: filters.startDate,
-    endDate: filters.endDate,
-    ready: !loading,
-    onChange: (startDate, endDate) => {
-      setFilters({ startDate, endDate, skip: 0, page: 1 });
-    },
-  });
+  // Date range picker (shared calendar UI)
+  const handleDateRangeChange = (startDate, endDate) => {
+    if (!startDate || !endDate) return;
+    setFilters({ startDate, endDate, skip: 0, page: 1 });
+  };
 
   // Initial load
   useEffect(() => { loadInitialData(); }, []);
@@ -745,9 +741,9 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
       {/* Header */}
       <div className="flex relative items-start justify-between gap-4 mb-8">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
             <span className="font-semibold">Time</span>{" "}
-            <span className="font-light">Claim</span>
+            <span className="font-normal text-gray-500">Claim</span>
           </h2>
           <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
             Manage employee time claim requests for idle, offline,
@@ -776,10 +772,11 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
             Select Date Ranges :
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input ref={datePicker.ref} type="text" readOnly className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer" />
-          </div>
+            <DateRangeCalendar
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onChange={handleDateRangeChange}
+            />
         </div>
 
         {/* Status */}

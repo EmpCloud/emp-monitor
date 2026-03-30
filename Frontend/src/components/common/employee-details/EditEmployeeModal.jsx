@@ -68,7 +68,8 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
       onSuccess?.();
       setTimeout(() => { onOpenChange(false); setStatus(null); }, 1200);
     } else {
-      setStatus({ type: "error", msg: res?.msg || "Update failed. Please try again." });
+      const errMsg = res?.message || res?.msg || res?.error || res?.data?.message || "Update failed. Please try again.";
+      setStatus({ type: "error", msg: errMsg });
     }
   };
 

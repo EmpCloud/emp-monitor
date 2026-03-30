@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import EmployeeDetailsTable from "@/components/common/employee-details/EmployeeDetails";
 import EmployeeFilter from "@/components/common/employee-details/EmployeeFilter";
-import { fetchEmployees, mapEmployeeForTable, fetchFilterOptions } from "./service";
+import { fetchEmployees, fetchRemovedUsers, mapEmployeeForTable, fetchFilterOptions } from "./service";
 
 // Tab → activeStatus sent to the API
 const TAB_STATUS = { active: "1", suspended: "2", deleted: "3" };
@@ -45,14 +45,19 @@ const EmployeeDetails = () => {
   const loadEmployees = useCallback(async () => {
     setLoading(true);
     try {
-      const { employees: raw } = await fetchEmployees({
-        activeStatus:  TAB_STATUS[activeTab],
-        locationId:    locationValue   === "all" ? "" : locationValue,
-        departmentId:  departmentValue === "all" ? "" : departmentValue,
-        roleId:        roleValue       === "all" ? "" : roleValue,
-        shiftId:       shiftValue      === "all" ? -1 : shiftValue,
-      });
-      setEmployees(raw.map(mapEmployeeForTable));
+      if (activeTab === "deleted") {
+        const { employees: raw } = await fetchRemovedUsers();
+        setEmployees(raw.map(mapEmployeeForTable).filter((e) => e.email && e.email !== "-"));
+      } else {
+        const { employees: raw } = await fetchEmployees({
+          activeStatus:  TAB_STATUS[activeTab],
+          locationId:    locationValue   === "all" ? "" : locationValue,
+          departmentId:  departmentValue === "all" ? "" : departmentValue,
+          roleId:        roleValue       === "all" ? "" : roleValue,
+          shiftId:       shiftValue      === "all" ? -1 : shiftValue,
+        });
+        setEmployees(raw.map(mapEmployeeForTable).filter((e) => e.email && e.email !== "-"));
+      }
     } finally {
       setLoading(false);
     }
