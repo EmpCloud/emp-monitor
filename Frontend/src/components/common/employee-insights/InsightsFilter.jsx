@@ -1,6 +1,7 @@
 import React from "react"
 import { Download } from "lucide-react"
 import CustomSelect from "@/components/common/elements/CustomSelect"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 
@@ -34,11 +35,12 @@ const InsightsFilter = ({
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Select Date
           </Label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => onSelectedDateChange(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-slate-700"
+          <br />
+          <DateRangeCalendar
+            startDate={selectedDate}
+            endDate={selectedDate}
+            onChange={(start) => onSelectedDateChange(start)}
+            placeholder="Select date"
           />
         </div>
 

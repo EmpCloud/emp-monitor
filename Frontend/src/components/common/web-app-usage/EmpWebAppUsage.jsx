@@ -9,10 +9,7 @@ import {
   Monitor,
   LayoutGrid,
   ArrowDownUp,
-  Calendar,
 } from "lucide-react";
-import moment from "moment-timezone";
-import $ from "jquery";
 
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
@@ -41,6 +38,7 @@ import {
 
 import EmpWebAppUsageLogo from "@/assets/reports/webapp_usage.svg";
 import { useWebAppUsageStore } from "@/page/protected/admin/web-app-usage/webAppUsageStore";
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
@@ -55,89 +53,18 @@ function getStatusInfo(status) {
   return STATUS_MAP[status] || { label: "Unknown", color: "text-gray-400" };
 }
 
-// ── Date Range Picker (jQuery daterangepicker, same as Timesheet) ────────────
+// ── Date Range (shared calendar, same as TimesheetFilters) ──────────────────
 
 function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
-  const datePickerRef = useRef(null);
-  const [pluginReady, setPluginReady] = useState(false);
-
-  // Load daterangepicker plugin
-  useEffect(() => {
-    window.moment = moment;
-    window.jQuery = window.$ = $;
-
-    import("daterangepicker/daterangepicker.css");
-    import("daterangepicker").then(() => {
-      setPluginReady(true);
-    });
-  }, []);
-
-  // Initialize daterangepicker once plugin is loaded
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return;
-
-    const $el = $(datePickerRef.current);
-
-    $el.daterangepicker(
-      {
-        startDate: moment(startDate),
-        endDate: moment(endDate),
-        minDate: moment().subtract(180, "days"),
-        maxDate: moment(),
-        dateLimit: { days: 31 },
-        locale: {
-          format: "MMM D, YYYY",
-        },
-        ranges: {
-          Today: [moment(), moment()],
-          Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
-          "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")],
-          "Last 30 Days": [moment().subtract(30, "days"), moment().subtract(1, "days")],
-          "This Month": [moment().startOf("month"), moment().endOf("month")],
-          "Last Month": [
-            moment().subtract(1, "month").startOf("month"),
-            moment().subtract(1, "month").endOf("month"),
-          ],
-          "This Week": [moment().startOf("week"), moment().endOf("week")],
-        },
-        opens: "left",
-        autoUpdateInput: true,
-      },
-      (start, end) => {
-        onDateRangeChange(
-          start.format("YYYY-MM-DD"),
-          end.format("YYYY-MM-DD")
-        );
-      }
-    );
-
-    return () => {
-      const dp = $el.data("daterangepicker");
-      if (dp) dp.remove();
-    };
-  }, [pluginReady]);
-
-  // Sync external prop changes into the picker display
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return;
-    const $el = $(datePickerRef.current);
-    const dp = $el.data("daterangepicker");
-    if (dp) {
-      dp.setStartDate(moment(startDate));
-      dp.setEndDate(moment(endDate));
-    }
-  }, [startDate, endDate, pluginReady]);
-
   return (
-    <div className="relative">
-      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-      <input
-        ref={datePickerRef}
-        type="text"
-        readOnly
-        className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer"
-      />
-    </div>
+    <DateRangeCalendar
+      startDate={startDate}
+      endDate={endDate}
+      onChange={(s, e) => {
+        if (!s || !e) return;
+        onDateRangeChange(s, e);
+      }}
+    />
   );
 }
 
@@ -715,8 +642,8 @@ export default function EmpWebAppUsage() {
         <div className="flex items-center gap-4">
           <img alt="Web App Usage" className="w-24 h-24" src={EmpWebAppUsageLogo} />
           <div className="border-l-2 border-blue-500 pl-4">
-            <h2 className="text-2xl text-slate-900">
-              <span className="font-black">Web App </span> Usage
+            <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+              <span className="font-semibold">Web App </span> Usage
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
               Detailed breakdown of web and application usage by employees.

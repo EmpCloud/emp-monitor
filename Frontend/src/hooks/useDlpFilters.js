@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useDateRangePicker } from "./useDateRangePicker";
 
 /**
  * Custom hook that encapsulates all shared DLP filter/pagination behavior.
@@ -10,7 +9,7 @@ import { useDateRangePicker } from "./useDateRangePicker";
  */
 export const useDlpFilters = (store, extraDeps = []) => {
     const {
-        rows, totalDocs, filters, loading, setFilters,
+        rows, totalDocs, filters, setFilters,
         loadInitialData, fetchLogs,
         fetchDepartmentsByLocation, fetchEmployeesByFilters,
         exportCsv, exportPdf,
@@ -21,15 +20,10 @@ export const useDlpFilters = (store, extraDeps = []) => {
     const initialLoad = useRef(true);
     const debounceTimer = useRef(null);
 
-    // Date range picker
-    const datePicker = useDateRangePicker({
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-        ready: !loading,
-        onChange: (startDate, endDate) => {
-            setFilters({ startDate, endDate, skip: 0, page: 1 });
-        },
-    });
+    const handleDateRangeChange = useCallback((startDate, endDate) => {
+        if (!startDate || !endDate) return;
+        setFilters({ startDate, endDate, skip: 0, page: 1 });
+    }, [setFilters]);
 
     // Initial load
     useEffect(() => {
@@ -107,7 +101,7 @@ export const useDlpFilters = (store, extraDeps = []) => {
     return {
         search, setSearch,
         downloadOption,
-        datePickerRef: datePicker.ref,
+        handleDateRangeChange,
         totalPages, currentPage,
         handleLocationChange,
         handleDepartmentChange,

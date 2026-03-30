@@ -7,7 +7,7 @@ const Placeholder = ({ title, description, Icon }) => (
       <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
         <Icon className="w-8 h-8 text-blue-500" />
       </div>
-      <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
+      <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">{title?.split(" ")[0]}</span>{title?.split(" ").length > 1 && <>{" "}<span className="font-normal text-gray-500">{title?.split(" ").slice(1).join(" ")}</span></>}</h1>
       <p className="text-sm text-gray-400 max-w-sm">{description}</p>
       <span className="mt-2 inline-block rounded-full bg-blue-50 px-4 py-1 text-xs font-semibold text-blue-500">
         Coming Soon

@@ -6,9 +6,9 @@ function Headers({ isConnected }) {
         <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
             <div className="border-l-4 border-blue-600 pl-4">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-2xl text-slate-900">
-                        <span className="font-black">Employee&apos;s Real</span>{" "}
-                        <span className="font-light">Time Insights</span>
+                    <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                        <span className="font-semibold">Employee&apos;s</span>{" "}
+                        <span className="font-normal text-gray-500">Real Time Insights</span>
                     </h2>
                     <span
                         className={`w-2 h-2 rounded-full mt-1 ${isConnected ? "bg-green-500" : "bg-slate-300"}`}

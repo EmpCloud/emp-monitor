@@ -29,7 +29,8 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
       onSuccess?.();
       setTimeout(() => { onOpenChange(false); setStatus(null); }, 1200);
     } else {
-      setStatus({ type: "error", msg: res?.msg || "Registration failed. Please try again." });
+      const errMsg = res?.message || res?.msg || res?.error || res?.data?.message || "Registration failed. Please try again.";
+      setStatus({ type: "error", msg: errMsg });
     }
   };
 

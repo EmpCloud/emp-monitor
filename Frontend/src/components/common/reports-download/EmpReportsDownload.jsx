@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import {
   Search, Info, FileText, Printer, Download, ChevronUp, ChevronDown,
-  Loader2, Calendar, ArrowUpDown, X
+  Loader2, ArrowUpDown, X
 } from "lucide-react"
-import moment from "moment"
-import $ from "jquery"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Button } from "@/components/ui/button"
@@ -21,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import EmpReportsDownloadLogo from "@/assets/reports/reports_download.svg"
 import { useReportsDownloadStore } from "@/page/protected/admin/reports-download/reportsDownloadStore"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 import { printSingleUserReport, exportReportPDF, CSV_COLUMN_OPTIONS, BROWSER_EXTRA_COLUMNS } from "@/page/protected/admin/reports-download/service"
 
 // Default store hook — can be overridden by passing `useStore` prop
@@ -41,73 +40,15 @@ const getInitials = (name) =>
 // ─── Date Range Picker ─────────────────────────────────────────────
 
 function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
-  const datePickerRef = useRef(null)
-  const [pluginReady, setPluginReady] = useState(false)
-
-  useEffect(() => {
-    window.moment = moment
-    window.jQuery = window.$ = $
-    import("daterangepicker/daterangepicker.css")
-    import("daterangepicker").then(() => setPluginReady(true))
-  }, [])
-
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return
-    const $el = $(datePickerRef.current)
-
-    $el.daterangepicker(
-      {
-        startDate: moment(startDate),
-        endDate: moment(endDate),
-        minDate: moment().subtract(180, "days"),
-        maxDate: moment(),
-        dateLimit: { days: 31 },
-        locale: { format: "MMM D, YYYY" },
-        ranges: {
-          "Today": [moment(), moment()],
-          "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
-          "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")],
-          "Last 30 Days": [moment().subtract(30, "days"), moment().subtract(1, "days")],
-          "This Month": [moment().startOf("month"), moment().endOf("month")],
-          "Last Month": [
-            moment().subtract(1, "month").startOf("month"),
-            moment().subtract(1, "month").endOf("month"),
-          ],
-          "This Week": [moment().startOf("week"), moment().endOf("week")],
-        },
-        opens: "left",
-        autoUpdateInput: true,
-      },
-      (start, end) => {
-        onDateRangeChange(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD"))
-      }
-    )
-
-    return () => {
-      const dp = $el.data("daterangepicker")
-      if (dp) dp.remove()
-    }
-  }, [pluginReady])
-
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return
-    const dp = $(datePickerRef.current).data("daterangepicker")
-    if (dp) {
-      dp.setStartDate(moment(startDate))
-      dp.setEndDate(moment(endDate))
-    }
-  }, [startDate, endDate, pluginReady])
-
   return (
-    <div className="relative">
-      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
-      <input
-        ref={datePickerRef}
-        type="text"
-        readOnly
-        className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer h-10"
-      />
-    </div>
+    <DateRangeCalendar
+      startDate={startDate}
+      endDate={endDate}
+      onChange={(s, e) => {
+        if (!s || !e) return
+        onDateRangeChange(s, e)
+      }}
+    />
   )
 }
 
@@ -429,8 +370,8 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">Reports</span>
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">Reports</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Download detailed employee reports including application usage,

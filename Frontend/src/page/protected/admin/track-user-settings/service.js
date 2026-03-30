@@ -44,6 +44,20 @@ export const saveUserTrackSettings = async (payload) => {
   }
 };
 
+/**
+ * GET organization groups for "Setting Applied" dropdown
+ * v3 API: GET /groups
+ */
+export const fetchGroups = async () => {
+  try {
+    const { data } = await apiService.apiInstance.get("/groups");
+    return data?.data ?? data ?? [];
+  } catch (error) {
+    console.error("TrackUserSettings: fetchGroups error", error);
+    return [];
+  }
+};
+
 /** Normalize to array — handles string (comma-separated), array, null/undefined */
 const toArray = (val) => {
   if (Array.isArray(val)) return val;
@@ -74,8 +88,8 @@ export const parseTrackSettings = (apiData) => {
     // General
     visibility: system.visibility === "true" || system.visibility === true,
     autoUpdate: String(system.autoUpdate) === "1",
-    settingType: String(d.type ?? r.type ?? "1"),
-    groupId: d.group_id ?? r.group_id ?? "",
+    settingType: String(d.tracking_rule_type ?? d.type ?? r.type ?? "3"),
+    groupId: d.group_id ?? r.group_id ?? "1",
 
     // Tracking features
     features: {
@@ -165,6 +179,7 @@ export const buildSavePayload = ({ employeeId, state, trackingData }) => {
       screen_record: state.features.screenRecording ? "1" : "0",
       screencast: state.features.screenCasting ? "1" : "0",
       webCamCasting: state.features.webcamCast ? "1" : "0",
+      block_websites: state.features.webUsed ? "1" : "0",
       realTimeTrack: state.features.realTimeTrack ? "1" : "0",
       file_upload_detection: state.features.fileUploadDetection ? "1" : "0",
       file_upload_blocking: state.features.fileUploadBlocking ? "1" : "0",
@@ -213,10 +228,12 @@ export const buildSavePayload = ({ employeeId, state, trackingData }) => {
     block: state.block ?? {},
   };
 
+  const settingType = parseInt(state.settingType, 10) || 3;
+
   return {
-    track_data,
     employee_id: employeeId,
-    type: parseInt(state.settingType, 10) || 1,
-    group_id: parseInt(state.groupId, 10) || 0,
+    type: settingType,
+    group_id: settingType === 2 ? (parseInt(state.groupId, 10) || 1) : 1,
+    track_data,
   };
 };

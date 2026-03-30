@@ -83,16 +83,37 @@ export function useEmployeeForm(locations = []) {
 
   const validate = (isEdit = false) => {
     const e = {};
-    if (!form.firstName.trim())    e.firstName = "First name is required";
-    if (!form.lastName.trim())     e.lastName = "Last name is required";
-    if (!form.email.trim())        e.email = "Email is required";
+    const nameRegex = /^[a-zA-Z\s'-]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!form.firstName.trim()) e.firstName = "First name is required";
+    else if (!nameRegex.test(form.firstName.trim())) e.firstName = "First name must contain only letters";
+    else if (form.firstName.trim().length < 2) e.firstName = "First name must be at least 2 characters";
+
+    if (!form.lastName.trim()) e.lastName = "Last name is required";
+    else if (!nameRegex.test(form.lastName.trim())) e.lastName = "Last name must contain only letters";
+    else if (form.lastName.trim().length < 2) e.lastName = "Last name must be at least 2 characters";
+
+    if (!form.email.trim()) e.email = "Email is required";
+    else if (!emailRegex.test(form.email.trim())) e.email = "Please enter a valid email address";
+
     if (!isEdit && !form.password) e.password = "Password is required";
+    else if (!isEdit && form.password && form.password.length < 8) e.password = "Password must be at least 8 characters";
     if (!isEdit && form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
+
     if (!form.employeeCode.trim()) e.employeeCode = "Employee code is required";
+    else if (form.employeeCode.trim().length < 2) e.employeeCode = "Employee code must be at least 2 characters";
+    else if (form.employeeCode.trim().length > 50) e.employeeCode = "Employee code must not exceed 50 characters";
+
     if (!form.locationId)          e.locationId = "Location is required";
     if (!form.departmentId)        e.departmentId = "Department is required";
     if (!form.roleId)              e.roleId = "Role is required";
     if (!form.timezone)            e.timezone = "Timezone is required";
+    if (form.mobile) {
+      const digits = form.mobile.replace(/\D/g, "");
+      if (digits.length < 7 || digits.length > 15) e.mobile = "Mobile number must be 7–15 digits";
+    }
+    if (form.mobile && !form.countryCode.trim()) e.countryCode = "Country code is required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };

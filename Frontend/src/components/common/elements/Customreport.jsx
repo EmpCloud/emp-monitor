@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Fullscreen } from "lucide-react";
-import ai from "@/assets/ailogo.png";
 import aiVideo from "@/assets/ai.webm";
 
 
@@ -14,22 +13,42 @@ const Customreport = ({
   showMaximize = false,
   showDownload = false,
   onViewReport,
+  onAiClick,
 }) => {
+  const videoRef = useRef(null);
+
+  const handleVideoMouseEnter = useCallback(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.playbackRate = 0.6;
+    el.play().catch(() => {});
+  }, []);
+
+  const handleVideoMouseLeave = useCallback(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.pause();
+    el.currentTime = 0;
+  }, []);
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       {showShield && (
-        <div className="w-12 h-12 flex items-center justify-center shrink-0">
-          {/* <img src={ai} alt="" />
-           */}
-           <video
-    src={aiVideo}
-    autoPlay
-    loop
-    muted
-    playsInline
-    onLoadedMetadata={(e) => (e.currentTarget.playbackRate = 0.6)}
-    className=" w-full h-full object-contain"
-  />
+        <div
+          className="w-12 h-12 flex items-center justify-center shrink-0 cursor-pointer"
+          onMouseEnter={handleVideoMouseEnter}
+          onMouseLeave={handleVideoMouseLeave}
+          onClick={onAiClick}
+        >
+          <video
+            ref={videoRef}
+            src={aiVideo}
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-contain"
+          />
         </div>
       )}
 

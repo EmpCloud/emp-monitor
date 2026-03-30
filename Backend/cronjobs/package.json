@@ -33,7 +33,7 @@
 		"csv-writer": "^1.6.0",
 		"dotenv": "^16.4.5",
 		"exceljs": "^4.2.1",
-		"express": "^4.17.1",
+		"express": "^4.22.1",
 		"fs": "0.0.1-security",
 		"googleapis": "^140.0.1",
 		"metadata-scraper": "^0.2.61",

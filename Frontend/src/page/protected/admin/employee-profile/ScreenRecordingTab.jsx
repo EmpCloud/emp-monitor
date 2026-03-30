@@ -67,7 +67,7 @@ export default function ScreenRecordingTab({ employee }) {
   const [loading, setLoading]   = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const apiBase = import.meta.env.VITE_API_URL?.replace(/\/api\/v3$/, '/') || "https://test-monitor-api.empcloud.com/";
+  const apiBase = import.meta.env.VITE_API_URL;
 
   const load = async () => {
     if (!employee?.id) return;

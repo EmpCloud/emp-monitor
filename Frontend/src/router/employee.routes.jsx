@@ -5,16 +5,6 @@ import EmployeeDashboard    from '../page/protected/employee/dashboard'
 import useEmployeeSession   from '../sessions/employeeSession'
 import { getSessionCookie } from '../lib/sessionCookie'
 
-function normalizeRole(role) {
-  return (role || '').toLowerCase().replace(/\s+/g, '')
-}
-
-function isEmployeeSession(session) {
-  if (!session) return false
-  const role = normalizeRole(session.role)
-  return role === 'employee' || session.is_employee === true
-}
-
 // Standalone component so hooks have their own isolated instance
 export function EmployeeProtectedRoute({ children }) {
   const { employee, setEmployee } = useEmployeeSession()
@@ -23,7 +13,8 @@ export function EmployeeProtectedRoute({ children }) {
   useEffect(() => {
     const fromCookie = getSessionCookie()
     if (fromCookie && fromCookie.data) {
-      if (isEmployeeSession(fromCookie)) {
+      const role = (fromCookie.role || '').toLowerCase().replace(/\s+/g, '')
+      if (role === 'employee') {
         setEmployee(fromCookie)
       }
     }

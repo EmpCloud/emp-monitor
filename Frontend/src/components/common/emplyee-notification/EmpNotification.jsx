@@ -117,8 +117,8 @@ const EmpNotification = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">Notifications</span>
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">Notifications</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet

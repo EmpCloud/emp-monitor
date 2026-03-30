@@ -6,8 +6,9 @@ function LiveHeader({ isConnected }) {
         <div className="flex relative flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div className="border-l-2 border-blue-500 pl-4">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-[22px] font-semibold text-slate-900">
-                        Live Recording
+                    <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                        <span className="font-semibold">Live</span>{" "}
+                        <span className="font-normal text-gray-500">Recording</span>
                     </h1>
                     <span
                         className={`w-2 h-2 rounded-full mt-1 ${isConnected ? "bg-green-500" : "bg-slate-300"}`}

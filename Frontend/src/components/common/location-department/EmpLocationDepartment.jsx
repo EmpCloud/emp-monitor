@@ -337,9 +337,9 @@ export default function EmpLocationDepartment() {
                         <img alt="location-department" className="w-24 h-24" src={EmpLocationDepartmentLogo} />
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h1 className="text-[18px] text-slate-900">
-                            <span className="font-bold">Manage Locations &</span>{" "}
-                            <span className="font-normal text-slate-600">Departments</span>
+                        <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                            <span className="font-semibold">Manage</span>{" "}
+                            <span className="font-normal text-gray-500">Locations & Departments</span>
                         </h1>
                         <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
                             Create and manage office locations and<br />

@@ -1,5 +1,5 @@
 import React from "react"
-import { Search, Info, Calendar, ImageIcon } from "lucide-react"
+import { Search, Info, ImageIcon } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,7 @@ import {
 import EmpScreenshotLogsLogo from "@/assets/dlp/screenshot-logs.svg"
 import { useScreenshotLogsStore } from "@/page/protected/admin/screenshot-logs/screenshotLogsStore"
 import { useDlpFilters } from "@/hooks/useDlpFilters"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 
 const DOWNLOAD_OPTIONS = [
   { label: "Select Option", value: "all" },
@@ -35,7 +36,7 @@ const EmpScreenshotLogs = () => {
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading } = store
 
   const {
-    search, setSearch, downloadOption, datePickerRef,
+    search, setSearch, downloadOption, handleDateRangeChange,
     totalPages, currentPage,
     handleLocationChange, handleDepartmentChange, handleEmployeeChange,
     handlePageSizeChange, handlePageChange, handleDownload,
@@ -59,8 +60,8 @@ const EmpScreenshotLogs = () => {
           <img alt="screenshot-logs" className="w-24 h-24" src={EmpScreenshotLogsLogo} />
         </div>
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">Screenshot </span> Logs
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">Screenshot </span> Logs
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Track and review screenshot capture activity across monitored systems.
@@ -88,8 +89,11 @@ const EmpScreenshotLogs = () => {
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input ref={datePickerRef} type="text" readOnly className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer" />
+            <DateRangeCalendar
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onChange={handleDateRangeChange}
+            />
           </div>
         </div>
         <div>

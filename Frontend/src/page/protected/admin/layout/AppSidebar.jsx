@@ -34,6 +34,7 @@ import {
 import AppMenuItems from "./AppMenuItems";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import downloadIcon from "@/assets/agentdwnld.png";
+import AgentDownloadOverlay from "@/page/protected/admin/agent-download";
 import apiService from "@/services/api.service";
 
 const menuItems = [
@@ -141,6 +142,7 @@ const normalizeResellerStats = (payload = {}) => {
 export function AppSidebar() {
   const { open } = useSidebar();
   const [openKey, setOpenKey] = useState(null);
+  const [agentDownloadOpen, setAgentDownloadOpen] = useState(false);
   const [licenseStats, setLicenseStats] = useState({
     totalLicenses: 0,
     usedLicenses: 0,
@@ -225,7 +227,7 @@ export function AppSidebar() {
         {/* <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:opacity-90 hover:shadow-blue-300">
           
         </button> */}
-        <ShimmerButton className=" flex items-center justify-center gap-2 shadow-sm border-2 border-blue-600 text-md " >
+        <ShimmerButton className=" flex items-center justify-center gap-2 shadow-sm border-2 border-blue-600 text-md " onClick={() => setAgentDownloadOpen(true)} >
           <span className="flex h-7 w-7 items-center justify-center rounded-full  shadow-sm">
             <img src={downloadIcon} alt="download" />
 
@@ -254,6 +256,8 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarFooter>
+
+      <AgentDownloadOverlay open={agentDownloadOpen} onClose={() => setAgentDownloadOpen(false)} />
     </Sidebar>
   );
 }

@@ -1,12 +1,11 @@
-import React, { useMemo, useEffect, useCallback, useRef, useState } from "react"
+import React, { useMemo, useEffect, useCallback, useState } from "react"
 import ReactApexChart from "react-apexcharts"
-import { Info, Calendar } from "lucide-react"
+import { Info } from "lucide-react"
 import { FaFileCsv } from "react-icons/fa6"
 import { BiSolidFilePdf } from "react-icons/bi"
-import moment from "moment"
-import $ from "jquery"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -48,69 +47,14 @@ const EmpProductivityReport = () => {
   } = useProductivityReportStore()
 
   const [selectedRows, setSelectedRows] = useState([])
-  const datePickerRef = useRef(null)
-  const [pluginReady, setPluginReady] = useState(false)
 
-  // Load daterangepicker plugin
-  useEffect(() => {
-    window.moment = moment
-    window.jQuery = window.$ = $
-    import("daterangepicker/daterangepicker.css")
-    import("daterangepicker").then(() => setPluginReady(true))
-  }, [])
-
-  // Initialize daterangepicker
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return
-
-    const $el = $(datePickerRef.current)
-
-    $el.daterangepicker(
-      {
-        startDate: moment(filters.startDate),
-        endDate: moment(filters.endDate),
-        minDate: moment().subtract(180, "days"),
-        maxDate: moment(),
-        locale: { format: "MMM D, YYYY" },
-        ranges: {
-          "Today": [moment(), moment()],
-          "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
-          "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")],
-          "This Month": [moment().startOf("month"), moment()],
-          "Last Month": [
-            moment().subtract(1, "month").startOf("month"),
-            moment().subtract(1, "month").endOf("month"),
-          ],
-          "Quarterly": [moment().subtract(90, "days"), moment()],
-          "All": [moment().subtract(180, "days"), moment()],
-        },
-        opens: "left",
-        autoUpdateInput: true,
-      },
-      (start, end) => {
-        setFilter("startDate", start.format("YYYY-MM-DD"))
-        setFilter("endDate", end.format("YYYY-MM-DD"))
-        setFilter("skip", 0)
-        setFilter("page", 1)
-      }
-    )
-
-    return () => {
-      const dp = $el.data("daterangepicker")
-      if (dp) dp.remove()
-    }
-  }, [pluginReady])
-
-  // Sync date filter changes into picker display
-  useEffect(() => {
-    if (!pluginReady || !datePickerRef.current) return
-    const $el = $(datePickerRef.current)
-    const dp = $el.data("daterangepicker")
-    if (dp) {
-      dp.setStartDate(moment(filters.startDate))
-      dp.setEndDate(moment(filters.endDate))
-    }
-  }, [filters.startDate, filters.endDate, pluginReady])
+  const handleDateRangeChange = useCallback((start, end) => {
+    if (!start || !end) return
+    setFilter("startDate", start)
+    setFilter("endDate", end)
+    setFilter("skip", 0)
+    setFilter("page", 1)
+  }, [setFilter])
 
   useEffect(() => {
     loadInitial()
@@ -270,8 +214,8 @@ const EmpProductivityReport = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-2xl text-slate-900">
-            <span className="font-black">Productivity Report</span>
+          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+            <span className="font-semibold">Productivity Report</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Comprehensive productivity reports with charts and trend analysis.
@@ -319,15 +263,11 @@ const EmpProductivityReport = () => {
             Select Date Ranges :
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input
-              ref={datePickerRef}
-              type="text"
-              readOnly
-              className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer"
-            />
-          </div>
+          <DateRangeCalendar
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            onChange={handleDateRangeChange}
+          />
         </div>
       </div>
 

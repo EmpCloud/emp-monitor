@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Info, ArrowUp, ArrowDown } from "lucide-react";
-import moment from "moment-timezone";
-import $ from "jquery";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -69,62 +68,15 @@ const EmpAlertNotification = () => {
     const [search, setSearch] = useState("");
     const initialLoad = useRef(true);
     const debounceTimer = useRef(null);
-    const datePickerRef = useRef(null);
-    const [pluginReady, setPluginReady] = useState(false);
-
     useEffect(() => {
         loadInitialData();
     }, []);
 
-    // Daterangepicker
-    useEffect(() => {
-        window.moment = moment;
-        window.jQuery = window.$ = $;
-        import("daterangepicker/daterangepicker.css");
-        import("daterangepicker").then(() => setPluginReady(true));
-    }, []);
-
-    useEffect(() => {
-        if (!pluginReady || !datePickerRef.current) return;
-        const $el = $(datePickerRef.current);
-        $el.daterangepicker(
-            {
-                startDate: moment(filters.startDate),
-                endDate: moment(filters.endDate),
-                minDate: moment().subtract(180, "days"),
-                maxDate: moment(),
-                dateLimit: { days: 31 },
-                locale: { format: "MMM D, YYYY" },
-                ranges: {
-                    Today: [moment(), moment()],
-                    Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
-                    "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")],
-                    "Last 30 Days": [moment().subtract(30, "days"), moment().subtract(1, "days")],
-                    "This Month": [moment().startOf("month"), moment().endOf("month")],
-                    "Last Month": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")],
-                },
-                opens: "left",
-                autoUpdateInput: true,
-            },
-            (start, end) => {
-                setFilter("startDate", start.format("YYYY-MM-DD"));
-                setFilter("endDate", end.format("YYYY-MM-DD"));
-            }
-        );
-        return () => {
-            const dp = $el.data("daterangepicker");
-            if (dp) dp.remove();
-        };
-    }, [pluginReady]);
-
-    useEffect(() => {
-        if (!pluginReady || !datePickerRef.current) return;
-        const dp = $(datePickerRef.current).data("daterangepicker");
-        if (dp) {
-            dp.setStartDate(moment(filters.startDate));
-            dp.setEndDate(moment(filters.endDate));
-        }
-    }, [filters.startDate, filters.endDate, pluginReady]);
+    const handleDateRangeChange = useCallback((start, end) => {
+        if (!start || !end) return;
+        setFilter("startDate", start);
+        setFilter("endDate", end);
+    }, [setFilter]);
 
     // Debounced search
     useEffect(() => {
@@ -191,7 +143,7 @@ const EmpAlertNotification = () => {
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
                 <div className="border-l-2 border-blue-500 pl-4">
-                    <h2 className="text-2xl text-slate-900">
+                    <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
                         <span className="font-semibold">Alerts Notifications</span>
                     </h2>
                     <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
@@ -225,14 +177,11 @@ const EmpAlertNotification = () => {
                     <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
                         Select Date Ranges <Info className="w-3.5 h-3.5 text-blue-500" />
                     </label>
-                    <div className="relative">
-                        <input
-                            ref={datePickerRef}
-                            type="text"
-                            readOnly
-                            className="w-full px-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg hover:border-slate-300 focus:outline-none focus:border-blue-400 transition-all cursor-pointer"
-                        />
-                    </div>
+                    <DateRangeCalendar
+                        startDate={filters.startDate}
+                        endDate={filters.endDate}
+                        onChange={handleDateRangeChange}
+                    />
                 </div>
             </div>
 

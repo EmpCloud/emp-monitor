@@ -149,9 +149,9 @@ export default function StorageType() {
               <img src={storageTypeImg} alt="storage type" className="w-30 h-30" />
             </div>
             <div className="border-l-[3px] border-blue-500 pl-3 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                <span className="font-extrabold">Storage</span>{" "}
-                <span className="text-gray-500 font-medium">Type</span>
+              <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                <span className="font-semibold">Storage</span>{" "}
+                <span className="text-gray-500 font-normal">Type</span>
               </h1>
               <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
                 Configure cloud and file-transfer storage integrations

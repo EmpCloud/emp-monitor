@@ -222,9 +222,9 @@ const EmpShiftManagement = () => {
                         <img alt="shift management" className="w-24 h-24" src={EmpShiftManagementLogo} />
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-2xl text-slate-900">
-                            <span className="font-black">Shift</span>{" "}
-                            <span className="font-light">Management</span>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                            <span className="font-semibold">Shift</span>{" "}
+                            <span className="font-normal text-gray-500">Management</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
                             Configure work shifts and assign them to employees or departments.

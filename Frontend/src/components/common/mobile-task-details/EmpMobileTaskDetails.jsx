@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Search, Info, Download, Upload, Trash2, Pencil } from "lucide-react";
-import moment from "moment-timezone";
-import $ from "jquery";
 import Swal from "sweetalert2";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
+import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,33 +40,13 @@ const EmpMobileTaskDetails = () => {
     const [search, setSearch] = useState("");
     const initialLoad = useRef(true);
     const debounceTimer = useRef(null);
-    const datePickerRef = useRef(null);
-    const [pluginReady, setPluginReady] = useState(false);
-
     useEffect(() => { loadInitialData(); }, []);
 
-    // Date picker
-    useEffect(() => {
-        window.moment = moment; window.jQuery = window.$ = $;
-        import("daterangepicker/daterangepicker.css");
-        import("daterangepicker").then(() => setPluginReady(true));
-    }, []);
-
-    useEffect(() => {
-        if (!pluginReady || !datePickerRef.current) return;
-        const $el = $(datePickerRef.current);
-        $el.daterangepicker({
-            startDate: moment(filters.startDate), endDate: moment(filters.endDate),
-            minDate: moment().subtract(180, "days"), maxDate: moment(), dateLimit: { days: 31 },
-            locale: { format: "MMM D, YYYY" },
-            ranges: { Today: [moment(), moment()], Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")], "Last 7 Days": [moment().subtract(7, "days"), moment().subtract(1, "days")], "Last 30 Days": [moment().subtract(30, "days"), moment().subtract(1, "days")] },
-            opens: "left", autoUpdateInput: true,
-        }, (start, end) => {
-            setFilter("startDate", start.format("YYYY-MM-DD"));
-            setFilter("endDate", end.format("YYYY-MM-DD"));
-        });
-        return () => { const dp = $el.data("daterangepicker"); if (dp) dp.remove(); };
-    }, [pluginReady]);
+    const handleDateRangeChange = useCallback((start, end) => {
+        if (!start || !end) return;
+        setFilter("startDate", start);
+        setFilter("endDate", end);
+    }, [setFilter]);
 
     useEffect(() => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -103,7 +82,7 @@ const EmpMobileTaskDetails = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full">
             <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
                 <div className="border-l-2 border-blue-500 pl-4">
-                    <h2 className="text-2xl font-semibold text-slate-900">Task Details</h2>
+                    <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Task</span>{" "}<span className="font-normal text-gray-500">Details</span></h2>
                     <p className="text-xs text-gray-400 mt-1">Manage and track employee tasks across projects</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -118,7 +97,7 @@ const EmpMobileTaskDetails = () => {
                 <div><label className="block text-xs font-semibold text-slate-600 mb-1">Project</label><CustomSelect placeholder="All Projects" items={[{ value: "", label: "All" }, ...projects]} selected={filters.project} onChange={handleProjectChange} width="full" /></div>
                 <div><label className="block text-xs font-semibold text-slate-600 mb-1">Manager</label><CustomSelect placeholder="All Managers" items={[{ value: "", label: "All" }, ...managers]} selected={filters.manager} onChange={(v) => setFilter("manager", v)} width="full" /></div>
                 <div><label className="block text-xs font-semibold text-slate-600 mb-1">Employee</label><CustomSelect placeholder="All Employees" items={[{ value: "", label: "All" }, ...employees]} selected={filters.employee[0] || ""} onChange={(v) => setFilter("employee", v ? [v] : [])} width="full" /></div>
-                <div><label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">Date Range <Info className="w-3 h-3 text-blue-500" /></label><input ref={datePickerRef} type="text" readOnly className="w-full px-3 py-2 text-[13px] bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-slate-300 focus:outline-none" /></div>
+                <div><label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">Date Range <Info className="w-3 h-3 text-blue-500" /></label><DateRangeCalendar startDate={filters.startDate} endDate={filters.endDate} onChange={handleDateRangeChange} /></div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">

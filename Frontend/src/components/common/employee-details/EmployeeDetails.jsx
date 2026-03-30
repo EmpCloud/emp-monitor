@@ -130,9 +130,13 @@ export default function EmployeeDetailsTable({
 
   const { filtered, paginated, totalPages } = useMemo(() => {
     const list = Array.isArray(employees) ? employees : [];
-    const filteredList = list.filter((e) =>
-      (e.name || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const q = (searchQuery || "").trim().toLowerCase();
+    const filteredList = !q
+      ? list
+      : list.filter((e) => {
+          const fields = [e.name, e.email, e.empCode, e.department, e.location, e.shift, e.role];
+          return fields.some((f) => (f || "").toLowerCase().includes(q));
+        });
     const total = Math.max(1, Math.ceil(filteredList.length / perPage));
     return {
       filtered: filteredList,
@@ -209,9 +213,9 @@ export default function EmployeeDetailsTable({
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <img src={employee} alt="employee" className="w-50 h-50" />
             <div className="border-l-[3px] border-blue-500 pl-3 min-w-0">
-              <h1 className="text-2xl font-bold text-gray-800">
-                <span className="font-extrabold">Employee</span>{" "}
-                <span className="text-gray-500 font-medium">Details</span>
+              <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                <span className="font-semibold">Employee</span>{" "}
+                <span className="text-gray-500 font-normal">Details</span>
               </h1>
               <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
                 Manage and monitor all registered employees in one place.
@@ -289,7 +293,7 @@ export default function EmployeeDetailsTable({
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-gray-500 font-medium">Show</span>
             <Select value={entriesPerPage} onValueChange={(v) => { setEntriesPerPage(v); setCurrentPage(1); }}>
-              <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
+              <SelectTrigger className="h-8 w-[70px] text-[13px] rounded-lg border-gray-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -395,7 +399,7 @@ export default function EmployeeDetailsTable({
                     <div className="flex items-center justify-center gap-1.5">
                       {activeTab !== "deleted" && (
                         <button className="action-icon bg-gray-100 text-gray-500 hover:bg-gray-200" title="Settings"
-                          onClick={() => navigate(`${employeeProfilePath}?id=${emp.id}`, { state: { employee: emp } })}>
+                          onClick={() => navigate(`${routeBase}/track-user-settings?employee_id=${emp.id}`)}>
                           <Settings size={13} />
                         </button>
                       )}

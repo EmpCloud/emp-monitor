@@ -214,7 +214,7 @@ const EmpAlertPolicies = () => {
                         <img alt="policies" className="w-24 h-24" src={EmpAlertPoliciesLogo} />
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-2xl text-slate-900">
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
                             <span className="font-semibold">Alert Policies</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">

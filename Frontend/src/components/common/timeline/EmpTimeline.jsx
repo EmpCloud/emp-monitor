@@ -148,8 +148,8 @@ export default function EmpTimeline() {
             <div className="relative">
               <div className="flex items-center gap-2 ">
 
-              <h1 className="text-2xl md:text-3xl font-semibold  tracking-tight">
-                Timeline
+              <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+                <span className="font-semibold">Timeline</span>
               </h1>
               <div className="flex items-end gap-1 mr-2">
                 <img

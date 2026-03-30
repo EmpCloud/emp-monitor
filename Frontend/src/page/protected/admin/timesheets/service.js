@@ -248,7 +248,7 @@ const getTimesheetExportData = async ({
         const start = startDate || today;
         const end = endDate || today;
 
-        const queryStr = new URLSearchParams({
+        const baseParams = {
             location_id: locationId && locationId !== "all" ? String(locationId) : "0",
             department_id: departmentId && departmentId !== "all" ? String(departmentId) : "0",
             employee_id: employeeId && employeeId !== "all" ? String(employeeId) : "0",
@@ -256,18 +256,40 @@ const getTimesheetExportData = async ({
             end_date: end,
             sortColumn,
             sortOrder,
-        });
+        };
 
         if (shiftId && shiftId !== "all") {
-            queryStr.set("shift_id", String(shiftId));
+            baseParams.shift_id = String(shiftId);
         }
 
-        const { data } = await apiService.apiInstance.get(
-            `/timesheet/timesheet?${queryStr.toString()}&skip=0&limit=50000`
-        );
+        const PAGE_SIZE = 500;
+        let allRows = [];
+        let skip = 0;
+        let hasMore = true;
 
-        const list = data?.data?.user_data ?? [];
-        return (Array.isArray(list) ? list : []).map(mapEmployeeRow);
+        while (hasMore) {
+            const queryStr = new URLSearchParams({
+                ...baseParams,
+                skip: String(skip),
+                limit: String(PAGE_SIZE),
+            });
+
+            const { data } = await apiService.apiInstance.get(
+                `/timesheet/timesheet?${queryStr.toString()}`
+            );
+
+            const list = data?.data?.user_data ?? [];
+            const batch = (Array.isArray(list) ? list : []).map(mapEmployeeRow);
+            allRows = [...allRows, ...batch];
+
+            if (batch.length < PAGE_SIZE) {
+                hasMore = false;
+            } else {
+                skip += PAGE_SIZE;
+            }
+        }
+
+        return allRows;
     } catch (error) {
         console.error("Timesheet Export Data API Error:", error);
         return [];

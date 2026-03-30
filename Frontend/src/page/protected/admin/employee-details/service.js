@@ -19,7 +19,7 @@ export const registerEmployee = async (formData) => {
     return data ?? null;
   } catch (error) {
     console.error("Employee Details: registerEmployee error", error);
-    return null;
+    return error?.response?.data ?? { code: 500, message: error?.message || "Registration failed." };
   }
 };
 
@@ -39,7 +39,7 @@ export const editEmployee = async (formData) => {
     return data ?? null;
   } catch (error) {
     console.error("Employee Details: editEmployee error", error);
-    return null;
+    return error?.response?.data ?? { code: 500, message: error?.message || "Update failed." };
   }
 };
 
@@ -206,6 +206,19 @@ export const fetchEmployees = async ({
       statusData: null,
       raw: null
     };
+  }
+};
+
+export const fetchRemovedUsers = async () => {
+  try {
+    const { data } = await apiService.apiInstance.get("/user/removed-user-list");
+    const users = Array.isArray(data?.data) ? data.data
+      : Array.isArray(data?.data?.user_data) ? data.data.user_data
+      : [];
+    return { employees: users, raw: data };
+  } catch (error) {
+    console.error("Employee Details: fetchRemovedUsers error", error);
+    return { employees: [], raw: null };
   }
 };
 

@@ -7,7 +7,7 @@ export const Clients = () => (
       <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
         <Briefcase className="w-8 h-8 text-blue-500" />
       </div>
-      <h1 className="text-2xl font-bold text-slate-800">Clients</h1>
+      <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Clients</span></h1>
       <p className="text-sm text-gray-400 max-w-sm">
         Manage client accounts, assignments and billing information.
       </p>

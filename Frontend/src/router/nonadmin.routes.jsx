@@ -29,16 +29,6 @@ import TrackUserSettings          from '../page/protected/admin/track-user-setti
 import useNonAdminSession   from '../sessions/useNonAdminSession'
 import { getSessionCookie } from '../lib/sessionCookie'
 
-function normalizeRole(role) {
-  return (role || '').toLowerCase().replace(/\s+/g, '')
-}
-
-function isEmployeeSession(session) {
-  if (!session) return false
-  const role = normalizeRole(session.role)
-  return role === 'employee' || session.is_employee === true
-}
-
 // Standalone component so hooks have their own isolated instance
 export function NonAdminProtectedRoute({ children }) {
   const { nonAdmin, setNonAdmin } = useNonAdminSession()
@@ -47,8 +37,8 @@ export function NonAdminProtectedRoute({ children }) {
   useEffect(() => {
     const fromCookie = getSessionCookie()
     if (fromCookie && fromCookie.data) {
-      // Block employees and admins from non-admin routes
-      if (!isEmployeeSession(fromCookie) && fromCookie.is_admin !== true) {
+      const role = (fromCookie.role || '').toLowerCase().replace(/\s+/g, '')
+      if (role !== 'employee' && fromCookie.is_admin !== true) {
         setNonAdmin(fromCookie)
       }
     }
@@ -64,10 +54,6 @@ export function NonAdminProtectedRoute({ children }) {
   }
   if (!nonAdmin || !nonAdmin.data) {
     return <Navigate to="/login" replace />
-  }
-  // Double-check: block employees even if Zustand store was somehow set
-  if (isEmployeeSession(nonAdmin)) {
-    return <Navigate to="/employee/dashboard" replace />
   }
   return <NonAdminLayout>{children}</NonAdminLayout>
 }
