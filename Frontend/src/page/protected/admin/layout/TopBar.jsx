@@ -21,6 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UniPass from "@/components/common/UniPass";
+import BackToCloud from "@/components/BackToCloud";
 
 export default function TopHeader() {
   const { open } = useSidebar();
@@ -62,6 +63,7 @@ export default function TopHeader() {
 
       {/* Right — Actions */}
       <div className="flex items-center gap-4">
+        <BackToCloud />
         {/* HRMS Badge */}
         <button className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors">
           <img src={hrms} alt="" className="h-6 w-6" />

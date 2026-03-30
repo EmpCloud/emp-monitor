@@ -11,6 +11,7 @@ import useNonAdminSession  from "../../../../sessions/useNonAdminSession";
 import useAdminSession     from "../../../../sessions/adminSession";
 import useEmployeeSession  from "../../../../sessions/employeeSession";
 import { switchRole }      from "../../../auth/employee-login/service";
+import BackToCloud from "@/components/BackToCloud";
 
 export default function NonAdminTopBar() {
   const navigate                                   = useNavigate();
@@ -77,6 +78,7 @@ export default function NonAdminTopBar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <BackToCloud />
         {switchError && (
           <span className="hidden sm:flex items-center gap-1 text-[11px] text-red-500 bg-red-50 border border-red-100 rounded-full px-2.5 py-1">
             <AlertCircle size={11} /> {switchError}

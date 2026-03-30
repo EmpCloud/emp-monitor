@@ -108,6 +108,9 @@ export default function SSOGate({ children }) {
         // Also set the bare token (used by some API interceptors)
         localStorage.setItem('token', accessToken);
 
+        // Remember where to return to in EMP Cloud
+        localStorage.setItem('empcloud_return_url', window.location.origin.replace(/monitor[^.]*/i, 'cloud') + '/dashboard');
+
         // Navigate based on role
         const dest = is_admin ? '/admin/dashboard'
           : is_employee ? '/employee/dashboard'
