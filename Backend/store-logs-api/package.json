@@ -47,7 +47,7 @@
         "install": "^0.13.0",
         "migrate-mongo": "7.2.1",
         "moment-timezone": "^0.5.48",
-        "mongoose": "^9.3.2",
+        "mongoose": "^9.3.3",
         "mysql2": "^3.20.0",
         "nest-event": "^1.0.8",
         "nest-router": "^1.0.9",
