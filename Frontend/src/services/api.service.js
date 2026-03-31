@@ -20,6 +20,23 @@ apiInstance.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    // GET/HEAD have no body — skip Content-Type so the request stays closer to a
+    // "simple" request where possible. (Authorization still triggers CORS preflight
+    // for cross-origin calls; OPTIONS in server logs is normal, then the real GET.)
+    const method = (config.method || 'get').toLowerCase();
+    if (method === 'get' || method === 'head') {
+        delete config.headers['Content-Type'];
+        // Avoid browser disk/memory cache + 304 on API GETs (nginx/ETag often causes stale JSON).
+        config.headers['Cache-Control'] = 'no-cache';
+        config.headers['Pragma'] = 'no-cache';
+        config.headers['Expires'] = '0';
+        // Unique URL so XHR does not reuse a cached 200 (headers alone are not always enough).
+        config.params = {
+            ...(config.params && typeof config.params === 'object' ? config.params : {}),
+            _nc: Date.now(),
+        };
+        return config;
+    }
     // Don't override Content-Type for FormData — axios sets the correct
     // multipart/form-data boundary automatically when data is a FormData.
     if (!(config.data instanceof FormData)) {
