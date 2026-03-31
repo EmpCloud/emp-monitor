@@ -68,7 +68,7 @@
         "nodemailer": "^8.0.4",
         "oauth": "^0.10.0",
         "passport": "^0.7.0",
-        "qs": "^6.13.1",
+        "qs": "^6.14.2",
         "redis": "^3.1.1",
         "requests": "^0.3.0",
         "rimraf": "^6.0.1",
@@ -88,9 +88,11 @@
     },
     "overrides": {
         "cookie": "^1.0.0",
+        "diff": "^8.0.3",
         "inflight": "1.0.6",
         "mailparser": "^3.7.1",
-        "qs": "^6.13.1",
+        "qs": "^6.14.2",
+        "serialize-javascript": "^7.0.5",
         "tough-cookie": "^5.0.0",
         "xml2js": "^0.6.2"
     }
