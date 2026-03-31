@@ -47,8 +47,12 @@ class MySqlSingelton {
             if (connection) connection.release();
         });
 
-        // Refactoring MySQL to Node.js 8’s Async/Await
-        this.mySqlPool.query = util.promisify(this.mySqlPool.query);
+        // Promisify once only — repeating util.promisify on every getInstance() breaks pool.query (async/await SSO/admin lookups).
+        if (!this._queryPromisified) {
+            const pool = this.mySqlPool;
+            pool.query = util.promisify(pool.query.bind(pool));
+            this._queryPromisified = true;
+        }
         return this.mySqlPool;
     }
 }

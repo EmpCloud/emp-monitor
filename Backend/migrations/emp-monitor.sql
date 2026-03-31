@@ -982,6 +982,8 @@ CREATE TABLE IF NOT EXISTS `organizations` (
   `beta_ids` varchar(100) DEFAULT NULL,
   `work_management_id` varchar(255) DEFAULT 'NULL',
   `product_tour_status` int(11) NOT NULL DEFAULT 1 COMMENT 'For Product Tour Status Update 0 Pending 1 Completed',
+  `is2FAEnable` tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '0=disabled, 1=enabled',
+  `mfa_config` json DEFAULT NULL COMMENT 'JSON: type, secret, etc.',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -11,6 +11,7 @@ const _ = require('underscore');
 const event = require('./event.service');
 const actionsTracker = require('../../services/actionsTracker');
 const Comman = require('../../../../utils/helpers/Common');
+const mySql = require('../../../../database/MySqlConnection').getInstance();
 const jwt = require('jsonwebtoken');
 const mysql2 = require('mysql2/promise');
 const activityLogsSchema = require('./activitylogs.schema');
@@ -895,9 +896,8 @@ class AuthService {
 
   /**
    * SSO Login — called by SSOGate on the frontend.
-   * Receives an EmpCloud JWT, decodes it, looks up (or auto-provisions) the
-   * user in emp-monitor's DB, generates an emp-monitor token, and returns the
-   * response in the format SSOGate expects.
+   * Receives an EmpCloud JWT, decodes it, auto-provisions the user/org in
+   * emp-monitor's DB if they don't exist, then generates an emp-monitor token.
    */
   async ssoLogin(req, res, next) {
     console.log('SSO: handler entered');
@@ -908,237 +908,524 @@ class AuthService {
         return res.status(400).json({ code: 400, error: 'Bad Request', message: 'SSO token is required', data: null });
       }
 
-      // 1. Decode the EmpCloud RS256 JWT (trusted redirect — no verification needed)
+      // 1. Decode the EmpCloud RS256 JWT
       const decoded = jwt.decode(token);
       if (!decoded || !decoded.sub || !decoded.email) {
         return res.status(400).json({ code: 400, error: 'Bad Request', message: 'Invalid SSO token', data: null });
       }
 
       const { sub: cloudUserId, org_id, email, first_name, last_name, role: cloudRole } = decoded;
-      console.log('SSO: decoded token - userId:', cloudUserId, 'email:', email, 'orgId:', org_id);
+      console.log('SSO: decoded token - userId:', cloudUserId, 'email:', email, 'orgId:', org_id, 'role:', cloudRole);
 
-      // 2. Skip empcloud DB validation — token is from trusted redirect
-      // The JWT was issued by EmpCloud and the user arrived via the dashboard Launch button
-      console.log('SSO: trusted redirect, skipping empcloud DB validation');
+      const empcloudDb = getEmpCloudPool();
 
-      // 3. For SSO, create a session directly from the decoded token
-      // Skip emp-monitor DB lookup — the user may not exist in emp-monitor yet
-      // Just issue a token based on the EmpCloud identity
-      console.log('SSO: creating session from decoded token...');
-      {
+      // ─── Helper: map EmpCloud role to emp-monitor role name ───
+      const roleMap = {
+        super_admin: 'Admin',
+        org_admin: 'Admin',
+        hr_admin: 'Admin',
+        hr_manager: 'Manager',
+        manager: 'Manager',
+        employee: 'Employee',
+      };
+      const monitorRoleName = roleMap[cloudRole] || 'Employee';
+      const isAdminRole = ['super_admin', 'org_admin', 'hr_admin'].includes(cloudRole);
+
+      // ─── Fetch license/subscription data from EmpCloud DB ───
+      let licenseData = { total_seats: 100, used_seats: 0, begin_date: null, expire_date: null, status: 'active' };
+      try {
+        const [subRows] = await empcloudDb.query(
+          `SELECT s.total_seats, s.used_seats, s.status,
+                  s.current_period_start AS begin_date,
+                  s.current_period_end AS expire_date
+           FROM org_subscriptions s
+           JOIN modules m ON m.id = s.module_id
+           WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'
+           LIMIT 1`,
+          [org_id]
+        );
+        if (subRows && subRows.length > 0) {
+          licenseData = subRows[0];
+          console.log('SSO: license from empcloud — seats:', licenseData.total_seats, '/', licenseData.used_seats,
+            'period:', licenseData.begin_date, '->', licenseData.expire_date);
+        } else {
+          console.log('SSO: no emp-monitor subscription in empcloud for org', org_id, '— using defaults');
+        }
+      } catch (e) {
+        console.log('SSO: empcloud license fetch failed:', e.message, '— using defaults');
+      }
+
+      // ─── 2. Check if user already exists in emp-monitor by email ───
+      let existingEmployee = null;
+      try {
+        const empResults = await authModel.userWithAdminAndRole(email);
+        if (Array.isArray(empResults) && empResults.length > 0) {
+          existingEmployee = empResults[0];
+        }
+      } catch (e) {
+        // Query fails with JOIN errors when user/employee/role doesn't exist — expected
+        console.log('SSO: employee lookup returned no result');
+      }
+
+      if (existingEmployee && existingEmployee.status !== 2) {
+        // ─── USER EXISTS — login normally like userAuth ───
+        console.log('SSO: user found in emp-monitor DB, employee_id:', existingEmployee.employee_id);
+
+        // ─── Sync license from empcloud → emp-monitor org ───
+        try {
+          const monitorOrgId = existingEmployee.organization_id;
+          // Update total_allowed_user_count from empcloud subscription
+          if (licenseData.total_seats) {
+            await mySql.query('UPDATE organizations SET total_allowed_user_count = ? WHERE id = ?', [licenseData.total_seats, monitorOrgId]);
+          }
+          // Update pack expiry in organization_settings
+          if (licenseData.begin_date || licenseData.expire_date) {
+            const [settRow] = await mySql.query('SELECT rules FROM organization_settings WHERE organization_id = ?', [monitorOrgId]);
+            if (settRow) {
+              const rules = JSON.parse(settRow.rules);
+              if (licenseData.expire_date) rules.pack.expiry = moment(licenseData.expire_date).format('YYYY-MM-DD');
+              if (licenseData.begin_date) rules.pack.begin_date = moment(licenseData.begin_date).format('YYYY-MM-DD');
+              await mySql.query('UPDATE organization_settings SET rules = ? WHERE organization_id = ?', [JSON.stringify(rules), monitorOrgId]);
+            }
+          }
+          // Sync current_user_count FROM emp-monitor → empcloud
+          const [countRow] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [monitorOrgId]);
+          if (countRow) {
+            const monitorUserCount = countRow.current_user_count || 0;
+            await empcloudDb.query(
+              `UPDATE org_subscriptions s
+               JOIN modules m ON m.id = s.module_id
+               SET s.used_seats = ?
+               WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
+              [monitorUserCount, org_id]
+            ).catch(() => {});
+            console.log('SSO: synced license — empcloud seats:', licenseData.total_seats, ', monitor users:', monitorUserCount);
+          }
+        } catch (syncErr) {
+          console.log('SSO: license sync warning (non-fatal):', syncErr.message);
+        }
+
+        let is_manager = false, is_teamlead = false, is_employee = false;
+        if (existingEmployee.role && existingEmployee.role.toLowerCase() === 'manager') is_manager = true;
+        else if (existingEmployee.role && existingEmployee.role.toLowerCase() === 'employee') is_employee = true;
+        else if (existingEmployee.role && existingEmployee.role.toLowerCase() === 'team lead') is_teamlead = true;
+        else is_manager = true;
+
+        let permissionData = await authModel.userPermission(existingEmployee.role_id, existingEmployee.organization_id);
+        let permission_ids = [];
+        if (permissionData.length > 0) {
+          permission_ids = _.pluck(permissionData, 'permission_id');
+        }
+
+        let setting = {};
+        try { setting = JSON.parse(existingEmployee.custom_tracking_rule); } catch (e) { setting = JSON.parse(JSON.stringify(defaultSettings)); }
+        const shift = existingEmployee.shift ? JSON.parse(existingEmployee.shift) : '';
+        const productive_setting = existingEmployee.productive_hours ? JSON.parse(existingEmployee.productive_hours) : null;
+        const productive_hours = productive_setting ? (productive_setting.mode == 'unlimited' ? 28800 : Comman.hourToSeconds(productive_setting.hour)) : 28800;
+
         const adminJsonData = {
-          organization_id: org_id,
-          user_id: cloudUserId,
-          first_name: first_name || decoded.first_name || 'User',
-          last_name: last_name || decoded.last_name || '',
-          email: email,
-          is_manager: cloudRole === 'manager' || cloudRole === 'hr_manager',
-          is_teamlead: false,
-          is_employee: cloudRole === 'employee',
-          is_admin: cloudRole === 'org_admin' || cloudRole === 'super_admin' || cloudRole === 'hr_admin',
-          cloud_role: cloudRole,
+          user_id: existingEmployee.id,
+          employee_id: existingEmployee.employee_id,
+          organization_id: existingEmployee.organization_id,
+          first_name: existingEmployee.first_name,
+          last_name: existingEmployee.last_name,
+          email: existingEmployee.email,
+          a_email: existingEmployee.a_email,
+          email_verified_at: existingEmployee.email_verified_at,
+          contact_number: existingEmployee.contact_number,
+          emp_code: existingEmployee.emp_code,
+          location_id: existingEmployee.location_id,
+          location_name: existingEmployee.location,
+          department_id: existingEmployee.department_id,
+          department_name: existingEmployee.department,
+          photo_path: existingEmployee.photo_path,
+          address: existingEmployee.address,
+          role_id: existingEmployee.role_id,
+          role: existingEmployee.role,
+          status: existingEmployee.status,
+          timezone: existingEmployee.timezone,
+          is_manager,
+          is_teamlead,
+          is_employee,
+          is_admin: false,
+          weekday_start: existingEmployee.weekday_start,
+          language: existingEmployee.language,
+          productive_hours,
+          productivity_data: productive_setting,
+          productivityCategory: existingEmployee.productivityCategory,
+          permissionData,
         };
 
         const payload = { user_id: adminJsonData.user_id };
         await redis.setAsync(
-          String(adminJsonData.user_id),
-          JSON.stringify({ ...adminJsonData, permissionData: Array.from(Array(25).keys()).map(item => item + 1) }),
+          adminJsonData.user_id,
+          JSON.stringify({ ...adminJsonData, permission_ids, setting, shift }),
           'EX',
           Comman.getTime(process.env.JWT_EXPIRY)
         );
-
         const accessToken = await jwtService.generateAccessToken(payload);
-        console.log('SSO: token generated successfully');
-
-        // Map cloud roles to emp-monitor role strings for frontend RBAC
-        const roleMap = {
-          super_admin: 'Admin',
-          org_admin: 'Admin',
-          hr_admin: 'Admin',
-          hr_manager: 'Manager',
-          manager: 'Manager',
-          employee: 'Employee',
-        };
-        const displayRole = roleMap[cloudRole] || 'Employee';
+        console.log('SSO: existing employee login success, userId:', existingEmployee.id);
 
         return res.status(200).json({
           code: 200,
           data: accessToken,
-          user_name: adminJsonData.first_name,
-          full_name: adminJsonData.first_name + ' ' + adminJsonData.last_name,
-          email: email,
-          user_id: String(cloudUserId),
-          u_id: String(cloudUserId),
-          organization_id: org_id,
-          is_admin: adminJsonData.is_admin,
-          is_manager: adminJsonData.is_manager,
-          is_teamlead: adminJsonData.is_teamlead,
-          is_employee: adminJsonData.is_employee,
-          role: displayRole,
-          cloud_role: cloudRole,
-          role_id: null,
-          photo_path: '',
+          user_name: existingEmployee.first_name,
+          full_name: existingEmployee.first_name + ' ' + existingEmployee.last_name,
+          email: existingEmployee.email,
+          user_id: existingEmployee.employee_id,
+          u_id: existingEmployee.employee_id,
+          organization_id: existingEmployee.organization_id,
+          is_admin: false,
+          is_manager,
+          is_teamlead,
+          is_employee,
+          role: existingEmployee.role,
+          role_id: existingEmployee.role_id,
+          photo_path: existingEmployee.photo_path || '',
           message: 'SSO Authentication Successful',
           error: null,
         });
       }
 
-      // Dead code below — kept for reference if emp-monitor user lookup is needed later
-      let userData;
-      let existingUser, adminData;
-      existingUser = null;
+      // ─── Check if user exists as admin ───
+      // NOTE: pass amember_id=-1 (impossible value) to avoid matching orgs with amember_id=0
+      let existingAdmin = null;
+      try {
+        const adminResults = await authModel.getAdmin(email, -1);
+        if (Array.isArray(adminResults) && adminResults.length > 0) {
+          existingAdmin = adminResults[0];
+        }
+      } catch (e) {
+        console.log('SSO: admin lookup failed:', e && e.message ? e.message : e);
+      }
 
-      if (existingUser) {
-        userData = existingUser;
-      } else {
-        adminData = null;
-        if (adminData) {
-          // Admin user — build response directly
-          const adminJsonData = {
-            organization_id: adminData.organization_id,
-            user_id: adminData.id,
-            first_name: first_name || adminData.first_name,
-            last_name: last_name || adminData.last_name,
-            email: email,
-            is_manager: false,
-            is_teamlead: false,
-            is_employee: false,
-            is_admin: true,
-          };
+      if (existingAdmin) {
+        console.log('SSO: admin found in emp-monitor DB, org_id:', existingAdmin.organization_id);
 
-          const payload = { user_id: adminJsonData.user_id };
-          await redis.setAsync(
-            adminJsonData.user_id,
-            JSON.stringify({ ...adminJsonData, permissionData: Array.from(Array(25).keys()).map(item => item + 1) }),
-            'EX',
-            Comman.getTime(process.env.JWT_EXPIRY)
-          );
-
-          const accessToken = await jwtService.generateAccessToken(payload);
-
-          return res.status(200).json({
-            code: 200,
-            data: accessToken,
-            user_name: first_name || adminData.first_name,
-            full_name: (first_name || adminData.first_name) + ' ' + (last_name || adminData.last_name),
-            email: email,
-            user_id: adminData.id,
-            u_id: adminData.id,
-            organization_id: adminData.organization_id,
-            is_admin: true,
-            is_manager: false,
-            is_teamlead: false,
-            is_employee: false,
-            role: 'Admin',
-            role_id: null,
-            photo_path: '',
-            message: 'SSO Authentication Successful',
-            error: null,
-          });
+        // ─── Sync license from empcloud → emp-monitor org ───
+        try {
+          const adminOrgId = existingAdmin.organization_id;
+          if (licenseData.total_seats) {
+            await mySql.query('UPDATE organizations SET total_allowed_user_count = ? WHERE id = ?', [licenseData.total_seats, adminOrgId]);
+          }
+          // Sync current_user_count FROM emp-monitor → empcloud used_seats
+          const [countRow] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [adminOrgId]);
+          if (countRow) {
+            await empcloudDb.query(
+              `UPDATE org_subscriptions s JOIN modules m ON m.id = s.module_id
+               SET s.used_seats = ? WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
+              [countRow.current_user_count || 0, org_id]
+            ).catch(() => {});
+            console.log('SSO: admin sync — empcloud total:', licenseData.total_seats, ', monitor used:', countRow.current_user_count);
+          }
+        } catch (syncErr) {
+          console.log('SSO: admin license sync warning:', syncErr.message);
         }
 
-        // User not found anywhere in emp-monitor — deny access
-        return res.status(403).json({ code: 403, error: 'Forbidden', message: 'No EmpMonitor account found for this email. Please contact your administrator.', data: null });
+        const setting = JSON.parse(existingAdmin.rules);
+        const productive_hours = setting.productiveHours ? (setting.productiveHours.mode == 'unlimited' ? 28800 : Comman.hourToSeconds(setting.productiveHours.hour)) : 28800;
+
+        const adminJsonData = {
+          organization_id: existingAdmin.organization_id,
+          user_id: existingAdmin.id,
+          first_name: first_name || existingAdmin.first_name,
+          last_name: last_name || existingAdmin.last_name,
+          email: email,
+          is_manager: false,
+          is_teamlead: false,
+          is_employee: false,
+          is_admin: true,
+          language: existingAdmin.language,
+          weekday_start: existingAdmin.weekday_start,
+          timezone: existingAdmin.timezone || 'Asia/Kolkata',
+          productive_hours,
+          productivity_data: setting.productiveHours,
+        };
+
+        const payload = { user_id: adminJsonData.user_id };
+        await redis.setAsync(
+          adminJsonData.user_id,
+          JSON.stringify({ ...adminJsonData, permissionData: Array.from(Array(25).keys()).map(item => item + 1) }),
+          'EX',
+          Comman.getTime(process.env.JWT_EXPIRY)
+        );
+        const accessToken = await jwtService.generateAccessToken(payload);
+        const feature = await authModel.dashboardFeature();
+        console.log('SSO: existing admin login success, userId:', existingAdmin.id);
+
+        return res.status(200).json({
+          code: 200,
+          data: accessToken,
+          user_name: first_name || existingAdmin.first_name,
+          full_name: (first_name || existingAdmin.first_name) + ' ' + (last_name || existingAdmin.last_name),
+          email: email,
+          user_id: existingAdmin.id,
+          u_id: existingAdmin.id,
+          organization_id: existingAdmin.organization_id,
+          is_admin: true,
+          is_manager: false,
+          is_teamlead: false,
+          is_employee: false,
+          role: 'Admin',
+          role_id: null,
+          photo_path: existingAdmin.photo_path || '',
+          feature: feature,
+          message: 'SSO Authentication Successful',
+          error: null,
+        });
       }
 
-      // 4. User found as employee/manager/teamlead — build response like userAuth does
-      if (userData.status == 2) {
-        return res.status(400).json({ code: 400, error: 'Not Found', message: 'User suspended by admin', data: null });
+      // ─── 3. USER NOT FOUND — auto-provision in emp-monitor DB ───
+      console.log('SSO: user not found, auto-provisioning in emp-monitor DB...');
+      const timezone = decoded.timezone || 'Asia/Kolkata';
+      // Deep-clone defaultSettings to avoid mutating the shared require() cache
+      const ssoSettings = JSON.parse(JSON.stringify(defaultSettings));
+
+      if (isAdminRole) {
+        // ─── Create as Admin (owner of new org in emp-monitor) ───
+        // Use empcloud license dates if available, else default 1 year
+        const beginDate = licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+        const expireDate = licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : moment().add(1, 'year').format('YYYY-MM-DD');
+        const totalSeats = licenseData.total_seats || 100;
+
+        ssoSettings.pack.expiry = expireDate;
+        ssoSettings.pack.begin_date = beginDate;
+
+        // Insert user
+        const adminNewData = await authModel.insertAdminDetails(
+          first_name || 'User', last_name || '', email, null, beginDate, null
+        );
+        console.log('SSO: created admin user, id:', adminNewData.insertId);
+
+        // Insert organization with license seats from empcloud
+        const orgData = await authModel.insertOrganisation(adminNewData.insertId, timezone, 0, totalSeats, null);
+        console.log('SSO: created organization, id:', orgData.insertId);
+
+        // Insert defaults (department, location, roles, shift)
+        await new Promise((resolve) => {
+          authModel.insertLocationAndDepartment_ROLE(orgData.insertId, timezone, ssoSettings.tracking.fixed, adminNewData.insertId, (err, data) => {
+            resolve(data);
+          });
+        });
+
+        // Insert org settings
+        await authModel.insertOrganizationSetting(orgData.insertId, ssoSettings);
+        console.log('SSO: created org settings, defaults provisioned');
+
+        // Sync used_seats=1 back to empcloud (new org, 1 admin user)
+        await empcloudDb.query(
+          `UPDATE org_subscriptions s JOIN modules m ON m.id = s.module_id
+           SET s.used_seats = 1 WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
+          [org_id]
+        ).catch((e) => console.log('SSO: empcloud seat sync skipped:', e.message));
+
+        const adminJsonData = {
+          organization_id: orgData.insertId,
+          user_id: adminNewData.insertId,
+          first_name: first_name || 'User',
+          last_name: last_name || '',
+          email: email,
+          is_manager: false,
+          is_teamlead: false,
+          is_employee: false,
+          is_admin: true,
+          timezone: timezone,
+          language: 'en',
+          weekday_start: 'monday',
+          productive_hours: 28800,
+          productivity_data: ssoSettings.productiveHours,
+        };
+
+        const payload = { user_id: adminJsonData.user_id };
+        await redis.setAsync(
+          adminJsonData.user_id,
+          JSON.stringify({ ...adminJsonData, permissionData: Array.from(Array(25).keys()).map(item => item + 1) }),
+          'EX',
+          Comman.getTime(process.env.JWT_EXPIRY)
+        );
+        const accessToken = await jwtService.generateAccessToken(payload);
+        const feature = await authModel.dashboardFeature();
+        console.log('SSO: admin provisioned and logged in, userId:', adminNewData.insertId, 'orgId:', orgData.insertId);
+
+        return res.status(200).json({
+          code: 200,
+          data: accessToken,
+          user_name: first_name || 'User',
+          full_name: (first_name || 'User') + ' ' + (last_name || ''),
+          email: email,
+          user_id: adminNewData.insertId,
+          u_id: adminNewData.insertId,
+          organization_id: orgData.insertId,
+          is_admin: true,
+          is_manager: false,
+          is_teamlead: false,
+          is_employee: false,
+          role: 'Admin',
+          role_id: null,
+          photo_path: '',
+          feature: feature,
+          message: 'SSO Authentication Successful — Account auto-provisioned',
+          error: null,
+        });
+      } else {
+        // ─── Create as Employee/Manager under existing org ───
+        // First find if org already exists in emp-monitor (another admin from same org may have logged in)
+        let monitorOrgId = null;
+        const [orgRow] = await mySql.query('SELECT id FROM organizations LIMIT 1').catch(() => [null]);
+        if (orgRow) {
+          monitorOrgId = orgRow.id;
+        } else {
+          // No org exists yet — create a default one with empcloud license data
+          const empBegin = licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+          const empExpire = licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : moment().add(1, 'year').format('YYYY-MM-DD');
+          const empSeats = licenseData.total_seats || 100;
+          ssoSettings.pack.expiry = empExpire;
+          ssoSettings.pack.begin_date = empBegin;
+
+          const tempAdmin = await authModel.insertAdminDetails(
+            'Organization', 'Admin', email, null, empBegin, null
+          );
+          const orgData = await authModel.insertOrganisation(tempAdmin.insertId, timezone, 0, empSeats, null);
+          await new Promise((resolve) => {
+            authModel.insertLocationAndDepartment_ROLE(orgData.insertId, timezone, ssoSettings.tracking.fixed, tempAdmin.insertId, (err, data) => resolve(data));
+          });
+          await authModel.insertOrganizationSetting(orgData.insertId, ssoSettings);
+          monitorOrgId = orgData.insertId;
+          console.log('SSO: created default org for employee, orgId:', monitorOrgId);
+        }
+
+        // Get default department, location, role for this org
+        const [dept] = await mySql.query('SELECT id FROM organization_departments WHERE organization_id = ? LIMIT 1', [monitorOrgId]);
+        const [loc] = await mySql.query('SELECT id FROM organization_locations WHERE organization_id = ? LIMIT 1', [monitorOrgId]);
+        const [role] = await mySql.query('SELECT id FROM roles WHERE organization_id = ? AND name = ? LIMIT 1', [monitorOrgId, monitorRoleName]);
+        const roleId = role ? role.id : (await mySql.query('SELECT id FROM roles WHERE organization_id = ? LIMIT 1', [monitorOrgId]))[0]?.id;
+        const deptId = dept ? dept.id : null;
+        const locId = loc ? loc.id : null;
+
+        if (!deptId || !locId) {
+          console.log('SSO: missing dept/location for org', monitorOrgId);
+          return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'Organization setup incomplete — missing department or location', data: null });
+        }
+
+        // Insert user
+        const userResult = await mySql.query(
+          'INSERT INTO users (first_name, last_name, email, a_email, date_join, status) VALUES (?, ?, ?, ?, ?, 1)',
+          [first_name || 'User', last_name || '', email, email, moment().format('YYYY-MM-DD')]
+        );
+        const newUserId = userResult.insertId;
+        console.log('SSO: created user, id:', newUserId);
+
+        // Get default shift
+        const [defaultShift] = await mySql.query('SELECT id FROM organization_shifts WHERE organization_id = ? LIMIT 1', [monitorOrgId]).catch(() => [null]);
+
+        // Insert employee
+        const empResult = await mySql.query(
+          'INSERT INTO employees (user_id, organization_id, department_id, location_id, timezone, shift_id, custom_tracking_rule) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [newUserId, monitorOrgId, deptId, locId, timezone, defaultShift ? defaultShift.id : null, JSON.stringify(ssoSettings)]
+        );
+        const newEmpId = empResult.insertId;
+        console.log('SSO: created employee, id:', newEmpId);
+
+        // Insert user_role mapping
+        await mySql.query('INSERT INTO user_role (user_id, role_id) VALUES (?, ?)', [newUserId, roleId]);
+        console.log('SSO: created role mapping, roleId:', roleId);
+
+        // Update org user count
+        await mySql.query('UPDATE organizations SET current_user_count = current_user_count + 1 WHERE id = ?', [monitorOrgId]);
+
+        // Sync updated user count back to empcloud used_seats
+        try {
+          const [updatedCount] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [monitorOrgId]);
+          if (updatedCount) {
+            await empcloudDb.query(
+              `UPDATE org_subscriptions s JOIN modules m ON m.id = s.module_id
+               SET s.used_seats = ? WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
+              [updatedCount.current_user_count, org_id]
+            ).catch(() => {});
+            console.log('SSO: synced new employee count to empcloud:', updatedCount.current_user_count);
+          }
+        } catch (e) { console.log('SSO: empcloud seat sync skipped:', e.message); }
+
+        // Now login the newly created employee
+        const [newEmployee] = await authModel.userWithAdminAndRole(email).catch(() => [null]);
+        if (!newEmployee) {
+          return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'User created but lookup failed', data: null });
+        }
+
+        let is_manager = false, is_teamlead = false, is_employee = false;
+        if (newEmployee.role && newEmployee.role.toLowerCase() === 'manager') is_manager = true;
+        else if (newEmployee.role && newEmployee.role.toLowerCase() === 'employee') is_employee = true;
+        else if (newEmployee.role && newEmployee.role.toLowerCase() === 'team lead') is_teamlead = true;
+        else is_employee = true;
+
+        let permissionData = await authModel.userPermission(newEmployee.role_id, newEmployee.organization_id);
+        let permission_ids = [];
+        if (permissionData.length > 0) {
+          permission_ids = _.pluck(permissionData, 'permission_id');
+        }
+
+        const setting = JSON.parse(JSON.stringify(ssoSettings));
+        const shift = '';
+        const productive_hours = 28800;
+
+        const adminJsonData = {
+          user_id: newEmployee.id,
+          employee_id: newEmployee.employee_id,
+          organization_id: newEmployee.organization_id,
+          first_name: newEmployee.first_name,
+          last_name: newEmployee.last_name,
+          email: newEmployee.email,
+          a_email: newEmployee.a_email,
+          location_id: newEmployee.location_id,
+          location_name: newEmployee.location,
+          department_id: newEmployee.department_id,
+          department_name: newEmployee.department,
+          photo_path: '',
+          role_id: newEmployee.role_id,
+          role: newEmployee.role,
+          status: 1,
+          timezone: timezone,
+          is_manager,
+          is_teamlead,
+          is_employee,
+          is_admin: false,
+          weekday_start: newEmployee.weekday_start || 'monday',
+          language: newEmployee.language || 'en',
+          productive_hours,
+          productivity_data: ssoSettings.productiveHours,
+          permissionData,
+        };
+
+        const payload = { user_id: adminJsonData.user_id };
+        await redis.setAsync(
+          adminJsonData.user_id,
+          JSON.stringify({ ...adminJsonData, permission_ids, setting, shift }),
+          'EX',
+          Comman.getTime(process.env.JWT_EXPIRY)
+        );
+        const accessToken = await jwtService.generateAccessToken(payload);
+        console.log('SSO: employee provisioned and logged in, userId:', newEmployee.id, 'empId:', newEmployee.employee_id);
+
+        return res.status(200).json({
+          code: 200,
+          data: accessToken,
+          user_name: newEmployee.first_name,
+          full_name: newEmployee.first_name + ' ' + (newEmployee.last_name || ''),
+          email: email,
+          user_id: newEmployee.employee_id,
+          u_id: newEmployee.employee_id,
+          organization_id: newEmployee.organization_id,
+          is_admin: false,
+          is_manager,
+          is_teamlead,
+          is_employee,
+          role: newEmployee.role,
+          role_id: newEmployee.role_id,
+          photo_path: '',
+          message: 'SSO Authentication Successful — Account auto-provisioned',
+          error: null,
+        });
       }
-
-      let is_manager = false, is_teamlead = false, is_employee = false;
-      if (userData.role && userData.role.toLowerCase() === 'manager') is_manager = true;
-      else if (userData.role && userData.role.toLowerCase() === 'employee') is_employee = true;
-      else if (userData.role && userData.role.toLowerCase() === 'team lead') is_teamlead = true;
-      else if (userData.role && userData.role.toLowerCase()) is_manager = true;
-
-      const userRoles = await authModel.roles(userData.id);
-      let permissionData = await authModel.userPermission(userData.role_id, userData.organization_id);
-      let permission_ids = [];
-      if (permissionData.length > 0) {
-        permission_ids = _.pluck(permissionData, 'permission_id');
-      }
-
-      let setting = JSON.parse(userData.custom_tracking_rule);
-      const shift = userData.shift ? JSON.parse(userData.shift) : '';
-      const productive_setting = userData.productive_hours ? JSON.parse(userData.productive_hours) : null;
-      const productive_hours = productive_setting ? (productive_setting.mode == 'unlimited' ? 28800 : Comman.hourToSeconds(productive_setting.hour)) : 28800;
-
-      const adminJsonData = {
-        user_id: userData.id,
-        employee_id: userData.employee_id,
-        organization_id: userData.organization_id,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        a_email: userData.a_email,
-        email_verified_at: userData.email_verified_at,
-        contact_number: userData.contact_number,
-        emp_code: userData.emp_code,
-        location_id: userData.location_id,
-        location_name: userData.location,
-        department_id: userData.department_id,
-        department_name: userData.department,
-        photo_path: userData.photo_path,
-        address: userData.address,
-        role_id: userData.role_id,
-        role: userData.role,
-        status: userData.status,
-        timezone: userData.timezone,
-        is_manager,
-        is_teamlead,
-        is_employee,
-        is_admin: false,
-        weekday_start: userData.weekday_start,
-        language: userData.language,
-        productive_hours,
-        productivity_data: productive_setting,
-        productivityCategory: userData.productivityCategory,
-        permissionData,
-      };
-
-      // 5. Generate emp-monitor JWT token
-      const payload = { user_id: adminJsonData.user_id };
-
-      // 6. Cache user data in Redis (same pattern as regular login)
-      await redis.setAsync(
-        adminJsonData.user_id,
-        JSON.stringify({ ...adminJsonData, permission_ids, setting, shift }),
-        'EX',
-        Comman.getTime(process.env.JWT_EXPIRY)
-      );
-
-      const accessToken = await jwtService.generateAccessToken(payload);
-      const feature = await authModel.dashboardFeature();
-
-      // 7. Return data in the format SSOGate expects
-      return res.status(200).json({
-        code: 200,
-        data: accessToken,
-        user_name: userData.first_name,
-        full_name: userData.first_name + ' ' + userData.last_name,
-        email: userData.a_email,
-        user_id: userData.employee_id,
-        u_id: userData.id,
-        organization_id: userData.organization_id,
-        is_admin: false,
-        is_manager: adminJsonData.is_manager,
-        is_teamlead: adminJsonData.is_teamlead,
-        is_employee: adminJsonData.is_employee,
-        role: userData.role,
-        role_id: userData.role_id,
-        photo_path: userData.photo_path || '',
-        permissionData,
-        feature,
-        roles: userRoles,
-        total_allowed_user_count: userData.total_allowed_user_count,
-        location_id: userData.location_id,
-        department_id: userData.department_id,
-        weekday_start: userData.weekday_start,
-        language: userData.language,
-        message: 'SSO Authentication Successful',
-        error: null,
-      });
     } catch (error) {
       console.log('SSO Login error ---', error);
       return res.status(400).json({ code: 400, error: 'SSO Error', message: error.message, data: null });

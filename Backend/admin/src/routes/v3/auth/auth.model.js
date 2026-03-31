@@ -34,7 +34,7 @@ class AuthModel {
         JOIN ?? o ON o.user_id = u.id
         JOIN ?? os ON os.organization_id = o.id
         LEFT JOIN ?? r ON r.user_id=u.id
-        WHERE  a_email = ? OR email = ? OR o.amember_id= ?
+        WHERE  u.a_email = ? OR u.email = ? OR o.amember_id= ?
         `
         }; //status 1-active ,0-account deleted
         const params = [this.userTable, this.organizationTable, this.organizationSettingTable, this.resellerTable, email, email, amember_id];
