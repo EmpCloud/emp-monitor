@@ -46,10 +46,12 @@ function offsetToSeconds(offset) {
   return String(sign * (parseInt(m[2], 10) * 3600 + parseInt(m[3], 10) * 60));
 }
 
-/** Keep date as "YYYY-MM-DD" — the backend stores it in this format */
+/** Send date as epoch ms — Joi.date() accepts this cleanly and moment() parses it correctly */
 function formatDateJoin(dateStr) {
   if (!dateStr) return "";
-  return dateStr.slice(0, 10);
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.getTime();
 }
 
 /**
