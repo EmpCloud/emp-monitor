@@ -77,8 +77,8 @@ class UserActivity {
             const location_id = parseInt(req.body.location_id);
             const department_id = parseInt(req.body.department_id);
             const role_ids = req.body.role_id.split(',');
-            const date_join = req.body.date_join ? `'${moment(req.body.date_join, 'MM/DD/YYYY').format('YYYY-MM-DD')}'` : null;
-            const address = req.body.address ? `'${req.body.address.replace(/'/g, "''").replace(/"/g, '""')}'` : null;
+            const date_join = req.body.date_join ? moment(req.body.date_join, 'MM/DD/YYYY').format('YYYY-MM-DD') : null;
+            const address = req.body.address || null;
             const status = parseInt(req.body.status) || 1;
             const contact_number = req.body.phone ? req.body.phone : null;
             const photo_path = '/default/profilePic/user.png';
@@ -130,7 +130,7 @@ class UserActivity {
             const [orgSetting] = await UserActivityModel.getOrganizationSeeting(organization_id);
             if (orgSetting.current_count >= orgSetting.total_allowed_user_count) return sendResponse(res, 400, null, userMessages.find(x => x.id === "4")[language] || userMessages.find(x => x.id === "4")["en"], null);
 
-            const user = await UserActivityModel.userRegister(first_name, last_name, email, encripted, `'${contact_number}'`, date_join, address, photo_path, status);
+            const user = await UserActivityModel.userRegister(first_name, last_name, email, encripted, contact_number, date_join, address, photo_path, status);
 
             const employee = await UserActivityModel.addUserToEmp(user.insertId, organization_id, department_id, location_id, emp_code, shift_id, timezone, tracking_mode, tracking_rule_type, orgSetting.rules, project_name,  is_mobile);
 
