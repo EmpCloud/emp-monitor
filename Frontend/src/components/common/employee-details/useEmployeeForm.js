@@ -46,12 +46,10 @@ function offsetToSeconds(offset) {
   return String(sign * (parseInt(m[2], 10) * 3600 + parseInt(m[3], 10) * 60));
 }
 
-/** "YYYY-MM-DD" → "MM/DD/YYYY", matching PHP's date_join format */
+/** Keep date as "YYYY-MM-DD" — the backend stores it in this format */
 function formatDateJoin(dateStr) {
   if (!dateStr) return "";
-  const [y, mo, d] = dateStr.split("-");
-  if (!y || !mo || !d) return dateStr;
-  return `${mo}/${d}/${y}`;
+  return dateStr.slice(0, 10);
 }
 
 /**
