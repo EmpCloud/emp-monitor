@@ -1351,7 +1351,7 @@ class AuthService {
         // Insert user_role mapping (skip if already exists)
         const [existingRole] = await mySql.query('SELECT id FROM user_role WHERE user_id = ? LIMIT 1', [newUserId]).catch(() => [null]);
         if (!existingRole) {
-          await mySql.query('INSERT INTO user_role (user_id, role_id) VALUES (?, ?)', [newUserId, roleId]);
+          await mySql.query('INSERT INTO user_role (user_id, role_id, created_by) VALUES (?, ?, ?)', [newUserId, roleId, newUserId]);
           console.log('SSO: created role mapping, roleId:', roleId);
           // Update org user count only for truly new employees
           await mySql.query('UPDATE organizations SET current_user_count = current_user_count + 1 WHERE id = ?', [monitorOrgId]);
