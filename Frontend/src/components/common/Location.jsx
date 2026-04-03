@@ -35,19 +35,19 @@ const LOCATION_COORDINATES = {
 const getLocationCoordinates = (locationName) => {
   if (!locationName) return null;
   const normalizedName = locationName.toLowerCase().trim();
-  
+
   // Try exact match first
   if (LOCATION_COORDINATES[normalizedName]) {
     return LOCATION_COORDINATES[normalizedName];
   }
-  
+
   // Try partial match
   for (const [key, coords] of Object.entries(LOCATION_COORDINATES)) {
     if (normalizedName.includes(key) || key.includes(normalizedName)) {
       return coords;
     }
   }
-  
+
   // Default to center of India if not found
   return { latitude: 20.5937, longitude: 78.9629 };
 };
@@ -72,6 +72,7 @@ function AmChartsMap({ locations }) {
         wheelX: "none",
         wheelY: "none",
         projection: am5map.geoMercator(),
+        maskContent: false,
       }),
     );
 
@@ -85,7 +86,6 @@ function AmChartsMap({ locations }) {
     );
 
     polygonSeries.mapPolygons.template.setAll({
-      tooltipText: "{name}",
       interactive: true,
       fillOpacity: 0.9,
     });
@@ -100,6 +100,32 @@ function AmChartsMap({ locations }) {
     pointSeries.bullets.push((root, series, dataItem) => {
       const container = am5.Container.new(root, {});
 
+      const tooltip = am5.Tooltip.new(root, {
+        getFillFromSprite: false,
+        autoTextColor: false,
+        pointerOrientation: "vertical",
+        dy: -10,
+      });
+      tooltip.get("background").setAll({
+        fill: am5.color(0x1e293b),
+        fillOpacity: 0.95,
+        strokeWidth: 0,
+        cornerRadius: 6,
+        shadowBlur: 8,
+        shadowColor: am5.color(0x000000),
+        shadowOffsetY: 2,
+        shadowOpacity: 0.3,
+      });
+      tooltip.label.setAll({
+        fill: am5.color(0xffffff),
+        fontSize: 13,
+        fontWeight: "500",
+        paddingTop: 6,
+        paddingBottom: 6,
+        paddingLeft: 10,
+        paddingRight: 10,
+      });
+
       const circle = container.children.push(
         am5.Circle.new(root, {
           radius: 5,
@@ -107,6 +133,7 @@ function AmChartsMap({ locations }) {
           strokeWidth: 2,
           stroke: am5.color(0xffffff),
           tooltipText: "{city}: {hours} ({percentage}%)",
+          tooltip: tooltip,
         }),
       );
 
@@ -171,7 +198,7 @@ export default function LocationPerformance({
   const rows = data?.rows || [];
 
   return (
-    <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 p-4 sm:p-6 w-full max-w-7xl mx-auto h-full overflow-hidden flex flex-col">
+    <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 p-4 sm:p-6 w-full max-w-7xl mx-auto h-full flex flex-col">
       <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
         <div className="max-w-5xl mx-auto">
           {/* ── Header ── */}
@@ -189,10 +216,10 @@ export default function LocationPerformance({
           <div className="flex flex-col sm:flex-row gap-5 items-start">
             {/* Map */}
             <div
-              className="w-full sm:w-44 shrink-0 bg-slate-800 rounded-xl overflow-hidden"
-              style={{ minHeight: 220 }}
+              className="w-full sm:w-72 shrink-0 bg-slate-800 rounded-xl relative"
+              style={{ minHeight: 300, zIndex: 10 }}
             >
-              <div className="2xl:w-full w-44 h-44 2xl:h-56 p-2">
+              <div className="w-full h-72 p-2">
                 {loading ? (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
                     Loading...

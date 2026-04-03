@@ -52,10 +52,7 @@ const DEPARTMENTS = [
 ];
 
 const EMPLOYEES = [
-  { label: "See all", value: "all" },
-  { label: "Rupes Dhru", value: "rupes" },
-  { label: "Rakshaa R", value: "raksha" },
-  { label: "Harish VS", value: "harish" },
+  { label: "See All Employee", value: "all" },
 ];
 
 const DATE_RANGES = [
@@ -158,8 +155,7 @@ const EmpInsights = () => {
               <span className="font-semibold">Employee</span> Insights
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-5">
-              &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-              consectetur adipisci&quot;
+
             </p>
           </div>
           <div className="absolute right-0 -top-4 hidden lg:flex items-end gap-1 mr-2">
@@ -207,33 +203,11 @@ const EmpInsights = () => {
             setCurrentPage(1)
           }}
           onPageSizeChange={undefined}
-          onDownloadCsv={() => {
-            if (!insightStats) return;
-            const headers = ["Period", "Office Time", "Productive", "Unproductive", "Neutral", "Active Time", "Productivity"];
-            const rows = ["today", "yesterday", "organization"].map((key) => {
-              const s = insightStats[key];
-              if (!s) return null;
-              return [
-                key.charAt(0).toUpperCase() + key.slice(1),
-                s.officeTime, s.productiveTime, s.unproductiveTime,
-                s.neutralTime, s.activeTime, s.productivityText,
-              ].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",");
-            }).filter(Boolean);
-            const csv = [headers.join(","), ...rows].join("\n");
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `employee_insights_${selectedDate}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }}
+          onDownloadCsv={null}
         />
       </div>
 
-     
+
 
         <div className="flex items-center gap-6 w-full mt-8  border-t border-[#6B6B6B]/20 pt-4">
           <div className="flex items-center gap-2 min-w-fit">
@@ -246,8 +220,7 @@ const EmpInsights = () => {
           <div className="relative flex-1">
             <div className="h-10 w-full rounded-lg bg-[#DADADA] px-4 pr-12 flex items-center">
               <span className="text-xs text-slate-500 truncate">
-                &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-                consectetur adipisci
+                {insightStats?.currentLocation || ""}
               </span>
             </div>
             <button
@@ -265,7 +238,7 @@ const EmpInsights = () => {
       {loading ? <p className="text-xs text-slate-400 mt-3">Loading insights...</p> : null}
 
     </div>
-    
+
   );
 };
 

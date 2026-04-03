@@ -97,16 +97,18 @@ const InsightsFilter = ({
         </div>
       </div>
 
-      <div className="flex items-start mt-5">
-        <Button
-          type="button"
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5"
-          onClick={onDownloadCsv}
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Download CSV File
-        </Button>
-      </div>
+      {onDownloadCsv && (
+        <div className="flex items-start mt-5">
+          <Button
+            type="button"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5"
+            onClick={onDownloadCsv}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download CSV File
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

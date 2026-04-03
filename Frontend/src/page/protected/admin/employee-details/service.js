@@ -209,16 +209,35 @@ export const fetchEmployees = async ({
   }
 };
 
-export const fetchRemovedUsers = async () => {
+export const fetchRemovedUsers = async ({ startDate, endDate } = {}) => {
   try {
-    const { data } = await apiService.apiInstance.get("/user/removed-user-list");
-    const users = Array.isArray(data?.data) ? data.data
-      : Array.isArray(data?.data?.user_data) ? data.data.user_data
+    let query = "";
+    if (startDate) query += `fromDate=${startDate}`;
+    if (endDate) query += `${query ? "&" : ""}toDate=${endDate}`;
+    const url = `/user/removed-user-list${query ? `?${query}` : ""}`;
+    const { data } = await apiService.apiInstance.get(url);
+    const list = Array.isArray(data?.data?.list) ? data.data.list
+      : Array.isArray(data?.data) ? data.data
       : [];
-    return { employees: users, raw: data };
+    const count = data?.data?.count ?? list.length;
+    return { employees: list, count, raw: data };
   } catch (error) {
     console.error("Employee Details: fetchRemovedUsers error", error);
-    return { employees: [], raw: null };
+    return { employees: [], count: 0, raw: null };
+  }
+};
+
+export const fetchEmployeeList = async ({ status = 1, locationId, departmentId, roleId } = {}) => {
+  try {
+    const payload = { status };
+    if (locationId) payload.location_id = locationId;
+    if (departmentId) payload.department_id = departmentId;
+    if (roleId) payload.role_id = roleId;
+    const { data } = await apiService.apiInstance.post("/user/employee-list", payload);
+    return Array.isArray(data?.data) ? data.data : [];
+  } catch (error) {
+    console.error("Employee Details: fetchEmployeeList error", error);
+    return [];
   }
 };
 
@@ -244,4 +263,3 @@ export const mapEmployeeForTable = (emp, idx = 0) => {
     version: emp.software_version || "N/A"
   };
 };
-

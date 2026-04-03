@@ -65,16 +65,21 @@ export default function TopHeader() {
       <div className="flex items-center gap-4">
         <BackToCloud />
         {/* HRMS Badge */}
-        <button className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors">
+        {/* <button className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors">
           <img src={hrms} alt="" className="h-6 w-6" />
           <span className="hidden lg:inline"> HRMS</span>
-        </button>
+        </button> */}
 
         {/* Help */}
-        <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        <a
+          href="http://help.empmonitor.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
           <HelpCircle className="h-4 w-4" />
           Help
-        </button>
+        </a>
 
         {/* Notification Bell */}
         <div className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-lg  hover:bg-slate-100 transition-colors">
@@ -171,6 +176,6 @@ export default function TopHeader() {
 
        <UniPass isOpen={openUniPass} onClose={() => setOpenUniPass(false)}/>
     </div>
-   
+
   );
 }

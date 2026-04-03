@@ -15,7 +15,7 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState(null); // { type: "success"|"error", msg }
 
-  const { form, set, reset, errors, departments, deptLoading, validate, buildFormData } = useEmployeeForm(locations);
+  const { form, set, reset, errors, setErrors, departments, deptLoading, validate, buildFormData } = useEmployeeForm(locations);
 
   const handleSubmit = async () => {
     if (!validate()) return;
@@ -29,8 +29,26 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
       onSuccess?.();
       setTimeout(() => { onOpenChange(false); setStatus(null); }, 1200);
     } else {
-      const errMsg = res?.message || res?.msg || res?.error || res?.data?.message || "Registration failed. Please try again.";
-      setStatus({ type: "error", msg: errMsg });
+      const errMsg = res?.error || res?.message || res?.msg || res?.data?.message || "Registration failed. Please try again.";
+      const errLower = (errMsg || "").toLowerCase();
+      const fieldErrors = {};
+
+      if (errLower.includes("password"))       fieldErrors.password = errMsg;
+      if (errLower.includes("email"))          fieldErrors.email = errMsg;
+      if (errLower.includes("first_name") || errLower.includes("first name"))  fieldErrors.firstName = errMsg;
+      if (errLower.includes("last_name") || errLower.includes("last name"))    fieldErrors.lastName = errMsg;
+      if (errLower.includes("emp_code") || errLower.includes("employee code")) fieldErrors.employeeCode = errMsg;
+      if (errLower.includes("location"))       fieldErrors.locationId = errMsg;
+      if (errLower.includes("department"))     fieldErrors.departmentId = errMsg;
+      if (errLower.includes("role"))           fieldErrors.roleId = errMsg;
+      if (errLower.includes("phone") || errLower.includes("mobile")) fieldErrors.mobile = errMsg;
+      if (errLower.includes("timezone"))       fieldErrors.timezone = errMsg;
+
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...fieldErrors }));
+      } else {
+        setStatus({ type: "error", msg: errMsg });
+      }
     }
   };
 

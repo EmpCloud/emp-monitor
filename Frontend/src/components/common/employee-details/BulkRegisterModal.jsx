@@ -55,7 +55,7 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
               onChange={handleFileChange} className="hidden" />
             <div className="flex-1 px-5 py-3 text-gray-400 text-[15px] truncate cursor-default"
               onClick={() => fileInputRef.current?.click()}>
-              {file ? file.name : "Choose file…"}
+              {file ? file.name : "Choose file\u2026"}
             </div>
             <button type="button" onClick={() => fileInputRef.current?.click()}
               className="px-6 py-3 bg-gray-200 text-gray-500 text-[15px] font-medium hover:bg-gray-300 transition-colors">
@@ -65,7 +65,7 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
 
           <p className="text-[14px] text-gray-600 leading-relaxed">
             Note: Upload file only in <strong>.xlsx</strong> format.{" "}
-            <a href="#" className="text-blue-600 font-bold hover:underline" onClick={(e) => e.preventDefault()}>
+            <a href="/src/assets/registration-excel/Employee Registration.xlsx" download="Employee Registration.xlsx" className="text-blue-600 font-bold hover:underline">
               Download
             </a>{" "}sample template.
           </p>
@@ -77,9 +77,9 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
                   <p className="flex items-center gap-2 text-green-700 font-semibold">
                     <CheckCircle2 size={15} /> {result.added} employee(s) registered.
                   </p>
-                  {result.duplicateEmails.length > 0 && <p className="text-amber-600">⚠ {result.duplicateEmails.length} duplicate email(s) skipped.</p>}
-                  {result.duplicateCodes.length > 0 && <p className="text-amber-600">⚠ {result.duplicateCodes.length} duplicate code(s) skipped.</p>}
-                  {result.failed.length > 0 && <p className="text-red-500">✕ {result.failed.length} row(s) failed validation.</p>}
+                  {result.duplicateEmails.length > 0 && <p className="text-amber-600">{result.duplicateEmails.length} duplicate email(s) skipped.</p>}
+                  {result.duplicateCodes.length > 0 && <p className="text-amber-600">{result.duplicateCodes.length} duplicate code(s) skipped.</p>}
+                  {result.failed.length > 0 && <p className="text-red-500">{result.failed.length} row(s) failed validation.</p>}
                 </>
               ) : (
                 <p className="flex items-center gap-2 text-red-600 font-semibold">

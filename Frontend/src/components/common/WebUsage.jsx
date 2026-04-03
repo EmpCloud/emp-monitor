@@ -6,18 +6,18 @@ import CustomTab from "../../components/common/elements/CustomTab";
 
 const fallbackData = {
   today: [
-   
+
   ],
   yesterday: [
-   
+
   ],
   thisWeek: [
-    
+
   ],
 };
 
-export default function WebUsageChart({ 
-  data, 
+export default function WebUsageChart({
+  data,
   title = "Top 10 Website Usage",
   report
 }) {
@@ -67,6 +67,17 @@ export default function WebUsageChart({
       cornerRadiusBL: 3,
       cornerRadiusBR: 3,
       tooltipText: "{category}: {value}%",
+    });
+
+    series.slices.template.adapters.add("tooltipText", (text, target) => {
+      const dataItem = target.dataItem;
+      if (dataItem) {
+        const name = dataItem.get("category") || "";
+        const truncated = name.length > 20 ? name.slice(0, 20) + "..." : name;
+        const val = dataItem.get("value") || 0;
+        return `${truncated}: ${val}%`;
+      }
+      return text;
     });
 
     series.slices.template.states.create("hover", { scale: 1.04 });

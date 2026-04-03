@@ -46,7 +46,7 @@ function offsetToSeconds(offset) {
   return String(sign * (parseInt(m[2], 10) * 3600 + parseInt(m[3], 10) * 60));
 }
 
-/** "YYYY-MM-DD" → "MM/DD/YYYY" — backend moment() expects this exact format */
+/** "YYYY-MM-DD" → "MM/DD/YYYY", matching PHP's date_join format */
 function formatDateJoin(dateStr) {
   if (!dateStr) return "";
   const [y, mo, d] = dateStr.split("-");
@@ -97,9 +97,14 @@ export function useEmployeeForm(locations = []) {
     if (!form.email.trim()) e.email = "Email is required";
     else if (!emailRegex.test(form.email.trim())) e.email = "Please enter a valid email address";
 
-    if (!isEdit && !form.password) e.password = "Password is required";
-    else if (!isEdit && form.password && form.password.length < 8) e.password = "Password must be at least 8 characters";
-    if (!isEdit && form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
+    if (!isEdit && !form.password) {
+      e.password = "Password is required";
+    } else if (form.password) {
+      if (form.password.length < 8) e.password = "Password must be at least 8 characters";
+      else if (!/[0-9]/.test(form.password)) e.password = "Password must contain at least one number";
+      else if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(form.password)) e.password = "Password must contain at least one special character";
+    }
+    if (form.password && form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
 
     if (!form.employeeCode.trim()) e.employeeCode = "Employee code is required";
     else if (form.employeeCode.trim().length < 2) e.employeeCode = "Employee code must be at least 2 characters";
@@ -167,5 +172,5 @@ export function useEmployeeForm(locations = []) {
     return payload;
   };
 
-  return { form, set, reset, errors, departments, deptLoading, validate, buildFormData };
+  return { form, set, reset, errors, setErrors, departments, deptLoading, validate, buildFormData };
 }
