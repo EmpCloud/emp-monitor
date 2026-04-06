@@ -9,8 +9,7 @@ import { forEachSeries } from 'async';
 import { IDecodedToken } from 'src/common/interfaces/decoded-token.interface';
 import { timesByDate } from '../utils/shift.util';
 import { Logger } from '../../../../common/errlogger/logger';
-import { InjectRedis } from '@liaoliaots/nestjs-redis';
-import Redis from 'ioredis';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 
 const { MongoClient } = require('mongodb');
 
@@ -23,7 +22,7 @@ export class DataLogEventHandler extends EventEmitter {
     constructor(
         private readonly httpService: HttpService,
         private readonly empAttendanceModel: EmployeeAttendanceModel,
-        @InjectRedis() private readonly redis: Redis,
+        private readonly redisService: RedisService,
         private readonly logger: Logger,
         private readonly emitter: NestEventEmitter,
     ) { 
@@ -79,7 +78,7 @@ export class DataLogEventHandler extends EventEmitter {
             const collection = db.collection('failedactivitydatas');
             const insertResult = await collection.insertMany([params]);
             client.close();
-            let data = await this.redis.get('failedDataCronJobs');
+            let data = await this.redisService.getOrThrow().get('failedDataCronJobs');
             if (!data || +data == 0) {
                 try {
                     const res = await this.httpService.get(process.env.CRONS_JOBS_URL, params).toPromise();

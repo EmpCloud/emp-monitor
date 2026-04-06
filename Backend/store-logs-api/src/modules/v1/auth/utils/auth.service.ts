@@ -1,8 +1,7 @@
 import { Injectable, ForbiddenException, HttpException } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
 import { JWTService } from './jwt.service';
-import { InjectRedis } from '@liaoliaots/nestjs-redis';
-import Redis from 'ioredis';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 
 import config from '../../../../../../config/config.js';
 
@@ -16,13 +15,13 @@ export class AuthService {
     constructor(
         private readonly crytoService: CryptoService,
         private readonly jwtService: JWTService,
-        @InjectRedis() private readonly redis: Redis
+        private readonly redisService: RedisService
     ) { }
 
     async verify(token: string): Promise<any> {
 
         // logout token check
-        const invalidToken = await this.redis.get(token);
+        const invalidToken = await this.redisService.getOrThrow().get(token);
         if (invalidToken) {
             throw new ForbiddenException('Invalid token');
         }

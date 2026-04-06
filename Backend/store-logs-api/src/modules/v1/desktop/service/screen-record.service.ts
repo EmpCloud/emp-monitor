@@ -22,8 +22,7 @@ import { OnedriveUtils } from '../utils/one-drive.utils';
 import { SFtpUtils } from '../utils/SFTP.utils';
 import { DropboxUtils } from '../utils/dropbox.utils';
 import { WebDavUtils } from '../utils/WebDav.utils';
-import { InjectRedis } from '@liaoliaots/nestjs-redis';
-import Redis from 'ioredis';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 import configFile from "../../../../../../config/config.js";
 
 @Injectable()
@@ -33,7 +32,7 @@ export class ScreenRecordService {
   constructor(
     private readonly responseHelperService: ResponseHelperService,
     private readonly integrationModel: IntegrationModel,
-    @InjectRedis() private readonly redis: Redis,
+    private readonly redisService: RedisService,
   ) {
     this.providers = new Map();
 
@@ -144,14 +143,14 @@ export class ScreenRecordService {
     let storage = null;
     let dbStorageData = null;
     try {
-        let getScrnStorageData = await this.redis.get(`${userData.organization_id}_storage_creds`);
+        let getScrnStorageData = await this.redisService.getOrThrow().get(`${userData.organization_id}_storage_creds`);
         if(getScrnStorageData) {
             dbStorageData = JSON.parse(getScrnStorageData);
         }
         else {
             dbStorageData = await this.integrationModel.findOne(userData.organization_id);
             if (dbStorageData?.organizationproviders?.orgProCreds?.is_expired === 1) return this.endRequest(400, 'Storage access failed, please check your credentials.', files);
-            await this.redis.set(`${userData.organization_id}_storage_creds`, JSON.stringify(dbStorageData), 'EX', 28800);
+            await this.redisService.getOrThrow().set(`${userData.organization_id}_storage_creds`, JSON.stringify(dbStorageData), 'EX', 28800);
         }
         storage = JSON.parse(dbStorageData.organizationproviders.orgProCreds.creds);
     } catch (error) {
