@@ -1,4 +1,5 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { On } from 'nest-event';
 import { EventEmitter } from 'events';
 import moment = require('moment-timezone');

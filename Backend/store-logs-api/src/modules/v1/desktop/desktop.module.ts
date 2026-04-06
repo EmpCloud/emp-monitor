@@ -1,5 +1,6 @@
 import { MongooseDBModule } from '../../../database/mongoose-db/mongoose-db.module';
-import { Module, HttpModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { DesktopController } from './desktop.controller';
 import { ActivityService } from './service/activity.service';
 // import { SequelizeDbModule } from 'src/database/sequelize-db/sequelize-db.module';

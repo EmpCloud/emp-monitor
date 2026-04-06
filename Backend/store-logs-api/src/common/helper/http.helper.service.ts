@@ -1,4 +1,5 @@
-import { Injectable, HttpService, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { map } from 'rxjs/operators';
 
 @Injectable()
