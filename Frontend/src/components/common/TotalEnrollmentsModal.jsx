@@ -137,8 +137,7 @@ export default function TotalEnrollmentsModal({
                 {title}
               </h2>
               <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
-                *Lorem ipsum quia dolor sit porro quisquam est qui amet
-                consectetur adipisci
+                View and manage all enrolled employees. Use search and filters to find specific employees.
               </p>
             </div>
 
@@ -168,11 +167,12 @@ export default function TotalEnrollmentsModal({
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="appearance-none border border-gray-200 rounded-md px-3 py-1.5 pr-8 bg-white text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer"
+                  className="appearance-none border border-gray-200 rounded-md px-3 py-1.5 pr-8 bg-white text-gray-700 text-sm outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer"
                 >
                   <option value={10}>10</option>
-                  <option value={20}>20</option>
+                  <option value={25}>25</option>
                   <option value={50}>50</option>
+                  <option value={100}>100</option>
                 </select>
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <svg

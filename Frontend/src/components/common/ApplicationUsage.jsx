@@ -25,8 +25,8 @@ const fallbackData = {
   ],
 };
 
-export default function AppUsageChart({ 
-  data, 
+export default function AppUsageChart({
+  data,
   title = "Top 10 Application Usage",
   report
 }) {
@@ -76,6 +76,17 @@ export default function AppUsageChart({
       cornerRadiusBL: 3,
       cornerRadiusBR: 3,
       tooltipText: "{category}: {value}%",
+    });
+
+    series.slices.template.adapters.add("tooltipText", (text, target) => {
+      const dataItem = target.dataItem;
+      if (dataItem) {
+        const name = dataItem.get("category") || "";
+        const truncated = name.length > 20 ? name.slice(0, 20) + "..." : name;
+        const val = dataItem.get("value") || 0;
+        return `${truncated}: ${val}%`;
+      }
+      return text;
     });
 
     series.slices.template.states.create("hover", { scale: 1.04 });

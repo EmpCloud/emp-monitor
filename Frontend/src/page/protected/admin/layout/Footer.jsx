@@ -10,10 +10,10 @@ const Footer = ({ show }) => {
         Copyright {new Date().getFullYear()} © EmpMonitor All Right Reserved
       </div>
 
-      <button className="flex items-center gap-2 bg-[#0061ff] hover:bg-[#0051d5] text-white text-xs 2xl:px-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium">
+      {/* <button className="flex items-center gap-2 bg-[#0061ff] hover:bg-[#0051d5] text-white text-xs 2xl:px-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium">
         <FileText size={18} />
         <span>Download Report</span>
-      </button>
+      </button> */}
     </footer>
   );
 };

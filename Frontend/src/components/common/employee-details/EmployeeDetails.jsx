@@ -25,6 +25,7 @@ import RegisterEmployeeModal from "./RegisterEmployeeModal";
 import EditEmployeeModal from "./EditEmployeeModal";
 import BulkUpdateModal from "./BulkUpdateModal";
 import BulkRegisterModal from "./BulkRegisterModal";
+import DeletedUsersModal from "./DeletedUsersModal";
 import {
   deleteEmployee, deleteMultipleEmployees,
   suspendMultipleEmployees, activateMultipleEmployees,
@@ -95,6 +96,7 @@ export default function EmployeeDetailsTable({
   const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false);
   const [bulkRegisterOpen, setBulkRegisterOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [deletedUsersOpen, setDeletedUsersOpen] = useState(false);
 
   // Confirm dialog state
   const [confirm, setConfirm] = useState(null); // { type, ids, label }
@@ -193,9 +195,8 @@ export default function EmployeeDetailsTable({
   };
 
   const tabs = [
-    { key: "active",    label: "Active",              icon: <UserCheck size={15} /> },
-    { key: "suspended", label: "Suspended",            icon: <UserX size={15} /> },
-    { key: "deleted",   label: "Deleted User History", icon: <Trash2 size={15} /> },
+    { key: "active",    label: "Active",    icon: <UserCheck size={15} /> },
+    { key: "suspended", label: "Suspended", icon: <UserX size={15} /> },
   ];
 
   return (
@@ -247,13 +248,17 @@ export default function EmployeeDetailsTable({
           {tabs.map(({ key, label, icon }) => (
             <Button key={key} onClick={() => handleTabChange(key)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
-                activeTab === key
-                  ? key === "deleted" ? "bg-rose-500 text-white" : "tab-active"
-                  : key === "deleted" ? "tab-deleted" : "tab-inactive"
+                activeTab === key ? "tab-active" : "tab-inactive"
               }`}>
               {icon} {label}
             </Button>
           ))}
+          <Button
+            onClick={() => setDeletedUsersOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-semibold transition-all duration-200 bg-rose-500 hover:bg-rose-600 text-white"
+          >
+            <Trash2 size={15} /> Deleted User History
+          </Button>
         </div>
 
         {/* Filters */}
@@ -293,7 +298,7 @@ export default function EmployeeDetailsTable({
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-gray-500 font-medium">Show</span>
             <Select value={entriesPerPage} onValueChange={(v) => { setEntriesPerPage(v); setCurrentPage(1); }}>
-              <SelectTrigger className="h-8 w-[70px] text-[13px] rounded-lg border-gray-200">
+              <SelectTrigger className="h-8 w-[80px] text-[13px] rounded-lg border-gray-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -472,6 +477,7 @@ export default function EmployeeDetailsTable({
       />
       <BulkRegisterModal open={bulkRegisterOpen} onOpenChange={setBulkRegisterOpen} onSuccess={onRefresh} />
       <BulkUpdateModal   open={bulkUpdateOpen}   onOpenChange={setBulkUpdateOpen}   onSuccess={onRefresh} />
+      <DeletedUsersModal isOpen={deletedUsersOpen} onClose={() => setDeletedUsersOpen(false)} />
 
       {/* Confirm Dialog */}
       <ConfirmDialog

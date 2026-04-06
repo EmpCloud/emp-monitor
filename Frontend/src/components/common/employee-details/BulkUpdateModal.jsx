@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
-import { bulkUpdateEmployees } from "@/page/protected/admin/employee-details/service";
+import { bulkUpdateEmployees, fetchEmployeeList } from "@/page/protected/admin/employee-details/service";
 
 export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [result, setResult] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -55,7 +56,7 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
               onChange={handleFileChange} className="hidden" />
             <div className="flex-1 px-5 py-3 text-gray-400 text-[15px] truncate cursor-default"
               onClick={() => fileInputRef.current?.click()}>
-              {file ? file.name : "Choose file…"}
+              {file ? file.name : "Choose file\u2026"}
             </div>
             <button type="button" onClick={() => fileInputRef.current?.click()}
               className="px-6 py-3 bg-gray-200 text-gray-500 text-[15px] font-medium hover:bg-gray-300 transition-colors">
@@ -67,16 +68,39 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
             Note: Upload file only in <strong>.xlsx</strong> format.{" "}
             <button
               type="button"
-              className="text-blue-600 font-bold hover:underline"
-              onClick={() => {
-                const headers = [["Unique ID", "First Name", "Last Name", "Email", "Emp Code", "Role", "Location", "Department", "Shift"]];
-                const ws = XLSX.utils.aoa_to_sheet(headers);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Template");
-                XLSX.writeFile(wb, "bulk_update_template.xlsx");
+              disabled={downloading}
+              className="text-blue-600 font-bold hover:underline disabled:opacity-50"
+              onClick={async () => {
+                setDownloading(true);
+                try {
+                  const employees = await fetchEmployeeList();
+                  const headers = ["First Name", "Last Name", "Full Name", "UserName", "Email",
+                    "Employee ID", "Employee Unique ID", "Last Login", "Location", "Department",
+                    "Role"];
+                  const rows = employees.map((emp) => [
+                    emp.first_name || emp.name || "",
+                    emp.last_name || "",
+                    emp.full_name || "",
+                    emp.username || "",
+                    emp.email || "",
+                    emp.emp_code || "",
+                    emp.employee_unique_id || "",
+                    emp.employee_updated_at || "",
+                    emp.location || "",
+                    emp.department || "",
+                    emp.role || (Array.isArray(emp.roles) && emp.roles[0]?.role) || "",
+                  ]);
+                  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+                  const wb = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, "Employees");
+                  XLSX.writeFile(wb, "Employee list.xlsx");
+                } catch (err) {
+                  setResult({ type: "error", msg: "Failed to download employee list." });
+                }
+                setDownloading(false);
               }}
             >
-              Download
+              {downloading ? "Downloading..." : "Download"}
             </button>{" "}User List template.
           </p>
 
@@ -87,8 +111,8 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
                   <p className="flex items-center gap-2 text-green-700 font-semibold">
                     <CheckCircle2 size={15} /> {result.updated} employee(s) updated.
                   </p>
-                  {result.notFound.length > 0 && <p className="text-amber-600">⚠ {result.notFound.length} employee(s) not found.</p>}
-                  {result.badRoles.length > 0 && <p className="text-amber-600">⚠ {result.badRoles.length} invalid role(s) skipped.</p>}
+                  {result.notFound.length > 0 && <p className="text-amber-600">{result.notFound.length} employee(s) not found.</p>}
+                  {result.badRoles.length > 0 && <p className="text-amber-600">{result.badRoles.length} invalid role(s) skipped.</p>}
                 </>
               ) : (
                 <p className="flex items-center gap-2 text-red-600 font-semibold">
