@@ -28,8 +28,8 @@
     },
     "dependencies": {
         "@hapi/joi": "^17.1.1",
-        "@nestjs/common": "^11.1.17",
-        "@nestjs/core": "^9.0.7",
+        "@nestjs/common": "^11.1.18",
+        "@nestjs/core": "^11.1.18",
         "@nestjs/platform-express": "^11.1.17",
         "async": "^3.2.6",
         "aws-sdk": "^2.1693.0",
