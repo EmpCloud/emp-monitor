@@ -11,7 +11,7 @@ const ProvidersAndExports = [
     UserSystemLogsMongoModel,
 ];
 
-const mongoOption: any = { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false };
+const mongoOption: any = {};
 
 if (process.env.NODE_ENV === 'production') {
     mongoOption.auth = { user: process.env.MONGO_USER, password: process.env.MONGO_PASSWORD };

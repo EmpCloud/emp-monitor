@@ -72,7 +72,7 @@ export class DataLogEventHandler extends EventEmitter {
 
     async FailedDataPushFun(params: any) {
         try{
-            const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+            const client = new MongoClient(process.env.MONGO_URI);
             await client.connect();
             const db = client.db(process.env.MONGO_DB_NAME);
             const collection = db.collection('failedactivitydatas');
