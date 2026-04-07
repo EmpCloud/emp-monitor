@@ -47,6 +47,7 @@ const BiometricRoutes = require('./bioMetric/biometric.routes');
 const AmemberModule = require('./amemberHook/router');
 
 const DeleteRoute = require("./deleteOrgData/delOrganization.routes");
+const UserSyncController = require('./userSync/userSync.controller');
 
 const MobileModule = require('./mobile/mobile.module')
 
@@ -94,6 +95,11 @@ class Modules {
 
         this.modules.use('/mobile', new MobileModule().getRouters());
         
+        // EmpCloud user sync (API key auth, no JWT required)
+        this.modules.post('/users/sync', UserSyncController.syncUser);
+        this.modules.post('/users/sync/bulk', UserSyncController.bulkSyncUsers);
+        this.modules.delete('/users/sync/:empcloudUserId', UserSyncController.unsyncUser);
+
         this.modules.use(AuthMiddleware.authenticate);
         this.modules.get('/me', (req, res) => {
             res.json({ ...req.decoded })
