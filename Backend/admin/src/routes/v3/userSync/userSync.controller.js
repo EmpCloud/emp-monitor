@@ -102,23 +102,9 @@ async function unsyncUser(req, res) {
         // Deactivate user (soft delete — keep data but mark inactive)
         await db.query('UPDATE users SET status = 0, updated_at = NOW() WHERE id = ?', [user.id]);
 
-        // Notify EmpCloud about seat removal
-        try {
-            const empcloudUrl = process.env.EMPCLOUD_API_URL || 'http://localhost:3000/api/v1';
-            await fetch(`${empcloudUrl}/subscriptions/seat-webhook`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.EMP_CLOUD_SECRET_KEY || '' },
-                body: JSON.stringify({
-                    module_slug: 'emp-monitor',
-                    empcloud_user_id: Number(empcloudUserId),
-                    organization_id: user.organization_id,
-                    action: 'removed',
-                }),
-                signal: AbortSignal.timeout(5000),
-            });
-        } catch (err) {
-            console.error('Failed to notify EmpCloud about seat removal:', err.message);
-        }
+        // No webhook callback here — EmpCloud already handles seat removal
+        // when it calls this DELETE endpoint. Webhook only fires when users
+        // are removed directly inside Monitor (not via EmpCloud sync).
 
         return res.json({ code: 200, message: 'User deactivated', data: { id: user.id, email: user.email } });
     } catch (error) {
