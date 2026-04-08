@@ -48,6 +48,8 @@ const AmemberModule = require('./amemberHook/router');
 
 const DeleteRoute = require("./deleteOrgData/delOrganization.routes");
 const UserSyncController = require('./userSync/userSync.controller');
+const rateLimit = require('express-rate-limit');
+const syncRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: { code: 429, message: 'Too many sync requests' } });
 
 const MobileModule = require('./mobile/mobile.module')
 
@@ -95,10 +97,10 @@ class Modules {
 
         this.modules.use('/mobile', new MobileModule().getRouters());
         
-        // EmpCloud user sync (API key auth, no JWT required)
-        this.modules.post('/users/sync', UserSyncController.syncUser);
-        this.modules.post('/users/sync/bulk', UserSyncController.bulkSyncUsers);
-        this.modules.delete('/users/sync/:empcloudUserId', UserSyncController.unsyncUser);
+        // EmpCloud user sync (API key auth + rate limited, no JWT required)
+        this.modules.post('/users/sync', syncRateLimiter, UserSyncController.syncUser);
+        this.modules.post('/users/sync/bulk', syncRateLimiter, UserSyncController.bulkSyncUsers);
+        this.modules.delete('/users/sync/:empcloudUserId', syncRateLimiter, UserSyncController.unsyncUser);
 
         this.modules.use(AuthMiddleware.authenticate);
         this.modules.get('/me', (req, res) => {
