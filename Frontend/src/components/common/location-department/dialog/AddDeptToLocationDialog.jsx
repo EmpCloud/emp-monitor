@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 
-const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
+const AddDeptToLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const saving = useLocationDepartmentStore((s) => s.saving);
     const allDepartments = useLocationDepartmentStore((s) => s.allDepartments);
     const saveAddDept = useLocationDepartmentStore((s) => s.saveAddDept);
@@ -67,7 +69,7 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
 
     const handleSubmit = async () => {
         if (selectedDepts.length === 0) {
-            setFormError("At least one department is required");
+            setFormError(t("locDept.atLeastOneDept"));
             return;
         }
         setFormError("");
@@ -79,7 +81,7 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
         if (result?.success) {
             resetForm();
         } else {
-            setFormError(result?.message || "Failed to add department");
+            setFormError(result?.message || t("locDept.failedAddDept"));
         }
     };
 
@@ -90,10 +92,10 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
                     <DialogHeader>
                         <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
                             <Plus className="w-5 h-5" />
-                            Add Department to Location
+                            {t("locDept.addDeptToLocation")}
                         </DialogTitle>
                         <DialogDescription className="text-violet-100 text-xs mt-1">
-                            Assign new or existing departments to this location
+                            {t("locDept.assignDeptDesc")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -106,7 +108,7 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
                     )}
 
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Departments *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.departments")} *</label>
                         <div className="border border-slate-200 rounded-lg p-2 min-h-[80px]">
                             <div className="flex flex-wrap gap-1.5 mb-2">
                                 {selectedDepts.map((dept) => (
@@ -125,7 +127,7 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {
                                 value={deptInput}
                                 onChange={(e) => setDeptInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Search or type new department, press Enter"
+                                placeholder={t("locDept.searchOrTypeDept")}
                                 className="w-full text-sm outline-none bg-transparent placeholder:text-slate-400"
                             />
                             {deptInput && filteredDepts.length > 0 && (

@@ -1,5 +1,6 @@
 import React from 'react'
 import { ClipboardList } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpAlertPolicies from '@/components/common/alert-policies/EmpAlertPolicies'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const AlertPolicies = () => (
-  <Placeholder
-    title="Alert Policies"
-    description="Create and configure alert policies based on employee behaviour triggers."
-    Icon={ClipboardList}
-  />
-)
+const AlertPolicies = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("alertPoliciesTitle")}
+      description={t("alertPoliciesDescription")}
+      Icon={ClipboardList}
+    />
+  )
+}
 
 export default AlertPolicies

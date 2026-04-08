@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import Stats from "@/components/common/Stats";
 import ActivitySnapshot from "@/components/common/Snapshot";
@@ -28,6 +29,8 @@ import PerformanceFilter from "./PerformanceFilter";
 import { useDashboardStore } from "./dashboardStore";
 
 const Dashboard = () => {
+
+  const { t } = useTranslation();
 
   const {
     stats,
@@ -233,8 +236,8 @@ const Dashboard = () => {
         <div className="xl:col-span-6 col-span-12">
 
           <TopProductiveEmployees
-            title="Top 10 Productive Employees"
-            columns={["Employee Name", "Time (Hours)"]}
+            title={t("top10productive")}
+            columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
             employees={productiveEmployees}
             loading={productiveEmployeesLoading}
             report={
@@ -243,8 +246,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Productive Employees")}
-                onViewReport={() => openViewReport("Top Productive Employees - Time Usage", { employees: productiveEmployees, by: filters.productiveBy })}
+                onAiClick={() => openAiAssistant(t("top10productive"))}
+                onViewReport={() => openViewReport(t("topProductiveReport"), { employees: productiveEmployees, by: filters.productiveBy })}
               />
             }
             filter={
@@ -268,8 +271,8 @@ const Dashboard = () => {
         <div className="xl:col-span-6 col-span-12">
 
           <TopNonProductiveEmployees
-            title="Top 10 Non Productive Employees"
-            columns={["Employee Name", "Time (Hours)"]}
+            title={t("top10nonproductive")}
+            columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
             employees={unproductiveEmployees}
             loading={unproductiveEmployeesLoading}
             report={
@@ -278,8 +281,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Non Productive Employees")}
-                onViewReport={() => openViewReport("Top Non-Productive Employees - Time Usage", { employees: unproductiveEmployees, by: filters.unproductiveBy })}
+                onAiClick={() => openAiAssistant(t("top10nonproductive"))}
+                onViewReport={() => openViewReport(t("topNonProductiveReport"), { employees: unproductiveEmployees, by: filters.unproductiveBy })}
               />
             }
             filter={
@@ -300,7 +303,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <ActiveEmp
-            title="Top 10 Active Employees"
+            title={t("top10active")}
             employees={activeEmployees}
             loading={activeEmployeesLoading}
             report={
@@ -309,8 +312,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Active Employees")}
-                onViewReport={() => openViewReport("Top Active Employees", { mode: "timesheet", staticData: activeEmployees, by: filters.activeBy })}
+                onAiClick={() => openAiAssistant(t("top10active"))}
+                onViewReport={() => openViewReport(t("topActiveReport"), { mode: "timesheet", staticData: activeEmployees, by: filters.activeBy })}
               />
             }
             filter={
@@ -330,7 +333,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <NonActiveEmp
-            title="Top 10 Non Active Employees"
+            title={t("top10nonactive")}
             employees={nonActiveEmployees}
             loading={nonActiveEmployeesLoading}
             report={
@@ -339,8 +342,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Non Active Employees")}
-                onViewReport={() => openViewReport("Top Non-Active Employees", { mode: "timesheet", staticData: nonActiveEmployees, by: filters.nonActiveBy })}
+                onAiClick={() => openAiAssistant(t("top10nonactive"))}
+                onViewReport={() => openViewReport(t("topNonActiveReport"), { mode: "timesheet", staticData: nonActiveEmployees, by: filters.nonActiveBy })}
               />
             }
             filter={
@@ -360,7 +363,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <LocationPerformance
-            title="Location Performance"
+            title={t("locPerform")}
             data={locationPerformance}
             loading={locationPerformanceLoading}
             report={
@@ -369,8 +372,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Location Performance")}
-                onViewReport={() => openViewReport("Location Performance", { mode: "performance", staticData: locationPerformance?.rows || [] })}
+                onAiClick={() => openAiAssistant(t("locPerform"))}
+                onViewReport={() => openViewReport(t("locPerform"), { mode: "performance", staticData: locationPerformance?.rows || [] })}
               />
             }
             filter={
@@ -379,7 +382,7 @@ const Dashboard = () => {
                 typeValue={filters.locationPerformanceType}
                 onTabChange={(v) => handleTabChange(v, "locationPerformance")}
                 onTypeChange={(v) => setFilter("locationPerformanceType", v)}
-                typePlaceholder="Idle"
+                typePlaceholder={t("idleLabel")}
               />
             }
           />
@@ -387,7 +390,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <DepartmentPerformance
-            title="Department Performance"
+            title={t("deptPerform")}
             data={departmentPerformance}
             loading={departmentPerformanceLoading}
             report={
@@ -396,8 +399,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Department Performance")}
-                onViewReport={() => openViewReport("Department Performance", { mode: "performance", staticData: departmentPerformance?.rows || [] })}
+                onAiClick={() => openAiAssistant(t("deptPerform"))}
+                onViewReport={() => openViewReport(t("deptPerform"), { mode: "performance", staticData: departmentPerformance?.rows || [] })}
               />
             }
             filter={
@@ -406,7 +409,7 @@ const Dashboard = () => {
                 typeValue={filters.departmentPerformanceType}
                 onTabChange={(v) => handleTabChange(v, "departmentPerformance")}
                 onTypeChange={(v) => setFilter("departmentPerformanceType", v)}
-                typePlaceholder="Productive"
+                typePlaceholder={t("productive")}
               />
             }
           />
@@ -414,7 +417,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <WebUsageChart
-            title="Top 10 Website Usage"
+            title={t("top10webUsage")}
             data={webUsage}
             report={
               <Customreport
@@ -422,8 +425,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Website Usage")}
-                onViewReport={() => openViewReport("Top Website Usage", { mode: "web_app", staticData: webUsage?.today || [] })}
+                onAiClick={() => openAiAssistant(t("top10webUsage"))}
+                onViewReport={() => openViewReport(t("topWebUsageReport"), { mode: "web_app", staticData: webUsage?.today || [] })}
               />
             }
           />
@@ -431,7 +434,7 @@ const Dashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <AppUsageChart
-            title="Top 10 Application Usage"
+            title={t("top10appUsage")}
             data={appUsage}
             report={
               <Customreport
@@ -439,8 +442,8 @@ const Dashboard = () => {
                 showButton
                 showMaximize
                 showDownload
-                onAiClick={() => openAiAssistant("Top 10 Application Usage")}
-                onViewReport={() => openViewReport("Top Application Usage", { mode: "web_app", staticData: appUsage?.today || [] })}
+                onAiClick={() => openAiAssistant(t("top10appUsage"))}
+                onViewReport={() => openViewReport(t("topAppUsageReport"), { mode: "web_app", staticData: appUsage?.today || [] })}
               />
             }
           />

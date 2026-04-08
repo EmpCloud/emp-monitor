@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import empLogo      from "@/assets/emp.png";
 import smallempLogo from "@/assets/smallemp.png";
 import {
@@ -23,27 +24,27 @@ import { usePermission } from "../../../../hooks/usePermission";
  * Items without a `perm` field are always visible (e.g. Dashboard).
  * A group item is hidden when all of its children are hidden.
  */
-const ALL_MENU_ITEMS = [
-  { title: "Dashboard", url: "/non-admin/dashboard", icon: LayoutDashboard },
+const getAllMenuItems = (t) => [
+  { title: t("dashboard"), url: "/non-admin/dashboard", icon: LayoutDashboard },
 
   {
-    title: "Employees",
+    title: t("employees"),
     icon: Users,
     children: [
       {
-        title: "Employees Details",
+        title: t("sidebar_employees_details"),
         url: "/non-admin/employee-details",
         perm: "employee_view",
         feature: "employee_details",
       },
       {
-        title: "Employee Attendance",
+        title: t("sidebar_employee_attendance"),
         url: "/non-admin/attendance",
         perm: "attendance_view",
         feature: "employee_attendance",
       },
       {
-        title: "Employee Insight",
+        title: t("sidebar_employee_insight"),
         url: "/non-admin/insights",
         perm: "employee_insights_view",
         feature: "employee_insights",
@@ -52,7 +53,7 @@ const ALL_MENU_ITEMS = [
   },
 
   {
-    title: "Timesheets",
+    title: t("timesheets"),
     url: "/non-admin/timesheets",
     icon: Clock,
     perm: "timesheet_view",
@@ -60,14 +61,14 @@ const ALL_MENU_ITEMS = [
   },
 
   {
-    title: "Live Monitor",
+    title: t("sidebar_live_monitor"),
     url: "/non-admin/live",
     icon: Monitor,
     perm: "non_admin_live_monitoring",
   },
 
   {
-    title: "Time Claim",
+    title: t("sidebar_time_claim"),
     url: "/non-admin/time-claim",
     icon: HandCoins,
     perm: "activity_alter_view",
@@ -75,74 +76,75 @@ const ALL_MENU_ITEMS = [
   },
 
   {
-    title: "Reports",
+    title: t("reports"),
     icon: BarChart3,
     children: [
       {
-        title: "Reports Download",
+        title: t("sidebar_reports_download"),
         url: "/non-admin/reports",
       },
       {
-        title: "Productivity Report",
+        title: t("sidebar_productivity_report"),
         url: "/non-admin/reports/productivity",
         perm: "employee_insights_view",
         feature: "employee_insights",
       },
       {
-        title: "Auto Email Report",
+        title: t("sidebar_auto_email_report"),
         url: "/non-admin/reports/autoemail",
       },
       {
-        title: "Web App Usage",
+        title: t("sidebar_web_app_usage"),
         url: "/non-admin/reports/webappusage",
         perm: "employee_webusage_view",
       },
     ],
   },
   {
-    title: "DLP",
+    title: t("sidebar_dlp"),
     icon: ShieldAlert,
     children: [
       {
-        title: "USB Detection",
+        title: t("sidebar_usb_detection"),
         url: "/non-admin/dlp/usb",
       },
     ],
   },
 
   {
-    title: "Settings",
+    title: t("settings"),
     icon: Settings2,
     children: [
-      { title: "Manage Location & Department", url: "/non-admin/settings/location", perm: "settings_locations_browse" },
-      { title: "Storage Types", url: "/non-admin/settings/storage", perm: "settings_storage_browse" },
-      { title: "Productivity Rules", url: "/non-admin/settings/productivity", perm: "settings_productivity_rule_browse" },
-      { title: "Roles & Permissions", url: "/non-admin/settings/roles", perm: "roles_browse" },
-      { title: "Shift Management", url: "/non-admin/settings/shift", perm: "settings_monitoring_configuration_browse" },
-      { title: "Monitoring Control", url: "/non-admin/settings/monitoring", perm: "settings_monitoring_configuration_browse" },
-      { title: "Localization", url: "/non-admin/settings/localization", perm: "settings_monitoring_configuration_browse" },
+      { title: t("sidebar_manage_location_dept"), url: "/non-admin/settings/location", perm: "settings_locations_browse" },
+      { title: t("sidebar_storage_types"), url: "/non-admin/settings/storage", perm: "settings_storage_browse" },
+      { title: t("sidebar_productivity_rules"), url: "/non-admin/settings/productivity", perm: "settings_productivity_rule_browse" },
+      { title: t("sidebar_roles_permissions"), url: "/non-admin/settings/roles", perm: "roles_browse" },
+      { title: t("sidebar_shift_management"), url: "/non-admin/settings/shift", perm: "settings_monitoring_configuration_browse" },
+      { title: t("sidebar_monitoring_control"), url: "/non-admin/settings/monitoring", perm: "settings_monitoring_configuration_browse" },
+      { title: t("localization"), url: "/non-admin/settings/localization", perm: "settings_monitoring_configuration_browse" },
     ],
   },
 
   {
-    title: "Behaviour",
+    title: t("behaviour"),
     icon: Zap,
     children: [
-      { title: "Alerts", url: "/non-admin/behaviour/alerts", perm: "alert_view" },
-      { title: "Alert Policies", url: "/non-admin/behaviour/alertpolicies", perm: "alert_create" },
-      { title: "Alert Notification", url: "/non-admin/behaviour/alertnotification", perm: "alert_view" },
+      { title: t("alerts"), url: "/non-admin/behaviour/alerts", perm: "alert_view" },
+      { title: t("sidebar_alert_policies"), url: "/non-admin/behaviour/alertpolicies", perm: "alert_create" },
+      { title: t("sidebar_alert_notification"), url: "/non-admin/behaviour/alertnotification", perm: "alert_view" },
     ],
   },
 ];
 
 export function NonAdminAppSidebar() {
+  const { t } = useTranslation();
   const { open }    = useSidebar();
   const [openKey, setOpenKey] = useState(null);
   const { nonAdmin } = useNonAdminSession();
   const { canView }  = usePermission(nonAdmin);
 
   const visibleItems = useMemo(() =>
-    ALL_MENU_ITEMS
+    getAllMenuItems(t)
       .map((item) => {
         if (!item.children) {
           // Leaf item — show if no perm required, or canView passes
@@ -158,7 +160,7 @@ export function NonAdminAppSidebar() {
       })
       .filter(Boolean),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [nonAdmin]);
+  [nonAdmin, t]);
 
   return (
     <Sidebar collapsible="icon">
@@ -202,11 +204,9 @@ export function NonAdminAppSidebar() {
               <img src={smallempLogo} alt="" />
             </div>
           </div>
-          <p className="mb-1 text-sm font-semibold">Manager Portal</p>
+          <p className="mb-1 text-sm font-semibold">{t("sidebar_manager_portal")}</p>
           <p className="text-xs leading-relaxed text-blue-100">
-            Monitor your team's
-            <br />
-            productivity and activity
+            {t("sidebar_manager_portal_desc")}
           </p>
         </div>
       </SidebarFooter>

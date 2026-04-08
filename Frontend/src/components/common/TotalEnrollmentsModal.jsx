@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Table,
@@ -39,6 +40,7 @@ export default function TotalEnrollmentsModal({
   employees = [],
   loading = false,
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
@@ -137,7 +139,7 @@ export default function TotalEnrollmentsModal({
                 {title}
               </h2>
               <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
-                View and manage all enrolled employees. Use search and filters to find specific employees.
+                {t("enrollments.description")}
               </p>
             </div>
 
@@ -159,7 +161,7 @@ export default function TotalEnrollmentsModal({
           {/* Controls Section */}
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Show</span>
+              <span>{t("show")}</span>
               <div className="relative">
                 <select
                   value={pageSize}
@@ -192,7 +194,7 @@ export default function TotalEnrollmentsModal({
                   </svg>
                 </div>
               </div>
-              <span>Entries</span>
+              <span>{t("entries")}</span>
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -201,7 +203,7 @@ export default function TotalEnrollmentsModal({
               </div>
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t("search")}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -218,22 +220,22 @@ export default function TotalEnrollmentsModal({
               <TableHeader className="bg-[#b3d1ff] text-[#2B3674] sticky top-0 z-10">
                 <TableRow className="border-none">
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[22%]">
-                    Name
+                    {t("name")}
                   </TableHead>
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[22%]">
-                    Email id
+                    {t("emailid")}
                   </TableHead>
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[14%]">
-                    EMP Code
+                    {t("enrollments.empCode")}
                   </TableHead>
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[16%]">
-                    Department
+                    {t("department")}
                   </TableHead>
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[14%]">
-                    Location
+                    {t("location")}
                   </TableHead>
                   <TableHead className="py-3.5 px-5 text-center font-semibold text-[#2B3674] w-[12%]">
-                    Status
+                    {t("status")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -242,13 +244,13 @@ export default function TotalEnrollmentsModal({
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-gray-500">
-                      Loading...
+                      {t("loadingText")}
                     </TableCell>
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-gray-500">
-                      No employees found.
+                      {t("Nodata")}
                     </TableCell>
                   </TableRow>
                 ) : pageRows.map((row, idx) => (
@@ -333,8 +335,8 @@ export default function TotalEnrollmentsModal({
           {/* Pagination Row */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <span className="text-sm text-gray-500 font-medium">
-              Showing {filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1} to{" "}
-              {Math.min(safePage * pageSize, filtered.length)} of {filtered.length}
+              {t("timeclaim.showing")} {filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1} {t("to")}{" "}
+              {Math.min(safePage * pageSize, filtered.length)} {t("of")} {filtered.length}
             </span>
             <PaginationComponent
               currentPage={safePage}
@@ -353,13 +355,13 @@ export default function TotalEnrollmentsModal({
               className="flex items-center gap-2 bg-[#0066ff] hover:bg-[#0052cc] text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              Generate CSV
+              {t("enrollments.generateCsv")}
             </button>
             <button
               onClick={onClose}
               className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>

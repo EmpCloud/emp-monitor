@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 
-const DeleteDeptFromLocationDialog = ({ open, onOpenChange }) => {
+const DeleteDeptFromLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const deleting = useLocationDepartmentStore((s) => s.deleting);
     const depts = useLocationDepartmentStore((s) => s.deleteDeptLocationDepts);
     const confirmDeleteDeptFromLocation = useLocationDepartmentStore((s) => s.confirmDeleteDeptFromLocation);
@@ -51,10 +53,10 @@ const DeleteDeptFromLocationDialog = ({ open, onOpenChange }) => {
                     <DialogHeader>
                         <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
                             <Trash2 className="w-5 h-5" />
-                            Remove Department from Location
+                            {t("locDept.removeDeptFromLocation")}
                         </DialogTitle>
                         <DialogDescription className="text-orange-100 text-xs mt-1">
-                            Select departments to remove from this location
+                            {t("locDept.selectDeptsToRemove")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -63,7 +65,7 @@ const DeleteDeptFromLocationDialog = ({ open, onOpenChange }) => {
                     {depts.length === 0 ? (
                         <div className="text-center py-6 text-sm text-slate-400">
                             <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                            No departments found for this location
+                            {t("locDept.noDeptsForLocation")}
                         </div>
                     ) : (
                         <div className="max-h-60 overflow-y-auto space-y-1">
@@ -105,7 +107,7 @@ const DeleteDeptFromLocationDialog = ({ open, onOpenChange }) => {
                         disabled={deleting || selectedDepts.length === 0}
                     >
                         {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                        Remove Selected ({selectedDepts.length})
+                        {`${t("locDept.removeSelected")} (${selectedDepts.length})`}
                     </Button>
                 </div>
             </DialogContent>

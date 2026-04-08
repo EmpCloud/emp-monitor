@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import empLogo from "@/assets/emp.png";
 import smallempLogo from "@/assets/smallemp.png";
 import {
@@ -37,90 +38,79 @@ import downloadIcon from "@/assets/agentdwnld.png";
 import AgentDownloadOverlay from "@/page/protected/admin/agent-download";
 import apiService from "@/services/api.service";
 
-const menuItems = [
-  // Singular items (no children)
-  { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
-
-  // Group item with children
+const getMenuItems = (t) => [
+  { title: t("dashboard"), url: "/admin/dashboard", icon: LayoutDashboard },
   {
-    title: "Employees",
+    title: t("employees"),
     icon: Users,
     children: [
-      { title: "Employees Details", url: "/admin/employee-details" },
-      { title: "Employee Comparison", url: "/admin/comparison" },
-      { title: "Employee Attendance", url: "/admin/attendance" },
-      { title: "Employee Insights", url: "/admin/insights" },
-      { title: "Real Time Track", url: "/admin/realtime" },
+      { title: t("sidebar_employees_details"), url: "/admin/employee-details" },
+      { title: t("sidebar_employee_comparison"), url: "/admin/comparison" },
+      { title: t("sidebar_employee_attendance"), url: "/admin/attendance" },
+      { title: t("sidebar_employee_insights"), url: "/admin/insights" },
+      { title: t("sidebar_real_time_track"), url: "/admin/realtime" },
     ],
   },
-
-  // Singular items (no children)
-  { title: "Timesheets", url: "/admin/timesheets", icon: Clock },
-  // { title: "Timeline", url: "/admin/timeline", icon: History },
-  { title: "Live Monitoring", url: "/admin/livemonitoring", icon: Monitor },
-  { title: "Time Claim", url: "/admin/timeclaim", icon: HandCoins },
-
-  // Group item with children
+  { title: t("timesheets"), url: "/admin/timesheets", icon: Clock },
+  { title: t("sidebar_live_monitoring"), url: "/admin/livemonitoring", icon: Monitor },
+  { title: t("sidebar_time_claim"), url: "/admin/timeclaim", icon: HandCoins },
   {
-    title: "Reports",
+    title: t("reports"),
     icon: BarChart3,
     children: [
-      { title: "Reports Download", url: "/admin/reports/download" },
-      { title: "Productivity Report", url: "/admin/reports/productivity" },
-      { title: "Auto Email Report", url: "/admin/reports/autoemail" },
-      { title: "Web App Usage", url: "/admin/reports/webappusage" },
+      { title: t("sidebar_reports_download"), url: "/admin/reports/download" },
+      { title: t("sidebar_productivity_report"), url: "/admin/reports/productivity" },
+      { title: t("sidebar_auto_email_report"), url: "/admin/reports/autoemail" },
+      { title: t("sidebar_web_app_usage"), url: "/admin/reports/webappusage" },
     ],
   },
   {
-    title: "DLP",
+    title: t("sidebar_dlp"),
     icon: ShieldAlert,
     children: [
-      { title: "USB Detection", url: "/admin/dlp/usb" },
-      { title: "System Logs", url: "/admin/dlp/systemlogs" },
-      { title: "Screenshot Logs", url: "/admin/dlp/screenshotlogs" },
-      { title: "Email Activity Logs", url: "/admin/dlp/emailactivitylogs" },
+      { title: t("sidebar_usb_detection"), url: "/admin/dlp/usb" },
+      { title: t("sidebar_system_logs"), url: "/admin/dlp/systemlogs" },
+      { title: t("sidebar_screenshot_logs"), url: "/admin/dlp/screenshotlogs" },
+      { title: t("sidebar_email_activity_logs"), url: "/admin/dlp/emailactivitylogs" },
     ],
   },
   {
-    title: "Settings",
+    title: t("settings"),
     icon: Settings2,
     children: [
-      { title: "Manage Location & Department", url: "/admin/settings/location" },
-      { title: "Storage Types", url: "/admin/settings/storage" },
-      { title: "Productivity Rules", url: "/admin/settings/productivity" },
-      { title: "Roles & Permissions", url: "/admin/settings/roles" },
-      { title: "Shift Management", url: "/admin/settings/shift" },
-      { title: "Monitoring Control", url: "/admin/settings/monitoring" },
-      { title: "Localization", url: "/admin/settings/localization" },
+      { title: t("sidebar_manage_location_dept"), url: "/admin/settings/location" },
+      { title: t("sidebar_storage_types"), url: "/admin/settings/storage" },
+      { title: t("sidebar_productivity_rules"), url: "/admin/settings/productivity" },
+      { title: t("sidebar_roles_permissions"), url: "/admin/settings/roles" },
+      { title: t("sidebar_shift_management"), url: "/admin/settings/shift" },
+      { title: t("sidebar_monitoring_control"), url: "/admin/settings/monitoring" },
+      { title: t("localization"), url: "/admin/settings/localization" },
     ],
   },
   {
-    title: "Behaviour",
+    title: t("behaviour"),
     icon: Zap,
     children: [
-      { title: "Alerts", url: "/admin/behaviour/alerts" },
-      { title: "Alert Policies", url: "/admin/behaviour/alertpolicies" },
-      { title: "Alert Notification", url: "/admin/behaviour/alertnotification" },
+      { title: t("alerts"), url: "/admin/behaviour/alerts" },
+      { title: t("sidebar_alert_policies"), url: "/admin/behaviour/alertpolicies" },
+      { title: t("sidebar_alert_notification"), url: "/admin/behaviour/alertnotification" },
     ],
   },
   {
-    title: "Mobile Task",
+    title: t("sidebar_mobile_task"),
     icon: Smartphone,
     children: [
-      { title: "Clients And Users", url: "/admin/mobiletask/clientuser" },
-      { title: "Task Details", url: "/admin/mobiletask/task" },
-      { title: "GEO Location Tracking", url: "/admin/mobiletask/geolocation" },
+      { title: t("sidebar_clients_users"), url: "/admin/mobiletask/clientuser" },
+      { title: t("sidebar_task_details"), url: "/admin/mobiletask/task" },
+      { title: t("sidebar_geo_location"), url: "/admin/mobiletask/geolocation" },
     ],
   },
-  // { title: "API Management", url: "/apimanagement", icon: Code2 },
-  // { title: "Invoice Management", url: "/invoicemanagement", icon: ReceiptText },
-  // { title: "Access Logs", url: "/accesslogs", icon: Key },
   {
-    title: "Reseller",
+    title: t("reseller"),
     icon: Store,
     children: [
-      { title: "Dashboard", url: "/admin/reseller/dashboard" },
-      { title: "Settings", url: "/admin/reseller/settings" },
+      { title: t("dashboard"), url: "/admin/reseller/dashboard" },
+      { title: t("settings"), url: "/admin/reseller/settings" },
     ],
   },
 ];
@@ -140,9 +130,11 @@ const normalizeResellerStats = (payload = {}) => {
 };
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const { open } = useSidebar();
   const [openKey, setOpenKey] = useState(null);
   const [agentDownloadOpen, setAgentDownloadOpen] = useState(false);
+  const menuItems = getMenuItems(t);
   const [licenseStats, setLicenseStats] = useState({
     totalLicenses: 0,
     usedLicenses: 0,
@@ -234,7 +226,7 @@ export function AppSidebar() {
           </span>
           <p>
 
-             Download Agent
+             {t("sidebar_download_agent")}
           </p>
         </ShimmerButton>
 
@@ -245,11 +237,11 @@ export function AppSidebar() {
                 <img src={smallempLogo} alt=""  />
               </div>
           </div>
-          <p className="mb-1 text-sm font-semibold">License information</p>
+          <p className="mb-1 text-sm font-semibold">{t("sidebar_license_info")}</p>
           <p className="text-xs leading-relaxed text-blue-100">
-            Used {licenseStats.usedLicenses} out of {licenseStats.totalLicenses} Licenses,
+            {t("sidebar_used")} {licenseStats.usedLicenses} {t("sidebar_out_of")} {licenseStats.totalLicenses} {t("sidebar_licenses")},
             <br />
-            {licenseStats.leftLicenses} - Licenses left &amp; Expires on
+            {licenseStats.leftLicenses} - {t("sidebar_licenses_left")}
           </p>
           <div className="mt-3 inline-block rounded-full border border-white/30 bg-white/10 px-4 py-1 text-xs font-semibold">
             {licenseStats.expiryDate}

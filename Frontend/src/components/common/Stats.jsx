@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import TotalEnrollmentsModal from "./TotalEnrollmentsModal";
 import { getDashboardEmployeesByType } from "@/page/protected/admin/dashboard/service";
 
@@ -33,19 +34,19 @@ const MiniWave = ({ color = "white" }) => (
 );
 
 
-const getStatType = (label) => {
-  switch (label) {
-    case "Currently Active":
+const getStatType = (labelKey) => {
+  switch (labelKey) {
+    case "stat_currently_active":
       return 1;
-    case "Currently Idle":
+    case "stat_currently_idle":
       return 2;
-    case "Currently Offline":
+    case "stat_currently_offline":
       return 6;
-    case "Absent":
+    case "stat_absent":
       return 3;
-    case "Suspended":
+    case "stat_suspended":
       return 4;
-    case "Total Enrollments":
+    case "stat_total_enrollments":
       return 5; // Registered
     default:
       return null;
@@ -53,8 +54,9 @@ const getStatType = (label) => {
 };
 
 export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState("Employees");
+  const [modalTitle, setModalTitle] = useState(t("employees"));
   const [modalType, setModalType] = useState(null);
   const [modalEmployees, setModalEmployees] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
@@ -63,16 +65,16 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
     setIsModalOpen(false);
     setModalLoading(false);
     setModalEmployees([]);
-    setModalTitle("Employees");
+    setModalTitle(t("employees"));
     setModalType(null);
-  }, []);
+  }, [t]);
 
   const openForStat = useCallback(
-    async (label) => {
-      const type = getStatType(label);
+    async (labelKey) => {
+      const type = getStatType(labelKey);
       if (!type) return;
 
-      setModalTitle(label);
+      setModalTitle(t(labelKey));
       setModalType(type);
       setIsModalOpen(true);
       setModalLoading(true);
@@ -81,7 +83,7 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
       setModalEmployees(res?.stats || []);
       setModalLoading(false);
     },
-    [timezone],
+    [timezone, t],
   );
 
   return (
@@ -94,16 +96,16 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
 
           // Special design for Idle and Offline
           const isIdleOrOffline =
-            stat.label === "Currently Idle" ||
-            stat.label === "Currently Offline";
+            stat.labelKey === "stat_currently_idle" ||
+            stat.labelKey === "stat_currently_offline";
 
           if (isIdleOrOffline) {
             const iconColor =
-              stat.label === "Currently Idle" ? "#0066cc" : "#86ef47";
+              stat.labelKey === "stat_currently_idle" ? "#0066cc" : "#86ef47";
             return (
               <div
                 key={i}
-                onClick={() => openForStat(stat.label)}
+                onClick={() => openForStat(stat.labelKey)}
                 className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4 h-25 cursor-pointer hover:shadow-md transition-shadow"
               >
                 {/* Circular Icon Background */}
@@ -122,7 +124,7 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
                 {/* Text Content */}
                 <div className="flex flex-col">
                   <span className="text-[#A3AED0] text-xs font-medium whitespace-wrap">
-                    {stat.label}
+                    {t(stat.labelKey)}
                   </span>
                   <span className="text-[#2B3674] text-2xl font-bold">
                     {stat.value}
@@ -135,7 +137,7 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
           return (
             <div
               key={i}
-              onClick={() => openForStat(stat.label)}
+              onClick={() => openForStat(stat.labelKey)}
               className={`relative flex items-center h-25 justify-between rounded-2xl px-4 py-3 overflow-hidden
               ${isBlue ? "bg-linear-to-br from-[#4f8ef7] to-[#3b5fc0] text-white shadow-blue-200 shadow-md" : ""}
               ${isSteel ? "bg-linear-to-br from-[#6b80a8] to-[#3d5080] text-white shadow-slate-300 shadow-md" : ""}
@@ -147,7 +149,7 @@ export default function Stats({ stats, timezone = "Asia/Kolkata" }) {
                 <span
                   className={`text-xs font-medium leading-tight ${isHighlight ? "text-white/80" : "text-slate-400"}`}
                 >
-                  {stat.label}
+                  {t(stat.labelKey)}
                 </span>
                 <span
                   className={`text-2xl font-bold ${isHighlight ? "text-white" : "text-slate-800"}`}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next";
 import { Info, Save, X, Clock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,7 +42,8 @@ const DEFAULT_DAYS_STATE = () =>
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-const CreateShift = ({ mode = "create" }) => {
+const CreateShift = ({ mode = "create" }) => {  const { t } = useTranslation();
+
     const {
         createDialogOpen,
         closeCreateDialog,
@@ -227,12 +229,12 @@ const CreateShift = ({ mode = "create" }) => {
                         </div>
                         <div>
                             <DialogTitle className="text-xl font-black text-white">
-                                {isEdit ? "Shift Structure Update" : "Create New Shift"}
+                                {isEdit ? t("shift.shiftStructureUpdate") : t("shift.createNewShift")}
                             </DialogTitle>
                             <DialogDescription className="text-xs text-violet-200 mt-0.5">
                                 {isEdit
-                                    ? "Update shift schedule and settings"
-                                    : "Configure a new work shift with days, times and settings"}
+                                    ? t("shift.updateShiftSettings")
+                                    : t("shift.configureShift")}
                             </DialogDescription>
                         </div>
                     </DialogHeader>
@@ -257,7 +259,7 @@ const CreateShift = ({ mode = "create" }) => {
                         <Input
                             value={shiftName}
                             onChange={(e) => setShiftName(e.target.value)}
-                            placeholder="Name of your shift"
+                            placeholder={t("shift.nameOfShift")}
                             className="h-10 rounded-lg border-slate-200 text-sm"
                         />
                     </div>
@@ -505,7 +507,7 @@ const CreateShift = ({ mode = "create" }) => {
                             <textarea
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
-                                placeholder="Add a note for this shift"
+                                placeholder={t("shift.addNoteForShift")}
                                 rows={4}
                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                             />
@@ -525,7 +527,7 @@ const CreateShift = ({ mode = "create" }) => {
                             ) : (
                                 <Save className="w-4 h-4" />
                             )}
-                            {saving ? "Saving..." : "Save"}
+                            {saving ? t("common.saving") : t("save")}
                         </Button>
                         <Button
                             size="lg"

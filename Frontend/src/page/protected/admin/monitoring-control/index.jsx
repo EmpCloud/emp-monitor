@@ -1,5 +1,6 @@
 import React from 'react'
 import { SlidersHorizontal } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpMonitoringControl from '@/components/common/monitoring-control/EmpMonitoringControl'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const MonitoringControl = () => (
-  <Placeholder
-    title="Monitoring Control"
-    description="Control monitoring settings, screenshot intervals and data collection policies."
-    Icon={SlidersHorizontal}
-  />
-)
+const MonitoringControl = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("monitoringControlTitle")}
+      description={t("monitoringControlDescription")}
+      Icon={SlidersHorizontal}
+    />
+  )
+}
 
 export default MonitoringControl

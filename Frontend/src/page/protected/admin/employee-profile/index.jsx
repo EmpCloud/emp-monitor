@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,15 +21,15 @@ import WebHistoryTab from "./WebHistoryTab";
 import AppHistoryTab from "./AppHistoryTab";
 import KeyStrokesTab from "./KeyStrokesTab";
 
-const tabs = [
-  { key: "productivity", label: "Productivity", icon: BarChart3 },
-  { key: "timesheets", label: "Timesheets", icon: Clock },
-  { key: "screenshots", label: "Screenshots", icon: Camera },
-  { key: "screencast", label: "Screen Cast", icon: Monitor },
-  { key: "screenrecording", label: "Screen Recording", icon: Video },
-  { key: "webhistory", label: "Web History", icon: Globe },
-  { key: "apphistory", label: "App History", icon: LayoutGrid },
-  { key: "keystrokes", label: "Key Strokes", icon: PenTool },
+const tabDefs = [
+  { key: "productivity", labelKey: "productivity", icon: BarChart3 },
+  { key: "timesheets", labelKey: "timesheets", icon: Clock },
+  { key: "screenshots", labelKey: "ss", icon: Camera },
+  { key: "screencast", labelKey: "screenCast", icon: Monitor },
+  { key: "screenrecording", labelKey: "screenRecording", icon: Video },
+  { key: "webhistory", labelKey: "webHistory", icon: Globe },
+  { key: "apphistory", labelKey: "applicationHistory", icon: LayoutGrid },
+  { key: "keystrokes", labelKey: "keystroke", icon: PenTool },
 ];
 
 const tabComponents = {
@@ -43,6 +44,7 @@ const tabComponents = {
 };
 
 const EmployeeProfile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const employee = location.state?.employee;
@@ -63,14 +65,14 @@ const EmployeeProfile = () => {
     return (
       <div className="bg-slate-200 w-full p-5">
         <div className="bg-white rounded-2xl p-8 text-center min-h-[400px] flex flex-col items-center justify-center gap-4">
-          <p className="text-gray-500 text-lg">Employee not found.</p>
+          <p className="text-gray-500 text-lg">{t("employeeNotFound")}</p>
           <Button
             variant="outline"
             onClick={() => navigate(`${routeBase}/employee-details`)}
             className="gap-2"
           >
             <ArrowLeft size={16} />
-            Back to Employee List
+            {t("backToEmployeeList")}
           </Button>
         </div>
       </div>
@@ -88,17 +90,17 @@ const EmployeeProfile = () => {
             onClick={() => navigate(`${routeBase}/dashboard`)}
             className="text-blue-600 hover:underline font-medium"
           >
-            Home
+            {t("home")}
           </button>
           <span className="text-gray-400">/</span>
           <button
             onClick={() => navigate(`${routeBase}/employee-details`)}
             className="text-blue-600 hover:underline font-medium"
           >
-            Employee
+            {t("employee")}
           </button>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-500 font-medium">Employee Full Details</span>
+          <span className="text-gray-500 font-medium">{t("employeeFullDetails")}</span>
         </nav>
       </div>
 
@@ -115,7 +117,7 @@ const EmployeeProfile = () => {
 
           {/* Tab Navigation */}
           <div className="grid grid-cols-4 2xl:grid-cols-8 gap-4">
-            {tabs.map(({ key, label, icon: Icon }) => (
+            {tabDefs.map(({ key, labelKey, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
@@ -126,7 +128,7 @@ const EmployeeProfile = () => {
                 }`}
               >
                 <Icon size={14} />
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>

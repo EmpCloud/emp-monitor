@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next";
 import { Download, Search, Info, Printer } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
@@ -12,13 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ShowEntries from "@/components/common/elements/ShowEntries"
 import EmpPrintLogsLogo from "@/assets/dlp/print-logs.svg";
 
 const LOCATIONS = [
@@ -92,6 +87,7 @@ const MOCK_ROWS = [
 ]
 
 const EmpPrintLogs = () => {
+    const { t } = useTranslation();
   const [location, setLocation] = useState("all")
   const [department, setDepartment] = useState("all")
   const [employee, setEmployee] = useState("all")
@@ -133,8 +129,8 @@ const EmpPrintLogs = () => {
 
           <div className="border-l-2 border-blue-500 pl-4">
             <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-              <span className="font-semibold">Print</span>{" "}
-              <span className="font-normal text-gray-500">Logs</span>
+              <span className="font-semibold">{t("printLogs.title")}</span>{" "}
+              <span className="font-normal text-gray-500">{t("printLogs.logs")}</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
               &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
@@ -163,7 +159,7 @@ const EmpPrintLogs = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4 flex-1 min-w-0">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Location
+              {t("location")}
             </label>
             <CustomSelect
               placeholder="See All Location"
@@ -178,7 +174,7 @@ const EmpPrintLogs = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Department
+              {t("department")}
             </label>
             <CustomSelect
               placeholder="See All Department"
@@ -193,7 +189,7 @@ const EmpPrintLogs = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Employee
+              {t("employee")}
             </label>
             <CustomSelect
               placeholder="See All Employee"
@@ -228,36 +224,16 @@ const EmpPrintLogs = () => {
 
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => {
+        <ShowEntries value={pageSize} onChange={(v) => {
               const num = parseInt(v, 10)
               setPageSize(Number.isNaN(num) ? 10 : num)
               setPage(1)
-            }}
-          >
-            <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {["10", "25", "50", "100"].map((n) => (
-                <SelectItem key={n} value={n}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-[13px] text-gray-500 font-medium">
-            Entries
-          </span>
-        </div>
+            }} />
 
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -297,7 +273,7 @@ const EmpPrintLogs = () => {
                   colSpan={5}
                   className="text-center text-sm text-gray-400 py-10"
                 >
-                  No data found
+                  {t("Nodata")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -320,15 +296,15 @@ const EmpPrintLogs = () => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold text-gray-700">
             {filteredRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
           </span>{" "}
-          to{" "}
+          {t("to")}{" "}
           <span className="font-bold text-gray-700">
             {Math.min(currentPage * pageSize, filteredRows.length)}
           </span>{" "}
-          of{" "}
+          {t("of")}{" "}
           <span className="font-bold text-blue-600">
             {filteredRows.length}
           </span>

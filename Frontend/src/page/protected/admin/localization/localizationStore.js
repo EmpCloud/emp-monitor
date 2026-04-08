@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { applyLanguage } from "@/i18n/syncLanguage";
 import {
     getLocalization,
     saveLocalization,
@@ -32,10 +33,12 @@ export const useLocalizationStore = create((set, get) => ({
             const result = await getLocalization();
 
             if (result.success) {
+                const lang = result.data.language || "en";
+                applyLanguage(lang);
                 set({
                     loading: false,
                     timezone: result.data.timezone,
-                    language: result.data.language,
+                    language: lang,
                 });
             } else {
                 set({ loading: false, error: result.message });
@@ -54,6 +57,7 @@ export const useLocalizationStore = create((set, get) => ({
             set({ saving: false });
 
             if (result.success) {
+                applyLanguage(language);
                 set({ successMsg: result.message });
             } else {
                 set({ error: result.message });

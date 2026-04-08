@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -6,14 +7,13 @@ import PaginationComponent from "@/components/common/Pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import EmpAlertPoliciesLogo from "@/assets/behavior/alert-policies.svg";
 import { CONDITION_TYPE_MAP } from "@/page/protected/admin/alerts/service";
 import { useAlertPoliciesStore } from "@/page/protected/admin/alert-policies/alertPoliciesStore";
 
 const AppliesToCell = React.memo(function AppliesToCell({ appliesTo }) {
+    const { t } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const visible = expanded ? appliesTo : appliesTo.slice(0, 5);
     const hiddenCount = appliesTo.length - 5;
@@ -29,12 +29,12 @@ const AppliesToCell = React.memo(function AppliesToCell({ appliesTo }) {
             ))}
             {appliesTo.length > 5 && !expanded && (
                 <button onClick={expand} className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold transition-colors">
-                    +{hiddenCount} more
+                    +{hiddenCount} {t("alertPol.more")}
                 </button>
             )}
             {expanded && appliesTo.length > 5 && (
                 <button onClick={collapse} className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-semibold transition-colors">
-                    Hide
+                    {t("alertPol.hide")}
                 </button>
             )}
         </div>
@@ -42,6 +42,7 @@ const AppliesToCell = React.memo(function AppliesToCell({ appliesTo }) {
 });
 
 const EmpAlertPolicies = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const rows = useAlertPoliciesStore((s) => s.rows);
     const totalCount = useAlertPoliciesStore((s) => s.totalCount);
@@ -146,19 +147,19 @@ const EmpAlertPolicies = () => {
 
     const handleDelete = useCallback(async (policyId) => {
         const result = await Swal.fire({
-            title: "Are you sure?",
-            text: "This rule will be permanently deleted.",
+            title: t("alertPol.areYouSure"),
+            text: t("alertPol.deleteWarning"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Delete",
-            cancelButtonText: "Cancel",
+            confirmButtonText: t("delete"),
+            cancelButtonText: t("cancel"),
         });
         if (!result.isConfirmed) return;
         const success = await deletePolicyAction(policyId);
         if (success) {
-            Swal.fire({ icon: "success", title: "Deleted!", text: "Rule deleted successfully.", timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: "success", title: t("alertPol.deleted"), text: t("alertPol.ruleDeletedSuccess"), timer: 2000, showConfirmButton: false });
         }
     }, [deletePolicyAction]);
 
@@ -169,14 +170,14 @@ const EmpAlertPolicies = () => {
 
     const handleApplyAll = useCallback(async () => {
         const result = await Swal.fire({
-            title: "Apply All Rules",
-            text: "This will apply all rules to all employees. Continue?",
+            title: t("alertPol.applyAllRules"),
+            text: t("alertPol.applyAllConfirm"),
             icon: "question",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, Apply All",
-            cancelButtonText: "Cancel",
+            confirmButtonText: t("alertPol.yesApplyAll"),
+            cancelButtonText: t("cancel"),
         });
         if (!result.isConfirmed) return;
         const success = await applyAllRules();
@@ -215,10 +216,10 @@ const EmpAlertPolicies = () => {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Alert Policies</span>
+                            <span className="font-semibold">{t("alertPol.title")}</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                            Manage and configure alert policies for employee behaviour triggers
+                            {t("alertPol.description")}
                         </p>
                     </div>
                 </div>
@@ -228,48 +229,32 @@ const EmpAlertPolicies = () => {
                             className="rounded-full bg-blue-500 hover:bg-blue-600 px-6 text-sm font-semibold shadow-sm"
                             onClick={handleApplySelected}
                         >
-                            Apply Selected Rules
+                            {t("alertPol.applySelectedRules")}
                         </Button>
                     ) : (
                         <Button
                             className="rounded-full bg-blue-500 hover:bg-blue-600 px-6 text-sm font-semibold shadow-sm"
                             onClick={handleApplyAll}
                         >
-                            Apply All Rules To All Employees
+                            {t("alertPol.applyAllRulesToAll")}
                         </Button>
                     )}
                     <Button
                         className="rounded-full bg-blue-500 hover:bg-blue-600 px-6 text-sm font-semibold shadow-sm"
                         onClick={goToNewAlert}
                     >
-                        Add New Alert
+                        {t("alertPol.addNewAlert")}
                     </Button>
                 </div>
             </div>
 
             {/* Show entries + Search */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#424242] font-medium">Show</span>
-                    <Select
-                        value={String(pagination.pageSize)}
-                        onValueChange={handlePageSizeChange}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50", "100"].map((n) => (
-                                <SelectItem key={n} value={n}>{n}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-[#424242] font-medium">Entries</span>
-                </div>
+                <ShowEntries value={pagination.pageSize} onChange={handlePageSizeChange} />
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search"
+                        placeholder={t("search")}
                         value={localSearch}
                         onChange={handleSearchInput}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -289,13 +274,13 @@ const EmpAlertPolicies = () => {
                                     className="border-slate-300"
                                 />
                             </th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Date / Time</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("alertPol.dateTime")}</th>
                             <th
                                 className="px-4 py-3 text-xs font-semibold text-slate-700 text-left cursor-pointer select-none"
                                 onClick={() => handleSort("name")}
                             >
                                 <div className="flex items-center gap-1">
-                                    Rule Name
+                                    {t("alertPol.ruleName")}
                                     <span className="text-slate-300">
                                         {pagination.sortColumn === "name" ? (
                                             pagination.sortOrder === "D" ? <ArrowDown className="w-3 h-3 text-blue-500" /> : <ArrowUp className="w-3 h-3 text-blue-500" />
@@ -303,21 +288,21 @@ const EmpAlertPolicies = () => {
                                     </span>
                                 </div>
                             </th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Notify as</th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Conditions</th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Applies To</th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Recipients</th>
-                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Action</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("alertPol.notifyAs")}</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("alertPol.conditions")}</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("alertPol.appliesTo")}</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("alertPol.recipients")}</th>
+                            <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("action")}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white">
                         {tableLoading ? (
                             <tr>
-                                <td colSpan={8} className="text-center text-sm text-gray-400 py-10">Loading...</td>
+                                <td colSpan={8} className="text-center text-sm text-gray-400 py-10">{t("loadingText")}</td>
                             </tr>
                         ) : rows.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="text-center text-sm text-gray-400 py-10">No data found</td>
+                                <td colSpan={8} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</td>
                             </tr>
                         ) : (
                             rows.map((row) => (
@@ -378,9 +363,9 @@ const EmpAlertPolicies = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5 pt-10">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span>{" "}
-                    to <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span>{" "}
-                    of <span className="font-bold text-blue-600">{totalCount}</span>
+                    {t("timeclaim.showing")} <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span>{" "}
+                    {t("to")} <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span>{" "}
+                    {t("of")} <span className="font-bold text-blue-600">{totalCount}</span>
                 </p>
                 <PaginationComponent currentPage={pagination.page} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>

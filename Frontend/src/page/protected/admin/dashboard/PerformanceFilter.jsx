@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomTab from "@/components/common/elements/CustomTab";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 
@@ -9,10 +10,12 @@ const PerformanceFilter = ({
   onTypeChange,
   typePlaceholder = "Productive",
 }) => {
+  const { t } = useTranslation();
+
   const productivityOptions = [
-    { value: "pro", label: "Productive" },
-    { value: "non", label: "Non Productive" },
-    { value: "neu", label: "Idle" },
+    { value: "pro", label: t("productive") },
+    { value: "non", label: t("nonProductiveLabel") },
+    { value: "neu", label: t("idleLabel") },
   ];
 
   return (

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Info, Download, Upload, Trash2, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
 import PaginationComponent from "@/components/common/Pagination";
@@ -12,6 +13,7 @@ import AddEditTaskModal from "./AddEditTaskModal";
 import BulkImportModal from "./BulkImportModal";
 
 const EmpMobileTaskDetails = () => {
+    const { t } = useTranslation();
     const rows = useTaskStore((s) => s.rows);
     const totalCount = useTaskStore((s) => s.totalCount);
     const projects = useTaskStore((s) => s.projects);
@@ -70,7 +72,7 @@ const EmpMobileTaskDetails = () => {
 
     const handleProjectChange = useCallback((v) => { setFilter("project", v); setFilter("folder", ""); fetchFolders(v); }, [setFilter, fetchFolders]);
     const handleDelete = useCallback(async (taskId) => {
-        const r = await Swal.fire({ title: "Delete task?", icon: "warning", showCancelButton: true, confirmButtonText: "Delete" });
+        const r = await Swal.fire({ title: t("tasks.deleteTask"), icon: "warning", showCancelButton: true, confirmButtonText: t("delete") });
         if (r.isConfirmed) deleteTaskAction(taskId);
     }, [deleteTaskAction]);
     const handlePageSizeChange = useCallback((v) => { setPagination("pageSize", parseInt(v, 10) || 10); setPagination("page", 1); }, [setPagination]);
@@ -82,47 +84,47 @@ const EmpMobileTaskDetails = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full">
             <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
                 <div className="border-l-2 border-blue-500 pl-4">
-                    <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Task</span>{" "}<span className="font-normal text-gray-500">Details</span></h2>
-                    <p className="text-xs text-gray-400 mt-1">Manage and track employee tasks across projects</p>
+                    <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">{t("tasks.title")}</span>{" "}<span className="font-normal text-gray-500">{t("tasks.details")}</span></h2>
+                    <p className="text-xs text-gray-400 mt-1">{t("tasks.manageDesc")}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs" onClick={openCreate}>Add Task</Button>
-                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={() => useTaskStore.setState({ importModalOpen: true })}><Upload className="w-3.5 h-3.5 mr-1" />Import</Button>
-                    <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-xs" onClick={downloadCsv}><Download className="w-3.5 h-3.5 mr-1" />CSV</Button>
-                    <Button size="sm" className="bg-violet-500 hover:bg-violet-600 text-xs" onClick={downloadConsolidated}><Download className="w-3.5 h-3.5 mr-1" />Consolidated</Button>
+                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs" onClick={openCreate}>{t("tasks.addTask")}</Button>
+                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={() => useTaskStore.setState({ importModalOpen: true })}><Upload className="w-3.5 h-3.5 mr-1" />{t("common.import")}</Button>
+                    <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-xs" onClick={downloadCsv}><Download className="w-3.5 h-3.5 mr-1" />{t("csv")}</Button>
+                    <Button size="sm" className="bg-violet-500 hover:bg-violet-600 text-xs" onClick={downloadConsolidated}><Download className="w-3.5 h-3.5 mr-1" />{t("tasks.consolidated")}</Button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-                <div><label className="block text-xs font-semibold text-slate-600 mb-1">Project</label><CustomSelect placeholder="All Projects" items={[{ value: "", label: "All" }, ...projects]} selected={filters.project} onChange={handleProjectChange} width="full" /></div>
-                <div><label className="block text-xs font-semibold text-slate-600 mb-1">Manager</label><CustomSelect placeholder="All Managers" items={[{ value: "", label: "All" }, ...managers]} selected={filters.manager} onChange={(v) => setFilter("manager", v)} width="full" /></div>
-                <div><label className="block text-xs font-semibold text-slate-600 mb-1">Employee</label><CustomSelect placeholder="All Employees" items={[{ value: "", label: "All" }, ...employees]} selected={filters.employee[0] || ""} onChange={(v) => setFilter("employee", v ? [v] : [])} width="full" /></div>
-                <div><label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">Date Range <Info className="w-3 h-3 text-blue-500" /></label><DateRangeCalendar startDate={filters.startDate} endDate={filters.endDate} onChange={handleDateRangeChange} /></div>
+                <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("tasks.project")}</label><CustomSelect placeholder={t("tasks.allProjects")} items={[{ value: "", label: t("roles.all") }, ...projects]} selected={filters.project} onChange={handleProjectChange} width="full" /></div>
+                <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("projects.managers")}</label><CustomSelect placeholder={t("tasks.allManagers")} items={[{ value: "", label: t("roles.all") }, ...managers]} selected={filters.manager} onChange={(v) => setFilter("manager", v)} width="full" /></div>
+                <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("employee")}</label><CustomSelect placeholder={t("tasks.allEmployees")} items={[{ value: "", label: t("roles.all") }, ...employees]} selected={filters.employee[0] || ""} onChange={(v) => setFilter("employee", v ? [v] : [])} width="full" /></div>
+                <div><label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">{t("tasks.dateRange")} <Info className="w-3 h-3 text-blue-500" /></label><DateRangeCalendar startDate={filters.startDate} endDate={filters.endDate} onChange={handleDateRangeChange} /></div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
                 <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#424242] font-medium">Show</span>
+                    <span className="text-[13px] text-[#424242] font-medium">{t("show")}</span>
                     <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}><SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200"><SelectValue placeholder="10" /></SelectTrigger><SelectContent className="rounded-xl">{["10", "25", "50", "100"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select>
-                    <span className="text-[13px] text-[#424242] font-medium">Entries</span>
+                    <span className="text-[13px] text-[#424242] font-medium">{t("entries")}</span>
                 </div>
-                <div className="relative w-full max-w-xs"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs" /></div>
+                <div className="relative w-full max-w-xs"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input placeholder={t("search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs" /></div>
             </div>
 
             <div className="rounded-2xl border border-slate-100 overflow-x-auto bg-slate-50">
                 <table className="min-w-[900px] w-full">
                     <thead><tr className="bg-[#CADDFF]">
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Employee</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Project</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Folder</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Task</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Status</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Duration</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center w-24">Action</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("employee")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("tasks.project")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("tasks.folder")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("tasks.task")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("status")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("duration")}</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center w-24">{t("action")}</th>
                     </tr></thead>
                     <tbody className="bg-white">
-                        {tableLoading ? <tr><td colSpan={7} className="text-center text-sm text-gray-400 py-10">Loading...</td></tr>
-                        : rows.length === 0 ? <tr><td colSpan={7} className="text-center text-sm text-gray-400 py-10">No tasks found</td></tr>
+                        {tableLoading ? <tr><td colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("loadingText")}</td></tr>
+                        : rows.length === 0 ? <tr><td colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</td></tr>
                         : rows.map((row, idx) => (
                             <tr key={row._id || idx} className="border-b border-slate-100 last:border-0 text-xs text-slate-600">
                                 <td className="px-4 py-3">{row.employee_name || "-"}</td>
@@ -142,12 +144,12 @@ const EmpMobileTaskDetails = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5 pt-10">
-                <p className="text-[13px] text-gray-500 font-medium">Showing <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span> to <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span> of <span className="font-bold text-blue-600">{totalCount}</span></p>
+                <p className="text-[13px] text-gray-500 font-medium">{t("timeclaim.showing")} <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span> {t("to")} <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span> {t("of")} <span className="font-bold text-blue-600">{totalCount}</span></p>
                 <PaginationComponent currentPage={pagination.page} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
 
             <AddEditTaskModal />
-            <BulkImportModal open={importModalOpen} onClose={() => useTaskStore.setState({ importModalOpen: false })} onImport={bulkImport} title="Import Tasks" />
+            <BulkImportModal open={importModalOpen} onClose={() => useTaskStore.setState({ importModalOpen: false })} onImport={bulkImport} title={`${t("common.import")} ${t("tasks.title")}`} />
         </div>
     );
 };

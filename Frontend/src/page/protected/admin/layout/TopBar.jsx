@@ -6,6 +6,7 @@ import {
   Fingerprint,
   LogOut,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import userData from "@/data/user.json";
 import hrms from "@/assets/hrms.png";
@@ -24,6 +25,7 @@ import UniPass from "@/components/common/UniPass";
 import BackToCloud from "@/components/BackToCloud";
 
 export default function TopHeader() {
+  const { t } = useTranslation();
   const { open } = useSidebar();
   const { admin, clearAdmin } = useAdminSession();
   const [openUniPass, setOpenUniPass] = useState(false);
@@ -49,14 +51,14 @@ export default function TopHeader() {
         )}
         <div className="md:flex flex-col hidden">
           <span className="text-xs text-[#707EAE] font-bold">
-            Hi{" "}
+            {t("topbar_hi")}{" "}
             {admin?.user_name &&
               admin?.user_name?.charAt(0)?.toUpperCase() +
                 admin?.user_name?.slice(1)}
             ,
           </span>
           <h2 className="text-lg font-bold text-[#2B3674]">
-            Welcome to EmpMonitor!
+            {t("topbar_welcome")}
           </h2>
         </div>
       </div>
@@ -78,7 +80,7 @@ export default function TopHeader() {
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
         >
           <HelpCircle className="h-4 w-4" />
-          Help
+          {t("topbar_help")}
         </a>
 
         {/* Notification Bell */}
@@ -113,7 +115,7 @@ export default function TopHeader() {
                     : "Andrei Luca"}
                 </span>
                 <span className="text-xs text-[#7B8EB1] font-medium">
-                  Admin
+                  {t("topbar_admin")}
                 </span>
               </div>
             </div>
@@ -128,7 +130,7 @@ export default function TopHeader() {
                     <Settings className="h-4 w-4" />
                   </div>
                   <span className="text-sm font-semibold text-[#2B3674]">
-                    Account Settings
+                    {t("topbar_account_settings")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -139,7 +141,7 @@ export default function TopHeader() {
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                   <span className="text-sm font-semibold text-[#2B3674]">
-                    Uninstall Password
+                    {t("topbar_uninstall_password")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -167,7 +169,7 @@ export default function TopHeader() {
                 <div className="p-1.5 rounded-lg bg-red-50 text-[#FF4D49] group-hover:bg-red-100 transition-colors">
                   <LogOut className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-semibold">Logout</span>
+                <span className="text-sm font-semibold">{t("topbar_logout")}</span>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>

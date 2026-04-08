@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Calendar, Play, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ function groupByHour(recordings) {
 }
 
 export default function ScreenRecordingTab({ employee }) {
+  const { t } = useTranslation();
   const [date, setDate]         = useState(moment().format("YYYY-MM-DD"));
   const [fromTime, setFromTime] = useState("00");
   const [toTime, setToTime]     = useState("23");
@@ -94,7 +96,7 @@ export default function ScreenRecordingTab({ employee }) {
       {/* Filters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="space-y-1 w-full">
-          <label className="text-xs font-medium text-gray-600">Select Date</label>
+          <label className="text-xs font-medium text-gray-600">{t("selectDate")}</label>
           <div className="relative w-full">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -107,12 +109,12 @@ export default function ScreenRecordingTab({ employee }) {
           </div>
         </div>
         <div className="space-y-1 w-full">
-          <label className="text-xs font-medium text-gray-600">From Time</label>
-          <CustomSelect placeholder="From" items={timeOptions} selected={fromTime} onChange={setFromTime} width />
+          <label className="text-xs font-medium text-gray-600">{t("frmTime")}</label>
+          <CustomSelect placeholder={t("from")} items={timeOptions} selected={fromTime} onChange={setFromTime} width />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600">To Time</label>
-          <CustomSelect placeholder="To" items={timeOptions} selected={toTime} onChange={setToTime} width />
+          <label className="text-xs font-medium text-gray-600">{t("toTime")}</label>
+          <CustomSelect placeholder={t("to")} items={timeOptions} selected={toTime} onChange={setToTime} width />
         </div>
         <div className="flex items-end w-full">
           <Button
@@ -121,7 +123,7 @@ export default function ScreenRecordingTab({ employee }) {
             className="h-10 px-6 rounded-xl w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold gap-2"
           >
             <Search size={14} />
-            {loading ? "Searching…" : "Search"}
+            {loading ? `${t("search")}…` : t("search")}
           </Button>
         </div>
       </div>
@@ -129,11 +131,11 @@ export default function ScreenRecordingTab({ employee }) {
       {/* Slots */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <span className="text-sm text-gray-400">Loading recordings…</span>
+          <span className="text-sm text-gray-400">{t("loadingRecordings")}</span>
         </div>
       ) : slots.length === 0 ? (
         <div className="flex items-center justify-center py-16">
-          <span className="text-sm text-gray-400 italic">No recordings found for the selected period.</span>
+          <span className="text-sm text-gray-400 italic">{t("noRecordingsFound")}</span>
         </div>
       ) : slots.map((slot, i) => (
         <div key={i} className="space-y-3">
@@ -155,7 +157,7 @@ export default function ScreenRecordingTab({ employee }) {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-2">
         <p className="text-[13px] text-gray-500">
-          Total <span className="font-bold text-blue-600">{totalCount}</span> recordings
+          {t("total")} <span className="font-bold text-blue-600">{totalCount}</span> {t("totalRecordings")}
         </p>
         <PaginationComponent
           currentPage={currentPage}

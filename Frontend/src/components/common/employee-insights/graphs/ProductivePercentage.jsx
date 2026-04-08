@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts";
 
 const ProductivePercentage = ({ today, yesterday, organization }) => {
+  const { t } = useTranslation();
   const todayPercent = Number(today?.productivity ?? 0);
   const yesterdayPercent = Number(yesterday?.productivity ?? 0);
   const orgPercent = Number(organization?.productivity ?? 0);
@@ -40,7 +42,7 @@ const ProductivePercentage = ({ today, yesterday, organization }) => {
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex items-start justify-between gap-6">
       <div className="flex-1">
         <div className="text-lg font-semibold text-slate-700">
-          Productivity Percentage(%)
+          {t("insights_productivity_percentage")}
         </div>
         <div className="text-xs text-slate-400 mt-1 max-w-md leading-snug">
           &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
@@ -50,7 +52,7 @@ const ProductivePercentage = ({ today, yesterday, organization }) => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
           <div>
             <div className="text-xs text-[#575757] font-medium">
-              Previous Day Average
+              {t("insights_previous_day_avg")}
             </div>
             <div className="text-sm font-semibold text-blue-600 mt-1 flex justify-between items-center">
               <div className="">{yesterdayPercent.toFixed(2)}%</div>
@@ -59,7 +61,7 @@ const ProductivePercentage = ({ today, yesterday, organization }) => {
           </div>
           <div className="sm:border-l sm:border-slate-200 sm:pl-6">
             <div className="text-xs text-[#575757] font-medium">
-              Total Work Average
+              {t("insights_total_work_avg")}
             </div>
             <div className="text-sm font-semibold text-blue-600 mt-1 flex justify-between items-center">
               <div className="">{todayPercent.toFixed(2)}%</div>
@@ -68,7 +70,7 @@ const ProductivePercentage = ({ today, yesterday, organization }) => {
           </div>
           <div className="sm:border-l sm:border-slate-200 sm:pl-6">
             <div className="text-xs text-[#575757] font-medium">
-              Whole Organisation Average
+              {t("insights_whole_org_avg")}
             </div>
             <div className="text-sm font-semibold text-blue-600 mt-1 flex justify-between items-center">
               <div className="">{orgPercent.toFixed(2)}%</div>

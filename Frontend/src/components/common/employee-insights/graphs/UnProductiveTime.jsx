@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts";
 import { IoIosAlarm } from "react-icons/io";
 import UnProductiveTimeIcon from "@/assets/employee/icons/unproductive-time.svg";
 
 const UnProductiveTime = ({ value = "00:00:00 hrs" }) => {
+  const { t } = useTranslation();
   const unproductiveSparkChart = useMemo(() => {
     const series = [{ data: [18, 14, 26, 20, 32, 24, 30] }];
     const options = {
@@ -37,7 +39,7 @@ const UnProductiveTime = ({ value = "00:00:00 hrs" }) => {
           <img src={UnProductiveTimeIcon} />
         </div>
         <div className="text-[#EB5757]">
-          <div className="text-sm text-red-500">Unproductive Time</div>
+          <div className="text-sm text-red-500">{t("insights_unproductive_time")}</div>
           <div className="text-xl font-semibold">
             {value}
           </div>

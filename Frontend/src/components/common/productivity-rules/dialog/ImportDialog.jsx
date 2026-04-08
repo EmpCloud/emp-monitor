@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { useProductivityRulesStore } from "@/page/protected/admin/productivity-rules/productivityRulesStore";
 
-const ImportDialog = ({ variant = "import" }) => {
+const ImportDialog = ({ variant = "import" }) => {  const { t } = useTranslation();
+
     const {
         importDialogOpen,
         closeImportDialog,
@@ -45,7 +47,7 @@ const ImportDialog = ({ variant = "import" }) => {
 
         const regex = /\.(xlsx)$/i;
         if (!regex.test(selected.name)) {
-            setError("Please select a valid .xlsx file");
+            setError(t("prodRules.validXlsx"));
             setFile(null);
             return;
         }
@@ -55,7 +57,7 @@ const ImportDialog = ({ variant = "import" }) => {
 
     const handleSubmit = async () => {
         if (!file) {
-            setError("Please select a file to import");
+            setError(t("prodRules.selectFileToImport"));
             return;
         }
 
@@ -76,7 +78,7 @@ const ImportDialog = ({ variant = "import" }) => {
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <Upload className="w-5 h-5 text-blue-500" />
-                        <DialogTitle>{isBulk ? "Bulk Import Productivity Rules" : "Import Productivity Data"}</DialogTitle>
+                        <DialogTitle>{isBulk ? t("prodRules.bulkImportRules") : t("prodRules.importData")}</DialogTitle>
                     </div>
                     <DialogDescription>
                         Upload an .xlsx file to {isBulk ? "bulk import productivity rules" : "update productivity rankings"}.
@@ -92,7 +94,7 @@ const ImportDialog = ({ variant = "import" }) => {
                         {file ? (
                             <p className="text-sm text-slate-700 font-medium">{file.name}</p>
                         ) : (
-                            <p className="text-sm text-slate-500">Click to select an .xlsx file</p>
+                            <p className="text-sm text-slate-500">{t("prodRules.selectFile")}</p>
                         )}
                         <input
                             ref={fileRef}
@@ -107,7 +109,7 @@ const ImportDialog = ({ variant = "import" }) => {
 
                     {resultErrors.length > 0 && (
                         <div className="max-h-40 overflow-y-auto rounded-lg bg-red-50 p-3">
-                            <p className="text-xs font-semibold text-red-600 mb-1">Invalid entries:</p>
+                            <p className="text-xs font-semibold text-red-600 mb-1">{t("prodRules.invalidEntries")}</p>
                             {resultErrors.map((item, idx) => (
                                 <p key={idx} className="text-xs text-red-500">
                                     {item.Activity || item.name || JSON.stringify(item)}
@@ -117,7 +119,7 @@ const ImportDialog = ({ variant = "import" }) => {
                     )}
 
                     <p className="text-xs text-slate-500">
-                        <span className="font-semibold">Note:</span> Only .xlsx files are supported.
+                        <span className="font-semibold">{t("common.note")}:</span> {t("prodRules.onlyXlsx")}
                     </p>
                 </div>
 

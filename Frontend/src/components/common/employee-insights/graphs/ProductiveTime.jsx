@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts";
 import { BsFillLightningChargeFill } from "react-icons/bs";
 import ProductiveTimeIcon from "@/assets/employee/icons/productivity-time.svg";
 
 const ProductiveTime = ({ value = "00:00:00 hrs" }) => {
+  const { t } = useTranslation();
   const productiveSparkChart = useMemo(() => {
     const series = [{ data: [28, 18, 26, 10, 22, 12, 6] }];
     const options = {
@@ -35,7 +37,7 @@ const ProductiveTime = ({ value = "00:00:00 hrs" }) => {
           <img src={ProductiveTimeIcon} />
         </div>
         <div className="text-[#0ABF01]">
-          <div className="text-sm text-emerald-600">Productive Time</div>
+          <div className="text-sm text-emerald-600">{t("insights_productive_time")}</div>
           <div className="text-xl font-semibold ">{value}</div>
         </div>
       </div>

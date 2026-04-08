@@ -7,38 +7,38 @@ const getDashboardStats = async (timezone = "Asia/Kolkata") => {
         let { data } = await apiService.apiInstance.get(`/dashboard/employees?date=${moment().tz(timezone).format("YYYY-MM-DD")}`);
         let temp = [
             {
-                label: "Total Enrollments",
+                labelKey: "stat_total_enrollments",
                 value: "0",
                 highlight: true,
                 variant: "blue",
                 chart: "wave",
             },
             {
-                label: "Currently Active",
+                labelKey: "stat_currently_active",
                 value: "0",
                 bars: [40, 70, 50, 90, 60, 80, 55],
                 barColor: "#a78bfa",
             },
             {
-                label: "Currently Idle",
+                labelKey: "stat_currently_idle",
                 value: "0",
                 bars: [30, 60, 45, 75, 50, 65, 40],
                 barColor: "#60a5fa",
             },
             {
-                label: "Currently Offline",
+                labelKey: "stat_currently_offline",
                 value: "0",
                 bars: [50, 35, 65, 45, 70, 40, 60],
                 barColor: "#4ade80",
             },
             {
-                label: "Absent",
+                labelKey: "stat_absent",
                 value: "0",
                 bars: [60, 80, 50, 90, 55, 75, 65],
                 barColor: "#f87171",
             },
             {
-                label: "Suspended",
+                labelKey: "stat_suspended",
                 value: "0",
                 highlight: true,
                 variant: "steel",

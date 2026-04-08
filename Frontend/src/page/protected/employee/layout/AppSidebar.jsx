@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import empLogo      from "@/assets/emp.png";
 import smallempLogo from "@/assets/smallemp.png";
 import {
@@ -8,14 +9,16 @@ import {
 import { LayoutDashboard, HandCoins } from "lucide-react";
 import AppMenuItems from "./AppMenuItems";
 
-const employeeMenuItems = [
-  { title: "Dashboard", url: "/employee/dashboard", icon: LayoutDashboard },
-  { title: "Time Claim", url: "/employee/time-claim", icon: HandCoins },
+const getEmployeeMenuItems = (t) => [
+  { title: t("dashboard"), url: "/employee/dashboard", icon: LayoutDashboard },
+  { title: t("sidebar_time_claim"), url: "/employee/time-claim", icon: HandCoins },
 ];
 
 export function EmployeeAppSidebar() {
+  const { t } = useTranslation();
   const { open } = useSidebar();
   const [openKey, setOpenKey] = useState(null);
+  const employeeMenuItems = getEmployeeMenuItems(t);
 
   return (
     <Sidebar collapsible="icon">
@@ -58,11 +61,9 @@ export function EmployeeAppSidebar() {
               <img src={smallempLogo} alt="" />
             </div>
           </div>
-          <p className="mb-1 text-sm font-semibold">Employee Portal</p>
+          <p className="mb-1 text-sm font-semibold">{t("sidebar_employee_portal")}</p>
           <p className="text-xs leading-relaxed text-blue-100">
-            Monitor your productivity
-            <br />
-            and work activity here
+            {t("sidebar_employee_portal_desc")}
           </p>
         </div>
       </SidebarFooter>

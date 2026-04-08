@@ -7,6 +7,7 @@ import useAdminSession    from '../sessions/adminSession'
 import useNonAdminSession from '../sessions/useNonAdminSession'
 import useEmployeeSession from '../sessions/employeeSession'
 import { getSessionCookie } from '../lib/sessionCookie'
+import { syncLanguageFromSession } from '../i18n/syncLanguage'
 
 export function AdminProtectedRoute({ children }) {
   const { admin, setAdmin } = useAdminSession()
@@ -16,6 +17,7 @@ export function AdminProtectedRoute({ children }) {
     const fromCookie = getSessionCookie()
     if (fromCookie && fromCookie.data && fromCookie.is_admin === true) {
       setAdmin(fromCookie)
+      syncLanguageFromSession()
     }
     setHydrated(true)
   }, [setAdmin])
@@ -43,6 +45,7 @@ export function NonAdminProtectedRoute({ children }) {
       const role = (fromCookie.role || '').toLowerCase().replace(/\s+/g, '')
       if (role !== 'employee' && fromCookie.is_admin !== true) {
         setNonAdmin(fromCookie)
+        syncLanguageFromSession()
       }
     }
     setHydrated(true)
@@ -71,6 +74,7 @@ export function EmployeeProtectedRoute({ children }) {
       const role = (fromCookie.role || '').toLowerCase().replace(/\s+/g, '')
       if (role === 'employee') {
         setEmployee(fromCookie)
+        syncLanguageFromSession()
       }
     }
     setHydrated(true)

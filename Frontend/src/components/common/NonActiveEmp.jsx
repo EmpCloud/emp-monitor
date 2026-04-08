@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableBody,
@@ -32,12 +33,14 @@ const formatDuration = (value) => {
 };
 
 export default function NonActiveEmp({
-  title = "Top 10 Non Active Employees",
+  title,
   employees = [],
   loading = false,
   report,
   filter,
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("topNonActiveEmployees");
   // Aggregate by employee and sort ascending by active time
   const rows = (() => {
     const byEmp = new Map();
@@ -72,7 +75,7 @@ export default function NonActiveEmp({
         {/* ── Top Header Row ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-            {title}
+            {resolvedTitle}
           </h2>
 
           {report}
@@ -84,11 +87,11 @@ export default function NonActiveEmp({
         {/* Loading / Empty states */}
         {loading ? (
           <div className="py-6 text-center text-sm text-slate-500">
-            Loading...
+            {t("loadingText")}
           </div>
         ) : !rows.length ? (
           <div className="py-6 text-center text-sm text-slate-500">
-            No employees found for the selected filters.
+            {t("noEmployeesForFilters")}
           </div>
         ) : null}
 
@@ -97,7 +100,7 @@ export default function NonActiveEmp({
           <Table>
             <TableHeader>
               <TableRow className="border-b border-slate-200 hover:bg-transparent">
-                {["Employee Name", "Time (Hours)"].map((h) => (
+                {[t("empName"), t("timeHoursLabel")].map((h) => (
                   <TableHead
                     key={h}
                     className="text-slate-500 font-medium text-sm pb-3"

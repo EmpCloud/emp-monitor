@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Settings, ChevronDown, Plus, Trash2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ const Sep = () => (
 );
 
 export default function StorageType() {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -80,7 +82,7 @@ export default function StorageType() {
   };
 
   const handleSaveSuccess = () => {
-    showSuccess(editItem ? "Storage updated successfully." : "Storage added successfully.");
+    showSuccess(editItem ? t("storage_updated_success") : t("storage_added_success"));
     loadData();
   };
 
@@ -97,10 +99,10 @@ export default function StorageType() {
     setDeleteConfirmOpen(false);
     setDeleteItem(null);
     if (result) {
-      showSuccess("Storage deleted successfully.");
+      showSuccess(t("storage_deleted_success"));
       loadData();
     } else {
-      showError("Failed to delete storage. Please try again.");
+      showError(t("storage_delete_failed"));
     }
   };
 
@@ -109,16 +111,16 @@ export default function StorageType() {
     const result = await updateStorageOption(item.storage_data_id);
     setActionLoading(false);
     if (result) {
-      showSuccess("Storage activated successfully.");
+      showSuccess(t("storage_activated_success"));
       loadData();
     } else {
-      showError("Failed to activate storage. Please try again.");
+      showError(t("storage_activate_failed"));
     }
   };
 
   const getStatusLabel = (status) => {
     const s = String(status);
-    return s === "1" || s === "active" ? "Active" : "Not Active";
+    return s === "1" || s === "active" ? t("actives") : t("storage_not_active");
   };
 
   const isActive = (status) => {
@@ -150,11 +152,11 @@ export default function StorageType() {
             </div>
             <div className="border-l-[3px] border-blue-500 pl-3 min-w-0">
               <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                <span className="font-semibold">Storage</span>{" "}
-                <span className="text-gray-500 font-normal">Type</span>
+                <span className="font-semibold">{t("storage")}</span>{" "}
+                <span className="text-gray-500 font-normal">{t("type")}</span>
               </h1>
               <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
-                Configure cloud and file-transfer storage integrations
+                {t("storage_configure_desc")}
               </p>
             </div>
           </div>
@@ -169,7 +171,7 @@ export default function StorageType() {
               size={18}
               className="transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110"
             />
-            <span>Add Storage</span>
+            <span>{t("storage_add")}</span>
           </Button>
         </div>
 
@@ -180,19 +182,19 @@ export default function StorageType() {
               <TableRow className="bg-gray-200">
                 <TableHead className="pl-4 py-3 rounded-tl-xl">
                   <div className="flex items-center justify-between gap-2">
-                    <span>Storage Type</span>
+                    <span>{t("storage_type")}</span>
                     <Sep />
                   </div>
                 </TableHead>
                 <TableHead className="py-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span>Status</span>
+                    <span>{t("status")}</span>
                     <Sep />
                   </div>
                 </TableHead>
                 <TableHead className="py-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span>Note</span>
+                    <span>{t("note")}</span>
                     <Sep />
                   </div>
                 </TableHead>
@@ -200,7 +202,7 @@ export default function StorageType() {
                   className="text-center pr-4 text-white text-[12px] font-semibold rounded-tr-xl py-3"
                   style={{ background: "linear-gradient(135deg,#3b82f6,#2563eb)" }}
                 >
-                  Action
+                  {t("action")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -209,7 +211,7 @@ export default function StorageType() {
               {loading && (
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center text-sm text-gray-400">
-                    Loading...
+                    {t("storage_loading")}
                   </TableCell>
                 </TableRow>
               )}
@@ -217,7 +219,7 @@ export default function StorageType() {
               {!loading && data.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center text-sm text-gray-500">
-                    No storage types configured. Click &ldquo;Add Storage&rdquo; to get started.
+                    {t("storage_no_data")}
                   </TableCell>
                 </TableRow>
               )}
@@ -279,20 +281,20 @@ export default function StorageType() {
                           className="text-[13px] cursor-pointer"
                           onClick={() => handleEdit(item)}
                         >
-                          Edit
+                          {t("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-[13px] cursor-pointer text-red-500 focus:text-red-500"
                           onClick={() => openDeleteConfirm(item)}
                         >
-                          Delete
+                          {t("delete")}
                         </DropdownMenuItem>
                         {!isActive(item.status) && (
                           <DropdownMenuItem
                             className="text-[13px] cursor-pointer text-emerald-600 focus:text-emerald-600"
                             onClick={() => handleActivate(item)}
                           >
-                            Activate
+                            {t("activate")}
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -321,7 +323,7 @@ export default function StorageType() {
             style={{ background: "linear-gradient(135deg,#f87171,#ef4444)" }}
           >
             <h2 className="text-white text-lg font-bold tracking-tight">
-              Delete Storage
+              {t("storage_delete_title")}
             </h2>
             <DialogClose className="text-white hover:text-white/80 transition-colors focus:outline-none">
               <Trash2 className="h-5 w-5" />
@@ -329,11 +331,11 @@ export default function StorageType() {
           </div>
 
           <div className="px-6 py-6 text-[14px] text-gray-700">
-            Are you sure you want to delete{" "}
+            {t("storage_delete_confirm")}{" "}
             <span className="font-semibold">
-              {deleteItem?.name ?? "this storage"}
+              {deleteItem?.name ?? t("storage_delete_this")}
             </span>
-            ? This action cannot be undone.
+            ? {t("storage_delete_undone")}
           </div>
 
           <div className="border-t border-gray-200 mx-6" />
@@ -341,7 +343,7 @@ export default function StorageType() {
           <div className="px-6 py-4 flex justify-end gap-3">
             <DialogClose asChild>
               <Button variant="outline" className="h-9 px-5 rounded-full text-[13px] font-semibold">
-                Cancel
+                {t("cancel")}
               </Button>
             </DialogClose>
             <Button
@@ -349,7 +351,7 @@ export default function StorageType() {
               disabled={actionLoading}
               className="h-9 px-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-[13px] font-semibold disabled:opacity-50"
             >
-              {actionLoading ? "Deleting..." : "Delete"}
+              {actionLoading ? t("storage_deleting") : t("delete")}
             </Button>
           </div>
         </DialogContent>

@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin } from "lucide-react";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
@@ -6,13 +7,16 @@ import { Button } from "@/components/ui/button";
 import EmpMobileTaskGeolocationLogo from "@/assets/mobile-task/geo-location.svg";
 import { useGpsStore } from "@/page/protected/admin/mobile-task-geolocation/gpsStore";
 
-const STATUS_OPTIONS = [
-    { value: "all", label: "All" },
-    { value: "enabled", label: "Enabled" },
-    { value: "disabled", label: "Disabled" },
+const getStatusOptions = (t) => [
+    { value: "all", label: t("gps.all") },
+    { value: "enabled", label: t("gps.enabled") },
+    { value: "disabled", label: t("gps.disabled") },
 ];
 
 const EmpMobileTaskGeolocation = () => {
+    const { t } = useTranslation();
+    const STATUS_OPTIONS = getStatusOptions(t);
+
     const employees = useGpsStore((s) => s.employees);
     const geoLog = useGpsStore((s) => s.geoLog);
     const taskTime = useGpsStore((s) => s.taskTime);
@@ -45,8 +49,8 @@ const EmpMobileTaskGeolocation = () => {
                 <div className="flex items-center gap-2">
                     <img alt="gps" className="w-20 h-20" src={EmpMobileTaskGeolocationLogo} />
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">GEO</span>{" "}<span className="font-normal text-gray-500">Location Tracking</span></h2>
-                        <p className="text-xs text-gray-400 mt-1">Track employee GPS location and task activity</p>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">{t("gps.geoLabel")}</span>{" "}<span className="font-normal text-gray-500">{t("gps.locationTracking")}</span></h2>
+                        <p className="text-xs text-gray-400 mt-1">{t("gps.trackDesc")}</p>
                     </div>
                 </div>
             </div>
@@ -54,13 +58,13 @@ const EmpMobileTaskGeolocation = () => {
             {/* Filters */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
                 <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">GPS Status</label>
-                    <CustomSelect placeholder="All" items={STATUS_OPTIONS} selected={statusFilter} onChange={setStatusFilter} width="full" />
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">{t("gps.gpsStatus")}</label>
+                    <CustomSelect placeholder={t("gps.all")} items={STATUS_OPTIONS} selected={statusFilter} onChange={setStatusFilter} width="full" />
                 </div>
                 <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Employee</label>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">{t("employee")}</label>
                     <CustomSelect
-                        placeholder="Select Employee"
+                        placeholder={t("gps.selectEmployee")}
                         items={employees}
                         selected={selectedEmployee}
                         onChange={setSelectedEmployee}
@@ -68,18 +72,18 @@ const EmpMobileTaskGeolocation = () => {
                     />
                 </div>
                 <div className="sm:col-span-2 lg:col-span-1 min-w-0">
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">Date range</label>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">{t("gps.dateRange")}</label>
                     <DateRangeCalendar
                         startDate={startDate}
                         endDate={endDate}
                         onChange={handleDateRangeChange}
-                        placeholder="Select date range"
+                        placeholder={t("gps.selectDateRange")}
                     />
                 </div>
                 <div className="flex items-end">
                     <Button className="bg-blue-500 hover:bg-blue-600 w-full" onClick={handleTrack} disabled={mapLoading || !selectedEmployee}>
                         <MapPin className="w-4 h-4 mr-1.5" />
-                        {mapLoading ? "Loading..." : "Track Location"}
+                        {mapLoading ? t("gps.loading") : t("gps.trackLocation")}
                     </Button>
                 </div>
             </div>
@@ -91,12 +95,12 @@ const EmpMobileTaskGeolocation = () => {
                 {geoLog.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400">
                         <MapPin className="w-12 h-12 mb-3 text-slate-300" />
-                        <p className="text-sm font-medium">No GPS data available</p>
-                        <p className="text-xs mt-1">Select an employee and date range, then track</p>
+                        <p className="text-sm font-medium">{t("gps.noGpsData")}</p>
+                        <p className="text-xs mt-1">{t("gps.noGpsDataDesc")}</p>
                     </div>
                 ) : (
                     <div className="p-4 h-full overflow-y-auto">
-                        <p className="text-sm font-semibold text-slate-700 mb-3">Location Points ({geoLog.length})</p>
+                        <p className="text-sm font-semibold text-slate-700 mb-3">{t("gps.locationPoints")} ({geoLog.length})</p>
                         <div className="space-y-2">
                             {geoLog.map((point, idx) => (
                                 <div key={idx} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-100">
@@ -120,8 +124,8 @@ const EmpMobileTaskGeolocation = () => {
             {/* Task time summary */}
             {taskTime && (
                 <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-sm font-semibold text-slate-700 mb-1">Task Time Summary</p>
-                    <p className="text-xs text-slate-500">Total task time: {taskTime.total_time || taskTime.duration || "-"}</p>
+                    <p className="text-sm font-semibold text-slate-700 mb-1">{t("gps.taskTimeSummary")}</p>
+                    <p className="text-xs text-slate-500">{t("gps.totalTaskTime")}: {taskTime.total_time || taskTime.duration || "-"}</p>
                 </div>
             )}
         </div>

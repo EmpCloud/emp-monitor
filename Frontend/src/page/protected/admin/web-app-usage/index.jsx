@@ -1,5 +1,6 @@
 import React from 'react'
 import { Globe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpWebAppUsage from '@/components/common/web-app-usage/EmpWebAppUsage'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const WebAppUsage = () => (
-  <Placeholder
-    title="Web App Usage"
-    description="Detailed breakdown of web and application usage by employees."
-    Icon={Globe}
-  />
-)
+const WebAppUsage = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("webAppUsageTitle")}
+      description={t("webAppUsageDescription")}
+      Icon={Globe}
+    />
+  )
+}
 
 export default WebAppUsage

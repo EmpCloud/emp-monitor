@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Monitor, Wifi, WifiOff, Gauge, Camera, Video,
   Layers, FolderOpen, Play, Copy, Lock, RotateCcw, Power,
@@ -38,9 +39,9 @@ const CUSTOM_BUTTON_DATA = {
 };
 
 const SIZE_OPTIONS = [
-  { label: "Small",  value: 400 },
-  { label: "Medium", value: 600 },
-  { label: "Large",  value: 800 },
+  { labelKey: "small",  value: 400 },
+  { labelKey: "medium", value: 600 },
+  { labelKey: "large",  value: 800 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ function extractScreenData(data) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ScreenCastTab({ employee }) {
+  const { t } = useTranslation();
   // ── UI state (drives renders) ──────────────────────────────────────────────
   const [isConnected,  setIsConnected]  = useState(false);
   const [agentOnline,  setAgentOnline]  = useState(null);   // null | true | false
@@ -66,7 +68,7 @@ export default function ScreenCastTab({ employee }) {
   const [errorMsg,     setErrorMsg]     = useState("");
   const [isRecording,  setIsRecording]  = useState(false);
   const [canvasHeight, setCanvasHeight] = useState(DEFAULT_CANVAS_HEIGHT);
-  const [sizeLabel,    setSizeLabel]    = useState("Small");
+  const [sizeKey,      setSizeKey]      = useState("small");
 
   // ── Imperative refs (no re-render needed) ─────────────────────────────────
   const socketRef            = useRef(null);
@@ -489,7 +491,7 @@ export default function ScreenCastTab({ employee }) {
     canvasHeightRef.current     = opt.value;
     isScreenStartedRef.current  = false; // force canvas rebuild on next frame
     setCanvasHeight(opt.value);
-    setSizeLabel(opt.label);
+    setSizeKey(opt.labelKey);
   }, []);
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -509,7 +511,7 @@ export default function ScreenCastTab({ employee }) {
             agentOnline === true ? "bg-green-500" :
             agentOnline === false ? "bg-red-500" : "bg-gray-400"
           }`} />
-          Agent {agentOnline === true ? "Online" : agentOnline === false ? "Offline" : "Connection Status"}
+          {agentOnline === true ? t("agentOnlineLabel") : agentOnline === false ? t("agentOfflineLabel") : t("agentConnectionStatus")}
         </Badge>
 
         {/* Connect / Disconnect */}
@@ -519,14 +521,14 @@ export default function ScreenCastTab({ employee }) {
             disabled={!employee?.id}
             className="h-9 px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold gap-1.5"
           >
-            <Wifi size={13} /> Connect
+            <Wifi size={13} /> {t("connectBtn")}
           </Button>
         ) : (
           <Button
             onClick={disconnect}
             className="h-9 px-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs font-semibold gap-1.5"
           >
-            <WifiOff size={13} /> Disconnect
+            <WifiOff size={13} /> {t("disconnectBtn")}
           </Button>
         )}
 
@@ -537,7 +539,7 @@ export default function ScreenCastTab({ employee }) {
           variant="outline"
           className="h-9 px-5 rounded-full text-xs font-semibold gap-1.5"
         >
-          <Gauge size={13} /> Test Latency
+          <Gauge size={13} /> {t("testLatency")}
         </Button>
 
         {/* Dashboard latency readout */}
@@ -556,15 +558,15 @@ export default function ScreenCastTab({ employee }) {
         <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-full px-2 py-1">
           {SIZE_OPTIONS.map((opt) => (
             <button
-              key={opt.label}
+              key={opt.labelKey}
               onClick={() => applySize(opt)}
               className={`text-xs px-2.5 py-0.5 rounded-full transition-colors ${
-                sizeLabel === opt.label
+                sizeKey === opt.labelKey
                   ? "bg-blue-600 text-white font-semibold"
                   : "text-gray-600 hover:text-blue-600"
               }`}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
@@ -603,7 +605,7 @@ export default function ScreenCastTab({ employee }) {
             className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex flex-col items-center justify-center hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors gap-0.5"
           >
             <Camera size={15} className="text-blue-500" />
-            <span className="text-[8px] text-gray-500 leading-none">Snap</span>
+            <span className="text-[8px] text-gray-500 leading-none">{t("snap")}</span>
           </button>
 
           {/* Record */}
@@ -618,7 +620,7 @@ export default function ScreenCastTab({ employee }) {
             }`}
           >
             <Video size={15} className={isRecording ? "text-red-500" : "text-gray-600"} />
-            <span className="text-[8px] text-gray-500 leading-none">{isRecording ? "Stop" : "Record"}</span>
+            <span className="text-[8px] text-gray-500 leading-none">{isRecording ? t("stopRecord") : t("record")}</span>
           </button>
         </div>
       </div>
@@ -635,8 +637,8 @@ export default function ScreenCastTab({ employee }) {
               <div className="w-16 h-16 mx-auto bg-blue-600/30 rounded-2xl flex items-center justify-center">
                 <Monitor size={32} className="text-white/70" />
               </div>
-              <p className="text-blue-600 text-sm">Live screen cast will appear here</p>
-              <p className="text-blue-500 text-xs">Click Connect to start viewing</p>
+              <p className="text-blue-600 text-sm">{t("liveScreenCastAppearHere")}</p>
+              <p className="text-blue-500 text-xs">{t("clickConnectToStart")}</p>
             </div>
           </div>
         )}
@@ -646,7 +648,7 @@ export default function ScreenCastTab({ employee }) {
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             <div className="text-center space-y-2">
               <WifiOff size={32} className="text-white/40 mx-auto" />
-              <p className="text-white/60 text-sm">Agent is offline</p>
+              <p className="text-white/60 text-sm">{t("agentIsOffline")}</p>
             </div>
           </div>
         )}

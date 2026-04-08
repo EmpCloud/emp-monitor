@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, ChevronRight, ChevronLeft, Calendar, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const timeOptions = Array.from({ length: 24 }, (_, i) => {
 });
 
 function ScreenshotCard({ ss, onClick }) {
+  const { t } = useTranslation();
   return (
     <div
       className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
@@ -40,7 +42,7 @@ function ScreenshotCard({ ss, onClick }) {
               <div className="bg-white/80 rounded-sm" />
               <div className="bg-white/80 rounded-sm" />
             </div>
-            <p className="text-white/90 text-[11px] font-semibold">No Preview</p>
+            <p className="text-white/90 text-[11px] font-semibold">{t("noPreview")}</p>
           </div>
         )}
       </div>
@@ -59,6 +61,7 @@ function ScreenshotCard({ ss, onClick }) {
 }
 
 function TimeSlotSection({ bucket, onScreenshotClick }) {
+  const { t } = useTranslation();
   const h = Number(bucket.t ?? 0);
   const hour = String(h).padStart(2, "0");
   const nextHour = String(h + 1).padStart(2, "0");
@@ -84,6 +87,7 @@ function TimeSlotSection({ bucket, onScreenshotClick }) {
 }
 
 function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
+  const { t } = useTranslation();
   const currentIndex = useMemo(() => {
     if (!screenshot) return -1;
     return allScreenshots.findIndex((s) => s.name === screenshot.name && s.link === screenshot.link);
@@ -148,7 +152,7 @@ function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
             />
           ) : (
             <div className="text-center py-20">
-              <p className="text-white/60 text-sm">No preview available</p>
+              <p className="text-white/60 text-sm">{t("noPreviewAvailable")}</p>
             </div>
           )}
         </div>
@@ -164,14 +168,14 @@ function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
               disabled={!hasPrev}
               className="h-8 px-3 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              <ChevronLeft size={14} /> Prev
+              <ChevronLeft size={14} /> {t("prev")}
             </button>
             <button
               onClick={goNext}
               disabled={!hasNext}
               className="h-8 px-3 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              Next <ChevronRight size={14} />
+              {t("next")} <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -181,6 +185,7 @@ function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
 }
 
 export default function ScreenshotsTab({ employee }) {
+  const { t } = useTranslation();
   const [date, setDate]         = useState(moment().format("YYYY-MM-DD"));
   const [fromTime, setFromTime] = useState("00:00");
   const [toTime, setToTime]     = useState("23:00");
@@ -224,7 +229,7 @@ export default function ScreenshotsTab({ employee }) {
       {/* Filters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3 items-end">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Select Date</label>
+          <label className="text-sm font-medium text-gray-700">{t("selectDate")}</label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <Input
@@ -237,12 +242,12 @@ export default function ScreenshotsTab({ employee }) {
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">From Time</label>
-          <CustomSelect placeholder="From" items={timeOptions} selected={fromTime} onChange={setFromTime} width />
+          <label className="text-sm font-medium text-gray-700">{t("frmTime")}</label>
+          <CustomSelect placeholder={t("from")} items={timeOptions} selected={fromTime} onChange={setFromTime} width />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">To Time</label>
-          <CustomSelect placeholder="To" items={timeOptions} selected={toTime} onChange={setToTime} width />
+          <label className="text-sm font-medium text-gray-700">{t("toTime")}</label>
+          <CustomSelect placeholder={t("to")} items={timeOptions} selected={toTime} onChange={setToTime} width />
         </div>
         <Button
           onClick={load}
@@ -250,18 +255,18 @@ export default function ScreenshotsTab({ employee }) {
           className="h-9 px-8 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold gap-2 w-full sm:w-auto"
         >
           <Search size={15} />
-          {loading ? "Searching…" : "Search"}
+          {loading ? `${t("search")}…` : t("search")}
         </Button>
       </div>
 
       {/* Buckets */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <span className="text-sm text-gray-400">Loading screenshots…</span>
+          <span className="text-sm text-gray-400">{t("loadingScreenshots")}</span>
         </div>
       ) : buckets.length === 0 ? (
         <div className="flex items-center justify-center py-16">
-          <span className="text-sm text-gray-400 italic">No screenshots found for the selected period.</span>
+          <span className="text-sm text-gray-400 italic">{t("noScreenshotsFound")}</span>
         </div>
       ) : (
         buckets.map((bucket, i) => (
@@ -272,7 +277,7 @@ export default function ScreenshotsTab({ employee }) {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-2">
         <p className="text-[13px] text-gray-500">
-          Total <span className="font-bold text-blue-600">{totalCount}</span> screenshots
+          {t("total")} <span className="font-bold text-blue-600">{totalCount}</span> {t("totalScreenshots")}
         </p>
         <PaginationComponent
           currentPage={currentPage}

@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts";
 import { FaClock } from "react-icons/fa";
 import OfficeTimeIcon from "@/assets/employee/icons/office-time.svg";
 
 const OfficeTime = ({ value = "00:00:00 hrs" }) => {
+  const { t } = useTranslation();
   const officeTimeChart = useMemo(() => {
     const data = [30, 28, 15, 32, 40];
     const maxVal = 40;
@@ -61,7 +63,7 @@ const OfficeTime = ({ value = "00:00:00 hrs" }) => {
           <img src={OfficeTimeIcon} />
         </div>
         <div className="text-[#575757]" >
-          <div className="text-sm ">Office Time</div>
+          <div className="text-sm ">{t("insights_office_time")}</div>
           <div className="text-xl font-semibold text-[#575757]">
             {value}
           </div>

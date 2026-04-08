@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Search,
     Plus,
@@ -14,18 +15,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import PaginationComponent from "@/components/common/Pagination";
 import CreateEditEmailReport from "@/components/common/auto-email-report/dialog/CreateEditEmailReport";
 import DeleteReportDialog from "@/components/common/auto-email-report/dialog/DeleteReportDialog";
 import { useAutoEmailReportStore } from "@/page/protected/admin/auto-email-report/autoEmailReportStore";
-import { getFrequencyLabel, getContentLabels, FILTER_TYPE_MAP } from "@/page/protected/admin/auto-email-report/service";
+import { getFrequencyKey, getContentKeys, FILTER_TYPE_KEY_MAP } from "@/page/protected/admin/auto-email-report/service";
 import EmpAutoEmailReportLogo from "@/assets/reports/email_reports.svg";
 
 // ─── Debounce Hook ───────────────────────────────────────────────────────────
@@ -41,6 +36,7 @@ const useDebounce = (callback, delay) => {
 // ─── Recipient Cell ──────────────────────────────────────────────────────────
 
 const RecipientCell = ({ recipients }) => {
+    const { t } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const list = Array.isArray(recipients) ? recipients : [];
     const visible = expanded ? list : list.slice(0, 3);
@@ -57,7 +53,7 @@ const RecipientCell = ({ recipients }) => {
                     onClick={() => setExpanded(!expanded)}
                     className="text-[11px] text-blue-500 hover:text-blue-600 font-medium mt-0.5"
                 >
-                    {expanded ? "Show less" : `+${list.length - 3} more`}
+                    {expanded ? t("emailReport.showLess") : `+${list.length - 3} ${t("emailReport.more")}`}
                 </button>
             )}
         </div>
@@ -67,16 +63,17 @@ const RecipientCell = ({ recipients }) => {
 // ─── Content Badges ──────────────────────────────────────────────────────────
 
 const ContentBadges = ({ content }) => {
-    const labels = getContentLabels(content);
-    if (labels.length === 0) return <span className="text-xs text-slate-400">-</span>;
+    const { t } = useTranslation();
+    const keys = getContentKeys(content);
+    if (keys.length === 0) return <span className="text-xs text-slate-400">-</span>;
     return (
         <div className="flex flex-wrap gap-1">
-            {labels.map((label) => (
+            {keys.map((key) => (
                 <span
-                    key={label}
+                    key={key}
                     className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-[10px] font-medium text-blue-600 border border-blue-100"
                 >
-                    {label}
+                    {t(key)}
                 </span>
             ))}
         </div>
@@ -86,6 +83,7 @@ const ContentBadges = ({ content }) => {
 // ─── Export Dropdown ─────────────────────────────────────────────────────────
 
 const ExportDropdown = () => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const exportCsv = useAutoEmailReportStore((s) => s.exportCsv);
     const exportPdf = useAutoEmailReportStore((s) => s.exportPdf);
@@ -99,7 +97,7 @@ const ExportDropdown = () => {
                 onClick={() => setOpen(!open)}
             >
                 <Download className="w-3.5 h-3.5" />
-                Export
+                {t("export")}
                 <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
             </Button>
             {open && (
@@ -111,14 +109,14 @@ const ExportDropdown = () => {
                             className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <FileText className="w-3.5 h-3.5 text-red-500" />
-                            Export PDF
+                            {t("emailReport.exportPdf")}
                         </button>
                         <button
                             onClick={() => { exportCsv(); setOpen(false); }}
                             className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-                            Export Excel
+                            {t("emailReport.exportExcel")}
                         </button>
                     </div>
                 </>
@@ -130,6 +128,7 @@ const ExportDropdown = () => {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function EmpAutoEmailReport() {
+    const { t } = useTranslation();
     // ── Store ────────────────────────────────────────────────────────────
     const reports = useAutoEmailReportStore((s) => s.reports);
     const totalCount = useAutoEmailReportStore((s) => s.totalCount);
@@ -201,7 +200,7 @@ export default function EmpAutoEmailReport() {
         return (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                <span className="ml-3 text-sm text-slate-500">Loading email reports...</span>
+                <span className="ml-3 text-sm text-slate-500">{t("emailReport.loadingReports")}</span>
             </div>
         );
     }
@@ -212,7 +211,7 @@ export default function EmpAutoEmailReport() {
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center justify-between">
                     <span>{error}</span>
-                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">Dismiss</button>
+                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">{t("locDept.dismiss")}</button>
                 </div>
             )}
 
@@ -224,11 +223,11 @@ export default function EmpAutoEmailReport() {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Email</span>{" "}
-                            <span className="font-normal text-gray-500">Reports</span>
+                            <span className="font-semibold">{t("emailReport.title")}</span>{" "}
+                            <span className="font-normal text-gray-500">{t("emailReport.reports")}</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                            Configure automated scheduled report delivery via email
+                            {t("emailReport.description")}
                         </p>
                     </div>
                 </div>
@@ -241,38 +240,22 @@ export default function EmpAutoEmailReport() {
                         onClick={openCreateDialog}
                     >
                         <Plus className="w-4 h-4 mr-1" />
-                        Create New Report
+                        {t("emailReport.createNewReport")}
                     </Button>
                 </div>
             </div>
 
             {/* ── Show Entries + Search ─────────────────────────────────── */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium">Show</span>
-                    <Select
-                        value={String(pagination.pageSize)}
-                        onValueChange={(v) => {
+                <ShowEntries value={pagination.pageSize} onChange={(v) => {
                             setPagination("pageSize", parseInt(v, 10));
                             setPagination("page", 1);
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50", "100"].map((n) => (
-                                <SelectItem key={n} value={n}>{n}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-                </div>
+                        }} />
 
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search by name..."
+                        placeholder={t("search")}
                         value={search}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -295,31 +278,31 @@ export default function EmpAutoEmailReport() {
                                 className="px-4 py-3 text-xs font-semibold text-slate-700 text-left cursor-pointer select-none"
                                 onClick={() => handleSort("Name")}
                             >
-                                Title <SortIcon column="Name" />
+                                {t("emailReport.colTitle")} <SortIcon column="Name" />
                             </th>
                             <th
                                 className="px-4 py-3 text-xs font-semibold text-slate-700 text-left cursor-pointer select-none"
                                 onClick={() => handleSort("Frequency")}
                             >
-                                Frequency <SortIcon column="Frequency" />
+                                {t("emailReport.colFrequency")} <SortIcon column="Frequency" />
                             </th>
                             <th
                                 className="px-4 py-3 text-xs font-semibold text-slate-700 text-left cursor-pointer select-none"
                                 onClick={() => handleSort("Recipients")}
                             >
-                                Recipients <SortIcon column="Recipients" />
+                                {t("emailReport.colRecipients")} <SortIcon column="Recipients" />
                             </th>
                             <th
                                 className="px-4 py-3 text-xs font-semibold text-slate-700 text-left cursor-pointer select-none"
                                 onClick={() => handleSort("Filter Type")}
                             >
-                                Content <SortIcon column="Filter Type" />
+                                {t("emailReport.colContent")} <SortIcon column="Filter Type" />
                             </th>
                             <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                Filter
+                                {t("emailReport.colFilter")}
                             </th>
                             <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center bg-slate-200/60">
-                                Action
+                                {t("action")}
                             </th>
                         </tr>
                     </thead>
@@ -329,12 +312,12 @@ export default function EmpAutoEmailReport() {
                                 <td colSpan={6} className="text-center text-sm text-gray-400 py-16">
                                     <div className="flex flex-col items-center gap-2">
                                         <FileText className="w-10 h-10 text-slate-200" />
-                                        <p>No email reports found</p>
+                                        <p>{t("emailReport.noReportsFound")}</p>
                                         <button
                                             onClick={openCreateDialog}
                                             className="text-xs text-blue-500 hover:text-blue-600 font-medium mt-1"
                                         >
-                                            Create your first report
+                                            {t("emailReport.createFirstReport")}
                                         </button>
                                     </div>
                                 </td>
@@ -355,7 +338,7 @@ export default function EmpAutoEmailReport() {
                                             Number(report.frequency) === 3 || Number(report.frequency) === 7 ? "bg-cyan-50 text-cyan-600 border border-cyan-200" :
                                             "bg-amber-50 text-amber-600 border border-amber-200"
                                         }`}>
-                                            {getFrequencyLabel(report.frequency)}
+                                            {getFrequencyKey(report.frequency) ? t(getFrequencyKey(report.frequency)) : "NA"}
                                         </span>
                                     </td>
                                     <td className="px-4 py-4">
@@ -365,21 +348,21 @@ export default function EmpAutoEmailReport() {
                                         <ContentBadges content={report.content} />
                                     </td>
                                     <td className="px-4 py-4 text-xs text-slate-500">
-                                        {FILTER_TYPE_MAP[report.filter_type] || "Organization"}
+                                        {FILTER_TYPE_KEY_MAP[report.filter_type] ? t(FILTER_TYPE_KEY_MAP[report.filter_type]) : t("emailReport.organization")}
                                     </td>
                                     <td className="px-4 py-4 bg-slate-50/50">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
                                                 onClick={() => openEditDialog(report.id)}
                                                 className="w-7 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors"
-                                                title="Edit report"
+                                                title={t("edit")}
                                             >
                                                 <Pencil className="w-3.5 h-3.5 text-emerald-600" />
                                             </button>
                                             <button
                                                 onClick={() => openDeleteDialog(report.id)}
                                                 className="w-7 h-7 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
-                                                title="Delete report"
+                                                title={t("delete")}
                                             >
                                                 <Trash2 className="w-3.5 h-3.5 text-red-500" />
                                             </button>
@@ -398,9 +381,9 @@ export default function EmpAutoEmailReport() {
             {/* ── Pagination ────────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing{" "}
-                    <span className="font-bold text-gray-700">{showingFrom}</span> to{" "}
-                    <span className="font-bold text-gray-700">{showingTo}</span> of{" "}
+                    {t("timeclaim.showing")}{" "}
+                    <span className="font-bold text-gray-700">{showingFrom}</span> {t("to")}{" "}
+                    <span className="font-bold text-gray-700">{showingTo}</span> {t("of")}{" "}
                     <span className="font-bold text-blue-600">{totalCount}</span>
                 </p>
                 <PaginationComponent

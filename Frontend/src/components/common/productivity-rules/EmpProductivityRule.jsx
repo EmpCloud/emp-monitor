@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Search,
     Eye,
@@ -25,13 +26,7 @@ import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import EmpProductivityRuleLogo from "@/assets/settings/productivity-rules.svg";
 import { useProductivityRulesStore } from "@/page/protected/admin/productivity-rules/productivityRulesStore";
 import { convertSecToHM, RANKING_OPTIONS } from "@/page/protected/admin/productivity-rules/service";
@@ -42,11 +37,11 @@ import URLUsageDialog from "./dialog/URLUsageDialog";
 
 // ─── Tabs Config ────────────────────────────────────────────────────────────
 
-const TABS = [
-    { id: "All", label: "See All", icon: Eye },
-    { id: "Global", label: "Global", icon: Globe },
-    { id: "Custom", label: "Custom", icon: Wrench },
-    { id: "New", label: "New", icon: Plus },
+const getTabs = (t) => [
+    { id: "All", label: t("prodRules.seeAll"), icon: Eye },
+    { id: "Global", label: t("prodRules.global"), icon: Globe },
+    { id: "Custom", label: t("prodRules.custom"), icon: Wrench },
+    { id: "New", label: t("prodRules.new"), icon: Plus },
 ];
 
 // ─── Ranking Button Component ───────────────────────────────────────────────
@@ -68,6 +63,7 @@ const RankingButton = ({ label, active, color, dotColor, onClick }) => (
 // ─── Department Rules Dropdown ──────────────────────────────────────────────
 
 const DepartmentRulesRow = ({ dept, applicationId, currentStatus, preRequest, departments, onUpdate, onAlwaysActive }) => {
+    const { t } = useTranslation();
     const deptName = departments.find((d) => d.id === dept.department_id)?.name || `Dept ${dept.department_id}`;
 
     return (
@@ -78,9 +74,9 @@ const DepartmentRulesRow = ({ dept, applicationId, currentStatus, preRequest, de
             <td className="px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                     {[
-                        { status: 1, label: "Productive", color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" }, dot: "bg-emerald-500" },
-                        { status: 0, label: "Neutral", color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" }, dot: "bg-amber-500" },
-                        { status: 2, label: "Unproductive", color: { bg: "bg-red-50", text: "text-red-500", border: "border-red-200" }, dot: "bg-red-500" },
+                        { status: 1, label: t("prodRules.productive"), color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" }, dot: "bg-emerald-500" },
+                        { status: 0, label: t("prodRules.neutral"), color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" }, dot: "bg-amber-500" },
+                        { status: 2, label: t("prodRules.unproductive"), color: { bg: "bg-red-50", text: "text-red-500", border: "border-red-200" }, dot: "bg-red-500" },
                     ].map((r) => (
                         <RankingButton
                             key={r.status}
@@ -112,7 +108,7 @@ const DepartmentRulesRow = ({ dept, applicationId, currentStatus, preRequest, de
                         }`}
                     >
                         <Clock className="w-3 h-3" />
-                        Always Active: {convertSecToHM(dept.pre_request || 0)} hr
+                        {t("prodRules.alwaysActive")}: {convertSecToHM(dept.pre_request || 0)} {t("prodRules.hr")}
                     </button>
                 </div>
             </td>
@@ -124,6 +120,7 @@ const DepartmentRulesRow = ({ dept, applicationId, currentStatus, preRequest, de
 // ─── Export Dropdown ────────────────────────────────────────────────────────
 
 const ExportDropdown = ({ onExport, exporting }) => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
 
     return (
@@ -135,15 +132,15 @@ const ExportDropdown = ({ onExport, exporting }) => {
                 disabled={exporting}
             >
                 {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Export
+                {t("prodRules.export")}
                 <ChevronDown className="w-3 h-3 ml-1" />
             </Button>
             {open && (
                 <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 min-w-[140px]">
                     {[
-                        { format: "excel", label: "Excel (.xlsx)", icon: FileSpreadsheet },
-                        { format: "csv", label: "CSV", icon: FileText },
-                        { format: "pdf", label: "PDF", icon: FileDown },
+                        { format: "excel", label: t("prodRules.excelXlsx"), icon: FileSpreadsheet },
+                        { format: "csv", label: t("prodRules.csv"), icon: FileText },
+                        { format: "pdf", label: t("prodRules.pdf"), icon: FileDown },
                     ].map(({ format, label, icon: Icon }) => (
                         <button
                             key={format}
@@ -163,6 +160,7 @@ const ExportDropdown = ({ onExport, exporting }) => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const EmpProductivityRule = () => {
+    const { t } = useTranslation();
     const store = useProductivityRulesStore();
     const {
         rows,
@@ -255,11 +253,11 @@ const EmpProductivityRule = () => {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Productivity</span>{" "}
-                            <span className="font-normal text-gray-500">Rules</span>
+                            <span className="font-semibold">{t("prodRules.title")}</span>{" "}
+                            <span className="font-normal text-gray-500">{t("prodRules.rules")}</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                            Define rules to classify applications and websites as productive or unproductive.
+                            {t("prodRules.description")}
                         </p>
                     </div>
                 </div>
@@ -275,7 +273,7 @@ const EmpProductivityRule = () => {
                         }`}
                     >
                         <LayoutGrid className="w-4 h-4" />
-                        Activity
+                        {t("prodRules.activity")}
                     </Button>
                     <Button
                         size="lg"
@@ -287,14 +285,14 @@ const EmpProductivityRule = () => {
                         }`}
                     >
                         <Grip className="w-4 h-4" />
-                        Category
+                        {t("prodRules.category")}
                     </Button>
                 </div>
             </div>
 
             {/* Tabs Row */}
             <div className="flex flex-wrap items-center gap-3 mb-5">
-                {TABS.map((tab) => {
+                {getTabs(t).map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
                     return (
@@ -329,7 +327,7 @@ const EmpProductivityRule = () => {
                                 }`}
                             >
                                 <Globe className="w-3.5 h-3.5" />
-                                Website
+                                {t("prodRules.website")}
                             </button>
                             <button
                                 onClick={() => setActiveSubTab(activeSubTab === "application" ? "" : "application")}
@@ -340,16 +338,16 @@ const EmpProductivityRule = () => {
                                 }`}
                             >
                                 <AppWindow className="w-3.5 h-3.5" />
-                                Application
+                                {t("prodRules.application")}
                             </button>
                         </div>
                     )}
 
                     {/* Productivity Category */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-700">Productivity Category</span>
+                        <span className="text-sm font-medium text-slate-700">{t("prodRules.productivityCategory")}</span>
                         <CustomSelect
-                            placeholder="See All"
+                            placeholder={t("prodRules.seeAll")}
                             items={RANKING_OPTIONS}
                             selected={rankingFilter}
                             onChange={(val) => setRankingFilter(val)}
@@ -365,7 +363,7 @@ const EmpProductivityRule = () => {
                         onClick={openAddDomainDialog}
                     >
                         <Plus className="w-4 h-4" />
-                        Add New Domain
+                        {t("prodRules.addNewDomain")}
                     </Button>
 
                     {isActivityView && activeTab === "All" && (
@@ -377,7 +375,7 @@ const EmpProductivityRule = () => {
                                 onClick={openImportDialog}
                             >
                                 <Upload className="w-4 h-4" />
-                                Import
+                                {t("prodRules.import")}
                             </Button>
                         </>
                     )}
@@ -388,35 +386,19 @@ const EmpProductivityRule = () => {
                         onClick={openBulkImportDialog}
                     >
                         <Upload className="w-4 h-4" />
-                        Bulk Import
+                        {t("prodRules.bulkImport")}
                     </Button>
                 </div>
             </div>
 
             {/* Show entries + Search */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium">Show</span>
-                    <Select
-                        value={String(pageSize)}
-                        onValueChange={(v) => setPageSize(parseInt(v, 10) || 10)}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50"].map((n) => (
-                                <SelectItem key={n} value={n}>{n}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-                </div>
+                <ShowEntries value={pageSize} onChange={(v) => setPageSize(parseInt(v, 10) || 10)} />
 
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search by activity..."
+                        placeholder={t("prodRules.searchByActivity")}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                         onKeyDown={handleSearchKeyDown}
@@ -435,12 +417,12 @@ const EmpProductivityRule = () => {
                                     onClick={() => setSort("Name")}
                                     className="flex items-center gap-1 text-xs font-semibold text-slate-700"
                                 >
-                                    Activity
+                                    {t("prodRules.activity")}
                                     <ArrowUpDown className="w-3 h-3 text-slate-400" />
                                 </button>
                             </th>
                             <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                Productivity Ranking
+                                {t("prodRules.productivityRanking")}
                             </th>
                             <th className="px-4 py-3 bg-slate-200/60 w-14" />
                         </tr>
@@ -450,13 +432,13 @@ const EmpProductivityRule = () => {
                             <tr>
                                 <td colSpan={3} className="text-center py-16">
                                     <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto" />
-                                    <p className="text-sm text-slate-400 mt-2">Loading...</p>
+                                    <p className="text-sm text-slate-400 mt-2">{t("loadingText")}</p>
                                 </td>
                             </tr>
                         ) : rows.length === 0 ? (
                             <tr>
                                 <td colSpan={3} className="text-center text-sm text-gray-400 py-10">
-                                    No data found
+                                    {t("Nodata")}
                                 </td>
                             </tr>
                         ) : (
@@ -503,9 +485,9 @@ const EmpProductivityRule = () => {
                                             <td className="px-4 py-4">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     {[
-                                                        { status: 1, label: "Productive", color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" }, dot: "bg-emerald-500" },
-                                                        { status: 0, label: "Neutral", color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" }, dot: "bg-amber-500" },
-                                                        { status: 2, label: "Unproductive", color: { bg: "bg-red-50", text: "text-red-500", border: "border-red-200" }, dot: "bg-red-500" },
+                                                        { status: 1, label: t("prodRules.productive"), color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" }, dot: "bg-emerald-500" },
+                                                        { status: 0, label: t("prodRules.neutral"), color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" }, dot: "bg-amber-500" },
+                                                        { status: 2, label: t("prodRules.unproductive"), color: { bg: "bg-red-50", text: "text-red-500", border: "border-red-200" }, dot: "bg-red-500" },
                                                     ].map((r) => (
                                                         <RankingButton
                                                             key={r.status}
@@ -532,7 +514,7 @@ const EmpProductivityRule = () => {
                                                         }`}
                                                     >
                                                         <span className={`w-2 h-2 rounded-full ${hasCustom ? "bg-blue-500" : "bg-slate-300"}`} />
-                                                        Customize By Department
+                                                        {t("prodRules.customizeByDept")}
                                                         {isExpanded ? (
                                                             <ChevronUp className="w-3 h-3" />
                                                         ) : (
@@ -557,7 +539,7 @@ const EmpProductivityRule = () => {
                                                             }`}
                                                         >
                                                             <Clock className="w-3 h-3" />
-                                                            Always Active: {convertSecToHM(row.preRequest)} hr
+                                                            {t("prodRules.alwaysActive")}: {convertSecToHM(row.preRequest)} {t("prodRules.hr")}
                                                         </button>
                                                     )}
                                                 </div>
@@ -568,7 +550,7 @@ const EmpProductivityRule = () => {
                                                 <button
                                                     onClick={() => openURLUsageDialog(row.id, row.name)}
                                                     className="w-8 h-8 rounded-lg bg-violet-100 hover:bg-violet-200 flex items-center justify-center mx-auto transition-colors"
-                                                    title="View Usage"
+                                                    title={t("prodRules.viewUsage")}
                                                 >
                                                     <List className="w-4 h-4 text-violet-500" />
                                                 </button>
@@ -617,15 +599,15 @@ const EmpProductivityRule = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing{" "}
+                    {t("timeclaim.showing")}{" "}
                     <span className="font-bold text-gray-700">
                         {totalCount === 0 ? 0 : (page - 1) * pageSize + 1}
                     </span>{" "}
-                    to{" "}
+                    {t("to")}{" "}
                     <span className="font-bold text-gray-700">
                         {Math.min(page * pageSize, totalCount)}
                     </span>{" "}
-                    of{" "}
+                    {t("of")}{" "}
                     <span className="font-bold text-blue-600">{totalCount}</span>
                 </p>
                 <PaginationComponent

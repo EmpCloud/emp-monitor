@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Keyboard } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import KeyStrokesTab      from "../../admin/employee-profile/KeyStrokesTab";
 
 export default function EmployeeKeystrokes() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeKeystrokes() {
           <Keyboard size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">Key Strokes</h1>
-          <p className="text-xs text-[#A3AED0]">Keyboard activity log</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("keystroke")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_keystrokes_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

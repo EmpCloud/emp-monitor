@@ -153,7 +153,6 @@ export function useEmployeeForm(locations = []) {
       timezone:        tzName,
       timezone_offset: offsetToSeconds(tzOffset),
       date_join:       formatDateJoin(form.dateOfJoining),
-      joinDate:        formatDateJoin(form.dateOfJoining),
       shift_id:        form.shift || "0",
       address:         form.address,
       status:          "1",

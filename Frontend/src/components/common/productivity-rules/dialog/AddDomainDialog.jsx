@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import {
 import { useProductivityRulesStore } from "@/page/protected/admin/productivity-rules/productivityRulesStore";
 
 const AddDomainDialog = () => {
+    const { t } = useTranslation();
     const {
         addDomainDialogOpen,
         closeAddDomainDialog,
@@ -40,7 +42,7 @@ const AddDomainDialog = () => {
 
     const handleSubmit = async () => {
         if (!domain.trim()) {
-            setError("Domain URL is required");
+            setError(t("prodRules.domainUrlRequired"));
             return;
         }
 
@@ -80,9 +82,9 @@ const AddDomainDialog = () => {
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <Globe className="w-5 h-5 text-blue-500" />
-                        <DialogTitle>Add New Domain</DialogTitle>
+                        <DialogTitle>{t("prodRules.addNewDomain")}</DialogTitle>
                     </div>
-                    <DialogDescription>Add a new website URL and set its productivity ranking.</DialogDescription>
+                    <DialogDescription>{t("prodRules.addNewDomainDesc")}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-2">
@@ -127,8 +129,8 @@ const AddDomainDialog = () => {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="bg-blue-50">
-                                        <th className="px-4 py-2 text-left font-semibold text-slate-700">Department</th>
-                                        <th className="px-4 py-2 text-left font-semibold text-slate-700">Ranking</th>
+                                        <th className="px-4 py-2 text-left font-semibold text-slate-700">{t("department")}</th>
+                                        <th className="px-4 py-2 text-left font-semibold text-slate-700">{t("prodRules.productivityRanking")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

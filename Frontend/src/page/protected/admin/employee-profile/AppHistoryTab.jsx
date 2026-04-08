@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { LayoutGrid } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -19,6 +20,7 @@ function typeColor(type) {
 }
 
 export default function AppHistoryTab({ employee, startDate, endDate }) {
+  const { t } = useTranslation();
   const [tableRows, setTableRows] = useState([]);
   const [groups, setGroups]       = useState([]);
   const [loading, setLoading]     = useState(false);
@@ -86,14 +88,14 @@ export default function AppHistoryTab({ employee, startDate, endDate }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-gray-800">Top Application Usage</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t("topau")}</h3>
             <LayoutGrid size={18} className="text-green-500" />
           </div>
-          <p className="text-[10px] text-gray-400 mb-4 italic">* Top apps by total duration</p>
+          <p className="text-[10px] text-gray-400 mb-4 italic">{t("topAppsByDuration")}</p>
           {loading ? (
-            <p className="text-sm text-gray-400 text-center py-6">Loading…</p>
+            <p className="text-sm text-gray-400 text-center py-6">{t("Loading")}…</p>
           ) : topApps.list.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6 italic">No data available</p>
+            <p className="text-sm text-gray-400 text-center py-6 italic">{t("noDataAvailable")}</p>
           ) : (
             <div className="space-y-3">
               {topApps.list.map((app, i) => (
@@ -113,8 +115,8 @@ export default function AppHistoryTab({ employee, startDate, endDate }) {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Application Usage Chart</h3>
-          <p className="text-[10px] text-gray-400 mb-4 italic">* Top apps by percentage</p>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">{t("apChart")}</h3>
+          <p className="text-[10px] text-gray-400 mb-4 italic">{t("topAppsByPercentage")}</p>
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="flex flex-col gap-2.5 flex-1">
               {topApps.chart.map((item, i) => (
@@ -143,23 +145,23 @@ export default function AppHistoryTab({ employee, startDate, endDate }) {
         <Table className="min-w-[900px] w-full">
           <TableHeader>
             <TableRow className="bg-blue-50/80">
-              <TableHead className="text-xs font-semibold text-blue-600">Application</TableHead>
-              <TableHead className="text-xs font-semibold text-gray-700">Window Title</TableHead>
-              <TableHead className="text-xs font-semibold text-gray-700">Start Time</TableHead>
-              <TableHead className="text-xs font-semibold text-gray-700">End Time</TableHead>
-              <TableHead className="text-xs font-semibold text-gray-700">Active Time</TableHead>
-              <TableHead className="text-xs font-semibold text-gray-700">Idle Time</TableHead>
-              <TableHead className="text-xs font-semibold text-white bg-blue-400 text-center">Total Time</TableHead>
+              <TableHead className="text-xs font-semibold text-blue-600">{t("application")}</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">{t("windowTitle")}</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">{t("startTime")}</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">{t("endTime")}</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">{t("activeTime")}</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">{t("idleTime")}</TableHead>
+              <TableHead className="text-xs font-semibold text-white bg-blue-400 text-center">{t("totalTime")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white">
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10">Loading…</TableCell>
+                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("Loading")}…</TableCell>
               </TableRow>
             ) : paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10 italic">No data available</TableCell>
+                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10 italic">{t("noDataAvailable")}</TableCell>
               </TableRow>
             ) : paged.map((row, i) => (
               <TableRow key={i} className="text-xs text-gray-600">

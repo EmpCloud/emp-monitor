@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -9,11 +10,11 @@ import {
 import { fetchProductivity } from "./service";
 import { secToHMS } from "@/lib/dateTimeUtils";
 
-const legendItems = [
-  { label: "Productive",   color: "#818cf8" },
-  { label: "Neutral",      color: "#a78bfa" },
-  { label: "Idle",         color: "#c4b5fd" },
-  { label: "Offline Time", color: "#e9d5ff" },
+const legendKeys = [
+  { key: "productive",   color: "#818cf8" },
+  { key: "neutral",      color: "#a78bfa" },
+  { key: "idles",        color: "#c4b5fd" },
+  { key: "offlineTime",  color: "#e9d5ff" },
 ];
 
 function StatCard({ label, value, icon: Icon, iconBg, iconColor, ring, ringColor }) {
@@ -33,6 +34,7 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor, ring, ringColor
 }
 
 function TimelineBar({ days }) {
+  const { t } = useTranslation();
   const day = days?.[0];
   if (!day) return null;
 
@@ -50,10 +52,10 @@ function TimelineBar({ days }) {
         <span className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500" /> {day.date}
         </span>
-        {legendItems.map((item) => (
-          <span key={item.label} className="flex items-center gap-1.5 text-[13px] text-gray-500">
+        {legendKeys.map((item) => (
+          <span key={item.key} className="flex items-center gap-1.5 text-[13px] text-gray-500">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-            {item.label}
+            {t(item.key)}
           </span>
         ))}
         <div className="ml-auto flex items-center gap-2">
@@ -75,14 +77,14 @@ function TimelineBar({ days }) {
             ) : null;
           })}
           {offlineSec > 0 && (
-            <div className="h-full bg-gray-300" style={{ width: `${(offlineSec / total * 100).toFixed(1)}%` }} title={`Offline: ${secToHMS(offlineSec)}`} />
+            <div className="h-full bg-gray-300" style={{ width: `${(offlineSec / total * 100).toFixed(1)}%` }} title={`${t("offlineKey")}: ${secToHMS(offlineSec)}`} />
           )}
         </div>
         <div className="flex justify-between mt-2.5 text-[11px] text-gray-400 font-medium">
           <span>{day.date}</span>
-          <span>Office: {secToHMS(day.office_time)}</span>
-          <span>Active: {secToHMS(day.computer_activities_time)}</span>
-          <span>Productive: {secToHMS(day.productive_duration)}</span>
+          <span>{t("office")}: {secToHMS(day.office_time)}</span>
+          <span>{t("actives")}: {secToHMS(day.computer_activities_time)}</span>
+          <span>{t("productive")}: {secToHMS(day.productive_duration)}</span>
         </div>
       </div>
     </div>
@@ -90,6 +92,7 @@ function TimelineBar({ days }) {
 }
 
 function StackedBarChart({ days }) {
+  const { t } = useTranslation();
   const chartRef = useRef(null);
 
   const chartData = useMemo(() =>
@@ -173,10 +176,10 @@ function StackedBarChart({ days }) {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
       <div ref={chartRef} className="w-full h-[350px] sm:h-[420px]" />
       <div className="flex flex-wrap items-center justify-center gap-5 mt-3 pt-3 border-t border-gray-50">
-        {legendItems.map((item) => (
-          <span key={item.label} className="flex items-center gap-2 text-[13px] text-gray-500 font-medium">
+        {legendKeys.map((item) => (
+          <span key={item.key} className="flex items-center gap-2 text-[13px] text-gray-500 font-medium">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-            {item.label}
+            {t(item.key)}
           </span>
         ))}
       </div>
@@ -185,6 +188,7 @@ function StackedBarChart({ days }) {
 }
 
 export default function ProductivityTab({ employee, startDate, endDate }) {
+  const { t } = useTranslation();
   const [days, setDays]       = useState([]);
   const [totals, setTotals]   = useState(null);
   const [loading, setLoading] = useState(false);
@@ -209,33 +213,33 @@ export default function ProductivityTab({ employee, startDate, endDate }) {
 
   const statCards = [
     {
-      label: "Office Time",
+      label: t("officeTime"),
       value: totals ? secToHMS(totals.total_office_time) : "—",
       icon: Clock, iconBg: "bg-blue-100", iconColor: "text-blue-500", ring: false,
     },
     {
-      label: "Active Time",
+      label: t("activeTime"),
       value: totals ? secToHMS(totals.total_computer_activities_time) : "—",
       icon: Activity, iconBg: "bg-rose-100", iconColor: "text-rose-500",
       ring: true, ringColor: "ring-rose-400",
     },
     {
-      label: "Productive Time",
+      label: t("prodTime"),
       value: totals ? secToHMS(totals.total_productive_duration) : "—",
       icon: TrendingUp, iconBg: "bg-cyan-100", iconColor: "text-cyan-500", ring: false,
     },
     {
-      label: "Unproductive Time",
+      label: t("unProdTime"),
       value: secToHMS(totalUnproductive),
       icon: TrendingDown, iconBg: "bg-orange-100", iconColor: "text-orange-400", ring: false,
     },
     {
-      label: "Neutral Time",
+      label: t("neutralTime"),
       value: secToHMS(totalNeutral),
       icon: Minus, iconBg: "bg-pink-100", iconColor: "text-pink-500", ring: false,
     },
     {
-      label: "Productivity",
+      label: t("productivity"),
       value: productivityPct,
       icon: BarChart3, iconBg: "bg-violet-100", iconColor: "text-violet-500", ring: false,
     },
@@ -251,7 +255,7 @@ export default function ProductivityTab({ employee, startDate, endDate }) {
 
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center justify-center h-32">
-          <span className="text-sm text-gray-400">Loading…</span>
+          <span className="text-sm text-gray-400">{t("Loading")}…</span>
         </div>
       ) : (
         <TimelineBar days={days} />

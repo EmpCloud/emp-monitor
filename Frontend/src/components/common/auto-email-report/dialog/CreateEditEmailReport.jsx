@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Mail,
     Save,
@@ -22,27 +23,27 @@ import { useAutoEmailReportStore } from "@/page/protected/admin/auto-email-repor
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const FREQUENCIES = [
-    { value: 1, label: "Daily", color: "text-emerald-600" },
-    { value: 2, label: "Weekly", color: "text-blue-600" },
-    { value: 3, label: "Monthly", color: "text-cyan-600" },
-    { value: 4, label: "Custom", color: "text-amber-600" },
-    { value: 5, label: "Date", color: "text-cyan-600" },
-    { value: 6, label: "Unproductive", color: "text-red-600" },
-    { value: 7, label: "Manager/TL Log", color: "text-cyan-600" },
-    { value: 9, label: "Time", color: "text-cyan-600" },
+const getFrequencies = (t) => [
+    { value: 1, label: t("emailReport.daily"), color: "text-emerald-600" },
+    { value: 2, label: t("emailReport.weekly"), color: "text-blue-600" },
+    { value: 3, label: t("emailReport.monthly"), color: "text-cyan-600" },
+    { value: 4, label: t("emailReport.custom"), color: "text-amber-600" },
+    { value: 5, label: t("emailReport.date"), color: "text-cyan-600" },
+    { value: 6, label: t("emailReport.unproductive"), color: "text-red-600" },
+    { value: 7, label: t("emailReport.managerTlLog"), color: "text-cyan-600" },
+    { value: 9, label: t("emailReport.time"), color: "text-cyan-600" },
 ];
 
-const CONTENT_OPTIONS = [
-    { key: "productivity", label: "Productivity", minuteKey: "prodInMinutes" },
-    { key: "timesheet", label: "Timesheet", minuteKey: "timesheetInMinutes" },
-    { key: "websites_usage", label: "Website Usage", minuteKey: "websitesInMinutes" },
-    { key: "apps_usage", label: "App Usage", minuteKey: "appsInMinutes" },
+const getContentOptions = (t) => [
+    { key: "productivity", label: t("emailReport.productivityContent"), minuteKey: "prodInMinutes" },
+    { key: "timesheet", label: t("emailReport.timesheetContent"), minuteKey: "timesheetInMinutes" },
+    { key: "websites_usage", label: t("emailReport.websiteUsage"), minuteKey: "websitesInMinutes" },
+    { key: "apps_usage", label: t("emailReport.appUsage"), minuteKey: "appsInMinutes" },
 ];
 
-const ATTENDANCE_OPTIONS = [
-    { key: "attendance", label: "Employee Attendance" },
-    { key: "hrms_attendance", label: "HRMS Attendance" },
+const getAttendanceOptions = (t) => [
+    { key: "attendance", label: t("emailReport.employeeAttendance") },
+    { key: "hrms_attendance", label: t("emailReport.hrmsAttendance") },
 ];
 
 const DATE_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -81,6 +82,11 @@ const getDefaultFormData = () => ({
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const CreateEditEmailReport = ({ open, onOpenChange }) => {
+    const { t } = useTranslation();
+    const FREQUENCIES = getFrequencies(t);
+    const CONTENT_OPTIONS = getContentOptions(t);
+    const ATTENDANCE_OPTIONS = getAttendanceOptions(t);
+
     const dialogMode = useAutoEmailReportStore((s) => s.dialogMode);
     const editReportData = useAutoEmailReportStore((s) => s.editReportData);
     const employees = useAutoEmailReportStore((s) => s.employees);
@@ -294,10 +300,10 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                         </div>
                         <div>
                             <DialogTitle className="text-xl font-black text-white">
-                                {isEdit ? "Edit Email Report" : "New Email Report"}
+                                {isEdit ? t("emailReport.editEmailReport") : t("emailReport.newEmailReport")}
                             </DialogTitle>
                             <DialogDescription className="text-xs text-blue-200 mt-0.5">
-                                Configure automated report delivery via email
+                                {t("emailReport.configureDelivery")}
                             </DialogDescription>
                         </div>
                     </DialogHeader>
@@ -306,7 +312,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                 {isLoadingEdit ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                        <span className="ml-3 text-sm text-slate-500">Loading report data...</span>
+                        <span className="ml-3 text-sm text-slate-500">{t("emailReport.loadingReportData")}</span>
                     </div>
                 ) : (
                     <div className="px-6 py-6 space-y-6">
@@ -325,20 +331,20 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                         {/* Info Banner */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-700 flex items-start gap-2">
                             <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                            <span>Auto Email Report will be sent based on the configured frequency and content selection. You can send a test email before saving.</span>
+                            <span>{t("emailReport.infoMessage")}</span>
                         </div>
 
                         {/* Report Title */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="flex items-center gap-2 sm:min-w-[140px]">
                                 <span className="w-1 h-5 rounded-full bg-blue-500" />
-                                <span className="text-sm font-semibold text-slate-700">Report Title</span>
+                                <span className="text-sm font-semibold text-slate-700">{t("emailReport.reportTitle")}</span>
                             </div>
                             <div className="flex-1">
                                 <Input
                                     value={formData.reportTitle}
                                     onChange={(e) => updateField("reportTitle", e.target.value)}
-                                    placeholder="Enter report title"
+                                    placeholder={t("emailReport.enterReportTitle")}
                                     className="h-10 rounded-lg border-slate-200 text-sm"
                                 />
                                 {errors.reportTitle && <p className="text-xs text-red-500 mt-1">{errors.reportTitle}</p>}
@@ -349,7 +355,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-2">
                                 <span className="w-1 h-5 rounded-full bg-indigo-500" />
-                                <span className="text-sm font-semibold text-slate-700">Frequency</span>
+                                <span className="text-sm font-semibold text-slate-700">{t("emailReport.frequency")}</span>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                                 {FREQUENCIES.map((f) => (
@@ -378,11 +384,11 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             {showCustomTime && (
                                 <div className="grid grid-cols-2 gap-4 px-4">
                                     <div>
-                                        <label className="text-xs text-slate-500 mb-1 block">Start Time</label>
+                                        <label className="text-xs text-slate-500 mb-1 block">{t("emailReport.startTime")}</label>
                                         <Input type="text" value={formData.customStart} onChange={(e) => updateField("customStart", e.target.value)} className="h-9 text-xs" placeholder="HH:MM:SS" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-500 mb-1 block">End Time</label>
+                                        <label className="text-xs text-slate-500 mb-1 block">{t("emailReport.endTime")}</label>
                                         <Input type="text" value={formData.customEnd} onChange={(e) => updateField("customEnd", e.target.value)} className="h-9 text-xs" placeholder="HH:MM:SS" />
                                     </div>
                                 </div>
@@ -391,13 +397,13 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             {/* Date picker */}
                             {showDatePicker && (
                                 <div className="px-4">
-                                    <label className="text-xs text-slate-500 mb-1 block">Select Date</label>
+                                    <label className="text-xs text-slate-500 mb-1 block">{t("emailReport.selectDate")}</label>
                                     <select
                                         value={formData.customDate}
                                         onChange={(e) => updateField("customDate", e.target.value)}
                                         className="h-9 w-32 px-2 border border-slate-200 rounded-lg text-xs"
                                     >
-                                        <option value="0">Select Date</option>
+                                        <option value="0">{t("emailReport.selectDate")}</option>
                                         {DATE_OPTIONS.map((d) => (
                                             <option key={d} value={d}>{d}</option>
                                         ))}
@@ -408,7 +414,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             {/* Fixed time */}
                             {showFixedTime && (
                                 <div className="px-4">
-                                    <label className="text-xs text-slate-500 mb-1 block">Time *</label>
+                                    <label className="text-xs text-slate-500 mb-1 block">{t("emailReport.timeRequired")}</label>
                                     <Input type="time" value={formData.fixedTime} onChange={(e) => updateField("fixedTime", e.target.value)} className="h-9 w-40 text-xs" />
                                 </div>
                             )}
@@ -418,23 +424,23 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex items-center gap-2 sm:min-w-[140px]">
                                 <span className="w-1 h-5 rounded-full bg-blue-500" />
-                                <span className="text-sm font-semibold text-slate-700">Recipients</span>
+                                <span className="text-sm font-semibold text-slate-700">{t("emailReport.recipients")}</span>
                             </div>
                             <div className="flex-1 space-y-2">
                                 <Input
                                     value={formData.emailInput}
                                     onChange={(e) => handleEmailInputChange(e.target.value)}
-                                    placeholder="Enter email addresses (comma separated)"
+                                    placeholder={t("emailReport.enterEmails")}
                                     className="h-10 rounded-lg border-slate-200 text-sm"
                                 />
-                                <p className="text-[11px] text-slate-400">Separate multiple emails with commas</p>
+                                <p className="text-[11px] text-slate-400">{t("emailReport.separateEmails")}</p>
                                 <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
                                     <Checkbox
                                         checked={formData.includeAdminEmail}
                                         onCheckedChange={(v) => updateField("includeAdminEmail", v)}
                                         className="border-slate-300"
                                     />
-                                    I want to receive this report too
+                                    {t("emailReport.receiveReport")}
                                 </label>
                             </div>
                         </div>
@@ -444,7 +450,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-2">
                                     <span className="w-1 h-5 rounded-full bg-indigo-500" />
-                                    <span className="text-sm font-semibold text-slate-700">Content</span>
+                                    <span className="text-sm font-semibold text-slate-700">{t("emailReport.content")}</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                                     {CONTENT_OPTIONS.map((opt) => (
@@ -465,7 +471,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                     disabled={contentDisabled}
                                                     className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                                                 />
-                                                Time in Minutes
+                                                {t("emailReport.timeInMinutes")}
                                             </label>
                                         </div>
                                     ))}
@@ -494,7 +500,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                     onCheckedChange={(v) => updateContent("manager_log", v)}
                                                     className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                                                 />
-                                                Manager/TL Log
+                                                {t("emailReport.managerTlLog")}
                                             </label>
                                         </div>
                                     )}
@@ -507,7 +513,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-2">
                                     <span className="w-1 h-5 rounded-full bg-blue-500" />
-                                    <span className="text-sm font-semibold text-slate-700">Report Format</span>
+                                    <span className="text-sm font-semibold text-slate-700">{t("emailReport.reportFormat")}</span>
                                 </div>
                                 <div className="flex gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
                                     {["pdf", "csv"].map((type) => (
@@ -530,17 +536,17 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-2">
                                     <span className="w-1 h-5 rounded-full bg-indigo-500" />
-                                    <span className="text-sm font-semibold text-slate-700">Filter</span>
+                                    <span className="text-sm font-semibold text-slate-700">{t("emailReport.filter")}</span>
                                 </div>
                                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
                                     {/* Filter type selection */}
                                     <div className="flex flex-wrap gap-3">
                                         {[
-                                            { value: "1", label: "Whole Organization" },
-                                            { value: "2", label: "Specific Employees" },
-                                            { value: "3", label: "Specific Departments" },
-                                            { value: "4", label: "Specific Locations" },
-                                            { value: "5", label: "Specific Shifts" },
+                                            { value: "1", label: t("emailReport.wholeOrganization") },
+                                            { value: "2", label: t("emailReport.specificEmployees") },
+                                            { value: "3", label: t("emailReport.specificDepartments") },
+                                            { value: "4", label: t("emailReport.specificLocations") },
+                                            { value: "5", label: t("emailReport.specificShifts") },
                                         ].map((opt) => (
                                             <label key={opt.value} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all ${
                                                 filterType === opt.value
@@ -582,7 +588,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                                 onCheckedChange={() => toggleAllFilterItems("selectedEmployees", employees)}
                                                                 className="border-slate-300"
                                                             />
-                                                            Select All
+                                                            {t("emailReport.selectAll")}
                                                         </label>
                                                         {filteredEmployees.map((emp) => (
                                                             <label key={emp.id} className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded cursor-pointer">
@@ -606,7 +612,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                                 onCheckedChange={() => toggleAllFilterItems("selectedDepartments", departments)}
                                                                 className="border-slate-300"
                                                             />
-                                                            Select All
+                                                            {t("emailReport.selectAll")}
                                                         </label>
                                                         {filteredDepartments.map((dept) => (
                                                             <label key={dept.id} className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded cursor-pointer">
@@ -630,7 +636,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                                 onCheckedChange={() => toggleAllFilterItems("selectedLocations", locations)}
                                                                 className="border-slate-300"
                                                             />
-                                                            Select All
+                                                            {t("emailReport.selectAll")}
                                                         </label>
                                                         {filteredLocations.map((loc) => (
                                                             <label key={loc.id} className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded cursor-pointer">
@@ -654,7 +660,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                                 onCheckedChange={() => toggleAllFilterItems("selectedShifts", shifts)}
                                                                 className="border-slate-300"
                                                             />
-                                                            Select All
+                                                            {t("emailReport.selectAll")}
                                                         </label>
                                                         <label className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded cursor-pointer">
                                                             <Checkbox
@@ -662,7 +668,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                                                 onCheckedChange={() => toggleFilterItem("selectedShifts", 0)}
                                                                 className="border-slate-300 data-[state=checked]:bg-blue-500"
                                                             />
-                                                            No Shift
+                                                            {t("emailReport.noShiftLabel")}
                                                         </label>
                                                         {filteredShifts.map((shift) => (
                                                             <label key={shift.id} className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded cursor-pointer">
@@ -693,7 +699,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                 disabled={testingEmail || saving}
                             >
                                 {testingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-                                Send Test Email
+                                {t("emailReport.sendTestEmail")}
                             </Button>
 
                             <div className="flex gap-2">
@@ -704,7 +710,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                     disabled={saving || testingEmail}
                                 >
                                     {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                                    {isEdit ? "Update" : "Save"}
+                                    {isEdit ? t("common.update") : t("save")}
                                 </Button>
                                 <Button
                                     size="lg"
@@ -714,7 +720,7 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                                     disabled={saving}
                                 >
                                     <X className="w-4 h-4 mr-1" />
-                                    Cancel
+                                    {t("emailReport.cancel")}
                                 </Button>
                             </div>
                         </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import {
     ChevronDown,
@@ -58,6 +59,7 @@ const useDebounce = (callback, delay) => {
 // ─── Department Badges ──────────────────────────────────────────────────────
 
 const DepartmentBadges = ({ departments, rowIdx }) => {
+    const { t } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const visibleCount = 5;
     const visible = expanded ? departments : departments.slice(0, visibleCount);
@@ -80,7 +82,7 @@ const DepartmentBadges = ({ departments, rowIdx }) => {
                     onClick={() => setExpanded(!expanded)}
                     className="inline-flex items-center px-3 py-1 rounded-md text-[11px] font-medium border bg-cyan-100 text-cyan-700 border-cyan-200 cursor-pointer hover:bg-cyan-200 transition-colors"
                 >
-                    {expanded ? "Show Less" : `+${departments.length - visibleCount} More`}
+                    {expanded ? t("locDept.showLess") : `+${departments.length - visibleCount} ${t("locDept.more")}`}
                 </button>
             )}
         </div>
@@ -90,6 +92,7 @@ const DepartmentBadges = ({ departments, rowIdx }) => {
 // ─── Export Dropdown ─────────────────────────────────────────────────────────
 
 const ExportDropdown = () => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const exportCsv = useLocationDepartmentStore((s) => s.exportCsv);
     const exportPdf = useLocationDepartmentStore((s) => s.exportPdf);
@@ -115,14 +118,14 @@ const ExportDropdown = () => {
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-t-lg"
                         >
                             <FileText className="w-3.5 h-3.5 text-red-500" />
-                            Export as PDF
+                            {t("locDept.exportPdf")}
                         </button>
                         <button
                             onClick={() => { exportCsv(); setOpen(false); }}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-b-lg"
                         >
                             <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
-                            Export as Excel
+                            {t("locDept.exportExcel")}
                         </button>
                     </div>
                 </>
@@ -134,6 +137,7 @@ const ExportDropdown = () => {
 // ─── Action Menu ─────────────────────────────────────────────────────────────
 
 const ActionMenu = ({ location }) => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const btnRef = useRef(null);
     const dropdownRef = useRef(null);
@@ -209,28 +213,28 @@ const ActionMenu = ({ location }) => {
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors rounded-t-lg"
                     >
                         <Pencil className="w-3.5 h-3.5 text-emerald-500" />
-                        Rename Location
+                        {t("locDept.renameLocation")}
                     </button>
                     <button
                         onClick={() => handleAction("addDept")}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
                     >
                         <Plus className="w-3.5 h-3.5 text-blue-500" />
-                        Add Department
+                        {t("locDept.addDepartment")}
                     </button>
                     <button
                         onClick={() => handleAction("deleteDept")}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500 hover:bg-red-50 cursor-pointer transition-colors"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Remove Department
+                        {t("locDept.removeDepartment")}
                     </button>
                     <button
                         onClick={() => handleAction("deleteLocation")}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500 hover:bg-red-50 cursor-pointer transition-colors rounded-b-lg"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Delete Location
+                        {t("locDept.deleteLocation")}
                     </button>
                 </div>,
                 document.body
@@ -242,6 +246,7 @@ const ActionMenu = ({ location }) => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export default function EmpLocationDepartment() {
+    const { t } = useTranslation();
     // Store
     const locations = useLocationDepartmentStore((s) => s.locations);
     const loading = useLocationDepartmentStore((s) => s.loading);
@@ -320,13 +325,13 @@ export default function EmpLocationDepartment() {
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center justify-between">
                     <span>{error}</span>
-                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">Dismiss</button>
+                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">{t("locDept.dismiss")}</button>
                 </div>
             )}
             {successMsg && (
                 <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700 flex items-center justify-between">
                     <span>{successMsg}</span>
-                    <button onClick={clearSuccess} className="text-green-400 hover:text-green-600 text-xs ml-4">Dismiss</button>
+                    <button onClick={clearSuccess} className="text-green-400 hover:text-green-600 text-xs ml-4">{t("locDept.dismiss")}</button>
                 </div>
             )}
 
@@ -338,12 +343,11 @@ export default function EmpLocationDepartment() {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Manage</span>{" "}
-                            <span className="font-normal text-gray-500">Locations & Departments</span>
+                            <span className="font-semibold">{t("locDept.manage")}</span>{" "}
+                            <span className="font-normal text-gray-500">{t("locDept.locationsAndDepartments")}</span>
                         </h1>
                         <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
-                            Create and manage office locations and<br />
-                            department structures
+                            {t("locDept.description")}
                         </p>
                     </div>
                 </div>
@@ -357,7 +361,7 @@ export default function EmpLocationDepartment() {
                         onClick={openDeleteDepartmentsDialog}
                     >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Delete Departments
+                        {t("locDept.deleteDepartments")}
                     </Button>
                     <Button
                         size="sm"
@@ -365,7 +369,7 @@ export default function EmpLocationDepartment() {
                         onClick={openAddLocationDialog}
                     >
                         <Plus className="w-3.5 h-3.5" />
-                        Add Location & Departments
+                        {t("locDept.addLocationDepts")}
                     </Button>
                 </div>
             </div>
@@ -375,14 +379,14 @@ export default function EmpLocationDepartment() {
                 <div className="relative flex-1 max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search locations or departments..."
+                        placeholder={t("locDept.searchPlaceholder")}
                         defaultValue={search}
                         onChange={(e) => debouncedSearch(e.target.value)}
                         className="pl-9 rounded-lg text-xs h-9"
                     />
                 </div>
                 <p className="text-xs text-slate-400">
-                    {filtered.length} location{filtered.length !== 1 ? "s" : ""} found
+                    {filtered.length} {t("locDept.locationsFound")}
                 </p>
             </div>
 
@@ -390,7 +394,7 @@ export default function EmpLocationDepartment() {
             {loading ? (
                 <div className="flex items-center justify-center py-20">
                     <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                    <span className="ml-3 text-sm text-slate-500">Loading locations...</span>
+                    <span className="ml-3 text-sm text-slate-500">{t("locDept.loadingLocations")}</span>
                 </div>
             ) : (
                 <>
@@ -403,15 +407,15 @@ export default function EmpLocationDepartment() {
                                         <th className="px-4 py-3 text-left bg-slate-50/60 whitespace-nowrap">
                                             <div className="flex items-center gap-1.5">
                                                 <MapPin className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                                                <span className="text-[12px] font-semibold text-slate-600">Location</span>
+                                                <span className="text-[12px] font-semibold text-slate-600">{t("location")}</span>
                                             </div>
                                         </th>
                                         <th className="px-4 py-3 text-left bg-slate-50/60 whitespace-nowrap">
-                                            <span className="text-[12px] font-semibold text-slate-600">Department</span>
+                                            <span className="text-[12px] font-semibold text-slate-600">{t("department")}</span>
                                         </th>
                                         <th className="px-4 py-3 bg-slate-50/60" />
                                         <th className="px-4 py-3 text-center text-[12px] font-semibold text-white bg-[#5C6BC0] whitespace-nowrap w-28">
-                                            Action
+                                            {t("action")}
                                         </th>
                                     </tr>
                                 </thead>
@@ -419,7 +423,7 @@ export default function EmpLocationDepartment() {
                                     {paginated.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="text-center py-12 text-sm text-slate-400">
-                                                {search ? "No locations match your search" : "No locations found. Add your first location."}
+                                                {search ? t("locDept.noMatchSearch") : t("locDept.noLocationsFound")}
                                             </td>
                                         </tr>
                                     ) : (

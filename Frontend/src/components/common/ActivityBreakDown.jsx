@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableBody,
@@ -70,14 +71,25 @@ const Pill = ({ value, variant }) => {
 import Customreport from "../../components/common/elements/Customreport";
 
 export default function ActivityBreakDown({ data = [] }) {
+  const { t } = useTranslation();
   const rows = data?.length ? data : defaultData;
+
+  const activityKeyMap = {
+    "Office Hours": "officeHours",
+    "Active Hours": "activeHours",
+    "Idle Hours": "idleHours",
+    "Productive Hours": "productiveHours",
+    "Non Productive Hours": "nonProductiveHours",
+    "Natural Hours": "neutralHours",
+    "Neutral Hours": "neutralHours",
+  };
   return (
     <>
       <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 p-4 h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-            Activity Break Down
+            {t("breakDown")}
           </h2>
           <Customreport showMaximize={true} showDownload={true} />
         </div>
@@ -87,16 +99,16 @@ export default function ActivityBreakDown({ data = [] }) {
           <TableHeader>
             <TableRow className="border-b border-slate-200 hover:bg-transparent ">
               <TableHead className="text-slate-800 font-semibold text-xs pb-3 w-[220px]">
-                Activity
+                {t("activity")}
               </TableHead>
               <TableHead className="text-slate-800 font-semibold text-xs pb-3">
-                Today
+                {t("today")}
               </TableHead>
               <TableHead className="text-slate-800 font-semibold text-xs pb-3">
-                Yesterday
+                {t("yesterday")}
               </TableHead>
               <TableHead className="text-slate-800 font-semibold text-xs pb-3">
-                This Week
+                {t("week")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -111,7 +123,7 @@ export default function ActivityBreakDown({ data = [] }) {
                 <TableCell
                   className={`py-2 text-xs font-medium ${row.highlight ? "text-blue-500" : "text-slate-600"}`}
                 >
-                  {row.activity}
+                  {activityKeyMap[row.activity] ? t(activityKeyMap[row.activity]) : row.activity}
                 </TableCell>
 
                 {/* Today */}

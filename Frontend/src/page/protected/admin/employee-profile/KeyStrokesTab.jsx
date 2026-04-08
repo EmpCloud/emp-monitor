@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -7,14 +8,14 @@ import PaginationFooter from "@/components/common/PaginationFooter";
 import { fetchKeystrokes } from "./service";
 import { fmtDateTime, diffHMS } from "@/lib/dateTimeUtils";
 
-const columns = [
-  { key: "#",          label: "#",              className: "text-xs font-semibold text-gray-700 w-10" },
-  { key: "type",       label: "Type",           className: "text-xs font-semibold text-gray-700" },
-  { key: "appDomain",  label: "App/Domain Name",className: "text-xs font-semibold text-gray-700" },
-  { key: "keyStrokes", label: "Key Strokes",    className: "text-xs font-semibold text-gray-700" },
-  { key: "startTime",  label: "Start Time",     className: "text-xs font-semibold text-gray-700" },
-  { key: "endTime",    label: "End Time",        className: "text-xs font-semibold text-gray-700" },
-  { key: "totalTime",  label: "Total Time",     className: "text-xs font-semibold text-white bg-blue-400 text-center" },
+const columnDefs = [
+  { key: "#",          labelKey: "#",            className: "text-xs font-semibold text-gray-700 w-10" },
+  { key: "type",       labelKey: "type",         className: "text-xs font-semibold text-gray-700" },
+  { key: "appDomain",  labelKey: "app/Domain",   className: "text-xs font-semibold text-gray-700" },
+  { key: "keyStrokes", labelKey: "keystroke",     className: "text-xs font-semibold text-gray-700" },
+  { key: "startTime",  labelKey: "startTime",    className: "text-xs font-semibold text-gray-700" },
+  { key: "endTime",    labelKey: "endTime",       className: "text-xs font-semibold text-gray-700" },
+  { key: "totalTime",  labelKey: "totalTime",    className: "text-xs font-semibold text-white bg-blue-400 text-center" },
 ];
 
 // type=1 → Application, type=2 → Website
@@ -32,6 +33,8 @@ function mapRow(item, idx) {
 }
 
 export default function KeyStrokesTab({ employee, startDate, endDate }) {
+  const { t } = useTranslation();
+  const columns = columnDefs.map((col) => ({ ...col, label: col.key === "#" ? "#" : t(col.labelKey) }));
   const [rows, setRows]           = useState([]);
   const [loading, setLoading]     = useState(false);
   const [search, setSearch]       = useState("");
@@ -82,12 +85,12 @@ export default function KeyStrokesTab({ employee, startDate, endDate }) {
           <TableBody className="bg-white">
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10">Loading…</TableCell>
+                <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("Loading")}…</TableCell>
               </TableRow>
             ) : paged.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-sm text-gray-400 py-10 italic">
-                  No data available in table
+                  {t("noDataAvailableInTable")}
                 </TableCell>
               </TableRow>
             ) : paged.map((row, i) => (

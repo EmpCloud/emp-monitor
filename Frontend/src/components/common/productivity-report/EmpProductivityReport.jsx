@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useCallback, useState } from "react"
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts"
 import { Info } from "lucide-react"
 import { FaFileCsv } from "react-icons/fa6"
@@ -16,17 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ShowEntries from "@/components/common/elements/ShowEntries"
 import EmpProductivityReportLogo from "@/assets/reports/productivity.svg"
 import { useProductivityReportStore } from "@/page/protected/admin/productivity-report/productivityReportStore"
 
 const EmpProductivityReport = () => {
+    const { t } = useTranslation();
   const {
     rows,
     totalCount,
@@ -149,7 +145,7 @@ const EmpProductivityReport = () => {
     yaxis: {
       min: 0,
       title: {
-        text: "Time Used (Hours)",
+        text: t("prodReport.timeUsedHours"),
         style: { color: "#64748b", fontSize: "12px", fontWeight: 500 },
       },
       labels: {
@@ -186,9 +182,9 @@ const EmpProductivityReport = () => {
   }), [sortedRows])
 
   const chartSeries = useMemo(() => [
-    { name: "Productive", data: sortedRows.map((r) => r.productiveHrs) },
-    { name: "Unproductive", data: sortedRows.map((r) => r.unproductiveHrs) },
-    { name: "Neutral", data: sortedRows.map((r) => r.neutralHrs) },
+    { name: t("productive"), data: sortedRows.map((r) => r.productiveHrs) },
+    { name: t("prodReport.unproductive"), data: sortedRows.map((r) => r.unproductiveHrs) },
+    { name: t("prodReport.neutral"), data: sortedRows.map((r) => r.neutralHrs) },
   ], [sortedRows])
 
   const pageSize = filters.limit
@@ -215,10 +211,10 @@ const EmpProductivityReport = () => {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Productivity Report</span>
+            <span className="font-semibold">{t("prodReport.title")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-            Comprehensive productivity reports with charts and trend analysis.
+            {t("prodReport.description")}
           </p>
         </div>
         <div className="flex items-end gap-1 mr-2">
@@ -229,9 +225,9 @@ const EmpProductivityReport = () => {
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
           <CustomSelect
-            placeholder="All Location"
+            placeholder={t("allLocations")}
             items={locations}
             selected={filters.location}
             onChange={handleLocationChange}
@@ -239,9 +235,9 @@ const EmpProductivityReport = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("department")}</label>
           <CustomSelect
-            placeholder="Select Department"
+            placeholder={t("allDepartments")}
             items={departments}
             selected={filters.department}
             onChange={handleDepartmentChange}
@@ -249,9 +245,9 @@ const EmpProductivityReport = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Employee</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("employee")}</label>
           <CustomSelect
-            placeholder="Select Employee"
+            placeholder={t("allEmployees")}
             items={employees}
             selected={filters.employee}
             onChange={handleEmployeeChange}
@@ -260,7 +256,7 @@ const EmpProductivityReport = () => {
         </div>
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-            Select Date Ranges :
+            {t("timeclaim.selectDateRanges")} :
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
           <DateRangeCalendar
@@ -285,7 +281,7 @@ const EmpProductivityReport = () => {
           </div>
         ) : sortedRows.length === 0 ? (
           <div className="flex items-center justify-center h-[380px] text-gray-400 text-sm">
-            No productivity data available for the selected period.
+            {t("prodReport.noDataAvailable")}
           </div>
         ) : (
           <ReactApexChart
@@ -302,26 +298,10 @@ const EmpProductivityReport = () => {
 
       {/* Show entries + Export */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => {
+        <ShowEntries value={pageSize} onChange={(v) => {
               const num = parseInt(v, 10)
               setPageSize(Number.isNaN(num) ? 10 : num)
-            }}
-          >
-            <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {["10", "25", "50", "100"].map((n) => (
-                <SelectItem key={n} value={n}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-        </div>
+            }} />
 
         <div className="flex items-center gap-2">
           <Button
@@ -353,14 +333,14 @@ const EmpProductivityReport = () => {
                   className="border-slate-300"
                 />
               </TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Name</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Office Time (Hr)</TableHead>
-              <TableHead className="text-xs font-semibold text-green-600">Productive</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Productivity %</TableHead>
-              <TableHead className="text-xs font-semibold text-red-500">Unproductive</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Unproductivity %</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Neutral</TableHead>
-              <TableHead className="text-xs font-semibold text-slate-700">Idle Time</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("prodRules.name")}</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("prodReport.officeTime")}</TableHead>
+              <TableHead className="text-xs font-semibold text-green-600">{t("prodRules.productive")}</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("prodReport.productivityPct")}</TableHead>
+              <TableHead className="text-xs font-semibold text-red-500">{t("prodRules.unproductive")}</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("prodReport.unproductivityPct")}</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("prodRules.neutral")}</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-700">{t("timeclaim.idleTime")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white">
@@ -375,7 +355,7 @@ const EmpProductivityReport = () => {
             ) : rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center text-sm text-gray-400 py-10">
-                  No records found
+                  {t("Nodata")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -406,15 +386,15 @@ const EmpProductivityReport = () => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold text-gray-700">
             {totalCount === 0 ? 0 : filters.skip + 1}
           </span>{" "}
-          to{" "}
+          {t("to")}{" "}
           <span className="font-bold text-gray-700">
             {Math.min(filters.skip + pageSize, totalCount)}
           </span>{" "}
-          of{" "}
+          {t("of")}{" "}
           <span className="font-bold text-blue-600">{totalCount}</span>
         </p>
         <PaginationComponent

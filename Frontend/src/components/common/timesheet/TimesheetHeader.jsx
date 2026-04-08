@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Columns3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FaFileCsv } from "react-icons/fa6";
@@ -36,6 +37,7 @@ const EXPORT_OPTIONS = [
 const ALL_KEYS = EXPORT_OPTIONS.map((o) => o.key);
 
 function ExportDropdown({ open, onClose, onSubmit, align = "right" }) {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState([]);
     const ref = useRef(null);
 
@@ -69,7 +71,7 @@ function ExportDropdown({ open, onClose, onSubmit, align = "right" }) {
                         onChange={() => setSelected(allSelected ? [] : ALL_KEYS)}
                         className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-400"
                     />
-                    <span className="text-[13px] font-semibold text-slate-700">Select All</span>
+                    <span className="text-[13px] font-semibold text-slate-700">{t("ts_select_all")}</span>
                 </label>
 
                 {EXPORT_OPTIONS.map((opt) => (
@@ -100,7 +102,7 @@ function ExportDropdown({ open, onClose, onSubmit, align = "right" }) {
                     onClick={() => { onSubmit(selected); onClose(); }}
                     className="w-full py-1.5 text-[12px] font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Submit
+                    {t("ts_submit")}
                 </button>
             </div>
         </div>
@@ -108,6 +110,7 @@ function ExportDropdown({ open, onClose, onSubmit, align = "right" }) {
 }
 
 function ColumnToggleDropdown({ open, onClose, allColumns, visibleColumns, onToggle, onReset }) {
+    const { t } = useTranslation();
     const ref = useRef(null);
 
     useEffect(() => {
@@ -127,9 +130,9 @@ function ColumnToggleDropdown({ open, onClose, allColumns, visibleColumns, onTog
             className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-2"
         >
             <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-slate-700">Show/Hide Columns</span>
+                <span className="text-[13px] font-semibold text-slate-700">{t("ts_show_hide_columns")}</span>
                 <button onClick={onReset} className="text-[11px] text-blue-500 hover:text-blue-600 font-medium">
-                    Reset
+                    {t("ts_reset")}
                 </button>
             </div>
             <div className="max-h-72 overflow-y-auto px-2 mt-1">
@@ -153,6 +156,7 @@ function ColumnToggleDropdown({ open, onClose, allColumns, visibleColumns, onTog
 }
 
 function TimesheetHeader({ onCsvExport, onPdfExport, exportLoading, allColumns, visibleColumns, onToggleColumn, onResetColumns }) {
+    const { t } = useTranslation();
     const [showCsv, setShowCsv] = useState(false);
     const [showPdf, setShowPdf] = useState(false);
     const [showColumns, setShowColumns] = useState(false);
@@ -183,10 +187,10 @@ function TimesheetHeader({ onCsvExport, onPdfExport, exportLoading, allColumns, 
                 </div>
                 <div className="border-l-2 border-blue-500 pl-4">
                     <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                        <span className="font-semibold">Timesheets</span>
+                        <span className="font-semibold">{t("ts_timesheets")}</span>
                     </h2>
                     <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                        Track employee working hours, clock-in and clock-out times
+                        {t("ts_track_desc")}
                     </p>
                 </div>
             </div>
@@ -194,7 +198,7 @@ function TimesheetHeader({ onCsvExport, onPdfExport, exportLoading, allColumns, 
                 {exportLoading && (
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Exporting...
+                        {t("ts_exporting")}
                     </div>
                 )}
 
@@ -207,7 +211,7 @@ function TimesheetHeader({ onCsvExport, onPdfExport, exportLoading, allColumns, 
                         onClick={handleColumnsToggle}
                     >
                         <Columns3 className="w-4 h-4" />
-                        Columns
+                        {t("ts_columns")}
                     </Button>
                     <ColumnToggleDropdown
                         open={showColumns}

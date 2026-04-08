@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,8 @@ import {
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 import { TIMEZONES, validateLocationForm } from "@/page/protected/admin/location-department/service";
 
-const AddLocationDialog = ({ open, onOpenChange }) => {
+const AddLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const saving = useLocationDepartmentStore((s) => s.saving);
     const allDepartments = useLocationDepartmentStore((s) => s.allDepartments);
     const saveLocation = useLocationDepartmentStore((s) => s.saveLocation);
@@ -112,7 +114,7 @@ const AddLocationDialog = ({ open, onOpenChange }) => {
                             Add Location & Departments
                         </DialogTitle>
                         <DialogDescription className="text-blue-100 text-xs mt-1">
-                            Create a new location and assign departments to it
+                            {t("locDept.addLocDesc")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -126,13 +128,13 @@ const AddLocationDialog = ({ open, onOpenChange }) => {
 
                     {/* Timezone */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Timezone *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.timezone")} *</label>
                         <select
                             value={selectedTimezone}
                             onChange={(e) => { setSelectedTimezone(e.target.value); setFormError(""); }}
                             className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                            <option value="">Select Timezone</option>
+                            <option value="">{t("locDept.selectTimezone")}</option>
                             {TIMEZONES.map((tz) => (
                                 <option key={tz.zone} value={tz.zone}>{tz.name}</option>
                             ))}
@@ -141,18 +143,18 @@ const AddLocationDialog = ({ open, onOpenChange }) => {
 
                     {/* Location Name */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Location Name *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.locationName")} *</label>
                         <Input
                             value={locName}
                             onChange={(e) => { setLocName(e.target.value); setFormError(""); }}
-                            placeholder="Type location name"
+                            placeholder={t("locDept.typeLocationName")}
                             className="rounded-lg"
                         />
                     </div>
 
                     {/* Departments */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Departments *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.departments")} *</label>
                         <div className="border border-slate-200 rounded-lg p-2 min-h-[80px]">
                             <div className="flex flex-wrap gap-1.5 mb-2">
                                 {selectedDepts.map((dept) => (
@@ -171,7 +173,7 @@ const AddLocationDialog = ({ open, onOpenChange }) => {
                                 value={deptInput}
                                 onChange={(e) => setDeptInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Search or type new department, press Enter"
+                                placeholder={t("locDept.searchOrTypeDept")}
                                 className="w-full text-sm outline-none bg-transparent placeholder:text-slate-400"
                             />
                             {deptInput && filteredDepts.length > 0 && (

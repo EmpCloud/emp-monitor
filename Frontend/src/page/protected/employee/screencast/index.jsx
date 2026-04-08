@@ -1,13 +1,15 @@
+import { useTranslation } from "react-i18next";
 import { Monitor } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import ScreenCastTab      from "../../admin/employee-profile/ScreenCastTab";
 
 export default function EmployeeScreencast() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
 
   const employeeData = {
     id:   employee?.user_id  ?? null,
-    name: employee?.full_name ?? employee?.user_name ?? "My Screen",
+    name: employee?.full_name ?? employee?.user_name ?? t("ep_my_screen"),
   };
 
   return (
@@ -17,8 +19,8 @@ export default function EmployeeScreencast() {
           <Monitor size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">My Screen</h1>
-          <p className="text-xs text-[#A3AED0]">Live view of your desktop</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("ep_my_screen")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_my_screen_desc")}</p>
         </div>
       </div>
 

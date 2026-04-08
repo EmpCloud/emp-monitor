@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Bell, HelpCircle, LogOut, User, ChevronDown,
@@ -17,6 +18,7 @@ import { switchRole }      from "../../../auth/employee-login/service";
 import BackToCloud from "@/components/BackToCloud";
 
 export default function EmployeeTopBar() {
+  const { t }                                 = useTranslation();
   const navigate                              = useNavigate();
   const { open }                              = useSidebar();
   const { employee, setEmployee, clearEmployee } = useEmployeeSession();
@@ -26,9 +28,9 @@ export default function EmployeeTopBar() {
   const [switchingRoleId, setSwitchingRoleId] = useState(null);
   const [switchError,     setSwitchError]     = useState("");
 
-  const displayName   = employee?.full_name ?? employee?.user_name ?? "Employee";
+  const displayName   = employee?.full_name ?? employee?.user_name ?? t("topbar_employee");
   const displayEmail  = employee?.email ?? "";
-  const currentRole   = employee?.role  ?? "Employee";
+  const currentRole   = employee?.role  ?? t("topbar_employee");
   const currentRoleId = employee?.role_id;
   const initials      = displayName.charAt(0).toUpperCase();
 
@@ -50,7 +52,7 @@ export default function EmployeeTopBar() {
 
     if (result.error) { setSwitchError(result.error); return; }
     if (!result.code || result.code !== 200 || !result.data) {
-      setSwitchError(result.message || "Role switch failed"); return;
+      setSwitchError(result.message || t("topbar_role_switch_failed")); return;
     }
 
     const newRole = (result.role || "").toLowerCase().replace(/\s+/g, "");
@@ -78,9 +80,9 @@ export default function EmployeeTopBar() {
         )}
         <div className="md:flex flex-col hidden">
           <span className="text-xs text-[#707EAE] font-bold">
-            Hi {displayName.split(" ")[0]},
+            {t("topbar_hi")} {displayName.split(" ")[0]},
           </span>
-          <h2 className="text-lg font-bold text-[#2B3674]">Welcome to EmpMonitor!</h2>
+          <h2 className="text-lg font-bold text-[#2B3674]">{t("topbar_welcome")}</h2>
         </div>
       </div>
 
@@ -100,13 +102,13 @@ export default function EmployeeTopBar() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-medium text-blue-600 shadow-sm hover:bg-blue-100 transition-colors outline-none">
                 <RefreshCw size={13} />
-                <span className="hidden lg:inline">Switch Role</span>
+                <span className="hidden lg:inline">{t("topbar_switch_role")}</span>
                 <ChevronDown size={12} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 rounded-2xl shadow-2xl border-slate-100 mt-2 p-2">
               <DropdownMenuLabel className="text-[11px] text-gray-400 font-medium px-3 py-1.5">
-                Switch to
+                {t("topbar_switch_to")}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-100 my-1" />
               {otherRoles.map((role) => {
@@ -123,7 +125,7 @@ export default function EmployeeTopBar() {
                         {isSwitching ? <Loader2 size={14} className="animate-spin" /> : <User size={14} />}
                       </div>
                       <span className="text-sm font-semibold text-[#2B3674]">{role.name}</span>
-                      {isSwitching && <span className="text-[11px] text-blue-500 ml-auto">switching…</span>}
+                      {isSwitching && <span className="text-[11px] text-blue-500 ml-auto">{t("topbar_switching")}</span>}
                     </div>
                   </DropdownMenuItem>
                 );
@@ -135,7 +137,7 @@ export default function EmployeeTopBar() {
         {/* Help */}
         <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors">
           <HelpCircle className="h-4 w-4" />
-          <span className="hidden lg:inline">Help</span>
+          <span className="hidden lg:inline">{t("topbar_help")}</span>
         </button>
 
         {/* Notification */}
@@ -178,7 +180,7 @@ export default function EmployeeTopBar() {
                 <div className="p-1.5 rounded-lg bg-red-50 text-[#FF4D49] group-hover:bg-red-100 transition-colors">
                   <LogOut className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-semibold">Logout</span>
+                <span className="text-sm font-semibold">{t("topbar_logout")}</span>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>

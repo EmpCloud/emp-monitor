@@ -1,4 +1,5 @@
 import React from "react"
+import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog"
 import useMonitoringControlStore from "@/page/protected/admin/monitoring-control/monitoringControlStore"
 
-const DeleteGroupDialog = ({ open, onOpenChange }) => {
+const DeleteGroupDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const { deletingGroup, deleteGroupAction, saving } = useMonitoringControlStore()
 
     const handleDelete = async () => {
@@ -34,7 +36,7 @@ const DeleteGroupDialog = ({ open, onOpenChange }) => {
                                 Delete Group
                             </DialogTitle>
                             <DialogDescription className="text-xs text-red-100 mt-0.5">
-                                This action cannot be undone
+                                {t("shift.cannotBeUndone")}
                             </DialogDescription>
                         </div>
                     </DialogHeader>
@@ -46,7 +48,7 @@ const DeleteGroupDialog = ({ open, onOpenChange }) => {
                         <span className="font-semibold text-slate-900">
                             &quot;{deletingGroup?.name}&quot;
                         </span>
-                        ? All settings associated with this group will be removed.
+                        ? {t("monitoring.deleteGroupWarning")}
                     </p>
 
                     <div className="flex justify-end gap-2 pt-2">
@@ -65,7 +67,7 @@ const DeleteGroupDialog = ({ open, onOpenChange }) => {
                             onClick={handleDelete}
                             disabled={saving}
                         >
-                            {saving ? "Deleting..." : "Delete"}
+                            {saving ? t("common.deleting") : t("delete")}
                         </Button>
                     </div>
                 </div>

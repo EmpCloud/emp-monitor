@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { employeeLogin } from "./service";
 import useEmployeeSession  from "../../../sessions/employeeSession";
 import useNonAdminSession from "../../../sessions/useNonAdminSession";
 import useAdminSession    from "../../../sessions/adminSession";
+import { syncLanguageFromSession } from "@/i18n/syncLanguage";
 import bgIllustration from "@/assets/login-bg.png";
 import empLogo from "@/assets/emp.png";
 import userIcon from "@/assets/user-setting.png";
@@ -15,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 
 export const EmployeeLogin = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setEmployee } = useEmployeeSession();
   const { setNonAdmin } = useNonAdminSession();
@@ -39,12 +42,13 @@ export const EmployeeLogin = () => {
         return;
       }
       if (!result?.success || result.code !== 200 || !result?.data) {
-        setError(result.message || "Login failed");
+        setError(result.message || t("auth_login_failed"));
         return;
       }
 
       // Route by role string (mirrors Laravel logic)
       const apiResponse = result.data;
+      syncLanguageFromSession();
       const role = (apiResponse.role || "").toLowerCase().replace(/\s+/g, "");
       if (role === "employee") {
         setEmployee(apiResponse);
@@ -57,7 +61,7 @@ export const EmployeeLogin = () => {
         navigate("/non-admin/dashboard");
       }
     } catch (err) {
-      setError("Unexpected error during login.");
+      setError(t("auth_unexpected_error"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -102,10 +106,10 @@ export const EmployeeLogin = () => {
             {/* Title */}
             <div className="text-center mb-7">
               <h2 className="text-[20px] font-bold tracking-tight text-[#0f1e3a]">
-                Employee Login
+                {t("auth_employee_login")}
               </h2>
               <p className="text-[13px] text-[#7aadca] mt-1">
-                Sign in to your employee account
+                {t("auth_sign_in_employee")}
               </p>
             </div>
 
@@ -122,7 +126,7 @@ export const EmployeeLogin = () => {
               {/* Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-[13px] font-semibold text-[#3a5a7a]">
-                  Email
+                  {t("email")}
                 </Label>
                 <Input
                   id="email"
@@ -130,7 +134,7 @@ export const EmployeeLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="Enter your email"
+                  placeholder={t("auth_enter_your_email")}
                   className={`emp-input px-4 h-11 rounded-xl text-sm text-[#1a2a4a] bg-white/80 placeholder:text-[#aac4d8] border-[1.5px] transition-all duration-200 ${
                     error ? "border-red-300 emp-input-error" : "border-[#e0eef5]"
                   }`}
@@ -140,7 +144,7 @@ export const EmployeeLogin = () => {
               {/* Password */}
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-[13px] font-semibold text-[#3a5a7a]">
-                  Password
+                  {t("password")}
                 </Label>
                 <div className="relative">
                   <Input
@@ -149,7 +153,7 @@ export const EmployeeLogin = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="Enter your password"
+                    placeholder={t("auth_enter_your_password")}
                     className={`emp-input px-4 pr-11 h-11 rounded-xl text-sm text-[#1a2a4a] bg-white/80 placeholder:text-[#aac4d8] border-[1.5px] transition-all duration-200 ${
                       error ? "border-red-300 emp-input-error" : "border-[#e0eef5]"
                     }`}
@@ -177,10 +181,10 @@ export const EmployeeLogin = () => {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <Loader2 size={17} className="animate-spin" />
-                      Logging in...
+                      {t("auth_logging_in")}
                     </span>
                   ) : (
-                    "Log in"
+                    t("auth_log_in")
                   )}
                 </Button>
               </div>
@@ -191,21 +195,21 @@ export const EmployeeLogin = () => {
                   variant="ghost"
                   className="h-auto p-0 text-[13px] font-semibold text-[#2079FD] hover:text-[#2079FD] hover:bg-transparent hover:underline transition-opacity duration-200"
                 >
-                  Forgot password?
+                  {t("auth_forgot_password")}
                 </Button>
               </div>
             </form>
 
             {/* Footer links */}
             <p className="text-center text-[13px] text-[#7aadca] leading-relaxed mt-5">
-              Admin?{" "}
+              {t("auth_admin_question")}{" "}
               <Button
                 type="button"
                 variant="ghost"
                 className="h-auto p-0 text-[13px] font-bold text-[#2079FD] hover:text-[#2079FD] hover:bg-transparent hover:underline"
                 onClick={() => navigate("/admin-login")}
               >
-                Admin Login
+                {t("auth_admin_login")}
               </Button>
             </p>
           </div>

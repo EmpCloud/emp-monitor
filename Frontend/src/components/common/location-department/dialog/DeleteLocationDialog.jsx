@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 
-const DeleteLocationDialog = ({ open, onOpenChange }) => {
+const DeleteLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const deleting = useLocationDepartmentStore((s) => s.deleting);
     const confirmDeleteLocation = useLocationDepartmentStore((s) => s.confirmDeleteLocation);
 
@@ -30,7 +32,7 @@ const DeleteLocationDialog = ({ open, onOpenChange }) => {
                             Delete Location
                         </DialogTitle>
                         <DialogDescription className="text-sm text-slate-500">
-                            Are you sure you want to delete this location? All departments assigned to this location will also be removed. This action cannot be undone.
+                            {t("locDept.deleteLocationConfirm")}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -42,7 +44,7 @@ const DeleteLocationDialog = ({ open, onOpenChange }) => {
                             disabled={deleting}
                         >
                             {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                            Yes, Delete
+                            {t("locDept.yesDelete")}
                         </Button>
                         <Button
                             variant="outline"

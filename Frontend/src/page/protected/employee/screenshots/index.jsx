@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Camera } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import ScreenshotsTab     from "../../admin/employee-profile/ScreenshotsTab";
 
 export default function EmployeeScreenshots() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeScreenshots() {
           <Camera size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">Screenshots</h1>
-          <p className="text-xs text-[#A3AED0]">Captured screenshots of your activity</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("ss")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_screenshots_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

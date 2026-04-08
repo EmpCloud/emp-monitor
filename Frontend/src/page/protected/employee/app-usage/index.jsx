@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { AppWindow } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import AppHistoryTab      from "../../admin/employee-profile/AppHistoryTab";
 
 export default function EmployeeAppUsage() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeAppUsage() {
           <AppWindow size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">App Usage</h1>
-          <p className="text-xs text-[#A3AED0]">Applications used during work hours</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("ep_app_usage")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_app_usage_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

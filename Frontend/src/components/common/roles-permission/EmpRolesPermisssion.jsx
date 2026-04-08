@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Search,
     Plus,
@@ -19,13 +20,7 @@ import CustomSelect from "@/components/common/elements/CustomSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import EmpRolesPermissionLogo from "@/assets/settings/roles-permissions.svg";
 import { useRolesPermissionStore } from "@/page/protected/admin/roles-permissions/rolesPermissionStore";
 
@@ -59,6 +54,7 @@ const useDebounce = (callback, delay) => {
 // ─── Export Dropdown ────────────────────────────────────────────────────────
 
 const ExportDropdown = () => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const exportExcel = useRolesPermissionStore((s) => s.exportExcel);
     const exportCsv = useRolesPermissionStore((s) => s.exportCsv);
@@ -73,7 +69,7 @@ const ExportDropdown = () => {
                 onClick={() => setOpen(!open)}
             >
                 <Download className="w-3.5 h-3.5" />
-                Export
+                {t("common.export")}
                 <ChevronDown className="w-3 h-3" />
             </Button>
             {open && (
@@ -85,21 +81,21 @@ const ExportDropdown = () => {
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-t-lg"
                         >
                             <FileText className="w-3.5 h-3.5 text-red-500" />
-                            Export as PDF
+                            {t("roles.exportAsPdf")}
                         </button>
                         <button
                             onClick={() => { exportExcel(); setOpen(false); }}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
-                            Export as Excel
+                            {t("roles.exportAsExcel")}
                         </button>
                         <button
                             onClick={() => { exportCsv(); setOpen(false); }}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-b-lg"
                         >
                             <FileDown className="w-3.5 h-3.5 text-blue-500" />
-                            Export as CSV
+                            {t("roles.exportAsCsv")}
                         </button>
                     </div>
                 </>
@@ -167,6 +163,7 @@ const ActionButtons = ({ role }) => {
 // ─── Location & Department Formatters ───────────────────────────────────────
 
 const LocationCell = ({ role }) => {
+    const { t } = useTranslation();
     if (role.locations?.length > 0) {
         return (
             <div className="flex flex-wrap gap-1">
@@ -176,10 +173,11 @@ const LocationCell = ({ role }) => {
             </div>
         );
     }
-    return <span className="text-xs text-slate-400">All</span>;
+    return <span className="text-xs text-slate-400">{t("roles.all")}</span>;
 };
 
 const DepartmentCell = ({ role }) => {
+    const { t } = useTranslation();
     const depts = [];
 
     if (role.departments?.length > 0) {
@@ -194,9 +192,9 @@ const DepartmentCell = ({ role }) => {
                 });
             }
         });
-        if (!hasDepts) return <span className="text-xs text-slate-400">All</span>;
+        if (!hasDepts) return <span className="text-xs text-slate-400">{t("roles.all")}</span>;
     } else {
-        return <span className="text-xs text-slate-400">All</span>;
+        return <span className="text-xs text-slate-400">{t("roles.all")}</span>;
     }
 
     if (depts.length === 0) return <span className="text-xs text-slate-400">All</span>;
@@ -213,7 +211,7 @@ const DepartmentCell = ({ role }) => {
             ))}
             {remaining > 0 && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">
-                    +{remaining} more
+                    +{remaining} {t("roles.more")}
                 </span>
             )}
         </div>
@@ -223,6 +221,7 @@ const DepartmentCell = ({ role }) => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const EmpRolesPermission = () => {
+    const { t } = useTranslation();
     const roles = useRolesPermissionStore((s) => s.roles);
     const totalCount = useRolesPermissionStore((s) => s.totalCount);
     const loading = useRolesPermissionStore((s) => s.loading);
@@ -292,13 +291,13 @@ const EmpRolesPermission = () => {
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center justify-between">
                     <span>{error}</span>
-                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">Dismiss</button>
+                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">{t("roles.dismiss")}</button>
                 </div>
             )}
             {successMsg && (
                 <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700 flex items-center justify-between">
                     <span>{successMsg}</span>
-                    <button onClick={clearSuccess} className="text-green-400 hover:text-green-600 text-xs ml-4">Dismiss</button>
+                    <button onClick={clearSuccess} className="text-green-400 hover:text-green-600 text-xs ml-4">{t("roles.dismiss")}</button>
                 </div>
             )}
 
@@ -310,12 +309,11 @@ const EmpRolesPermission = () => {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Roles</span>{" "}
-                            <span className="font-normal text-gray-500">and Permissions</span>
+                            <span className="font-semibold">{t("roles.title")}</span>{" "}
+                            <span className="font-normal text-gray-500">{t("roles.andPermissions")}</span>
                         </h1>
                         <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
-                            Manage user roles, access levels and<br />
-                            permission sets
+                            {t("roles.manageDesc")}
                         </p>
                     </div>
                 </div>
@@ -334,38 +332,22 @@ const EmpRolesPermission = () => {
                         onClick={openAddRoleDialog}
                     >
                         <Plus className="w-4 h-4" />
-                        Add New Role
+                        {t("roles.addNewRole")}
                     </Button>
                 </div>
             </div>
 
             {/* ── Show entries + Search ───────────────────────────────── */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium">Show</span>
-                    <Select
-                        value={String(pagination.pageSize)}
-                        onValueChange={(v) => {
+                <ShowEntries value={pagination.pageSize} onChange={(v) => {
                             const num = parseInt(v, 10);
                             changePageSize(Number.isNaN(num) ? 10 : num);
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50", "100"].map((n) => (
-                                <SelectItem key={n} value={n}>{n}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-                </div>
+                        }} />
 
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search roles..."
+                        placeholder={t("roles.searchRoles")}
                         defaultValue={search}
                         onChange={(e) => debouncedSearch(e.target.value)}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -377,7 +359,7 @@ const EmpRolesPermission = () => {
             {loading ? (
                 <div className="flex items-center justify-center py-20">
                     <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                    <span className="ml-3 text-sm text-slate-500">Loading roles...</span>
+                    <span className="ml-3 text-sm text-slate-500">{t("roles.loadingRoles")}</span>
                 </div>
             ) : (
                 <>
@@ -386,15 +368,15 @@ const EmpRolesPermission = () => {
                         <table className="min-w-[850px] w-full">
                             <thead>
                                 <tr className="bg-blue-50/80">
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Role Name</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Read</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Write</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Delete</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Location</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">Department</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-white text-center bg-[#5C6BC0] min-w-[180px]">Action</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("roles.roleName")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("read")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("write")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("delete")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("location")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("department")}</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-white text-center bg-[#5C6BC0] min-w-[180px]">{t("action")}</th>
                                     {isHRMS && (
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">Enable HRMS</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("roles.enableHRMS")}</th>
                                     )}
                                 </tr>
                             </thead>
@@ -402,7 +384,7 @@ const EmpRolesPermission = () => {
                                 {roles.length === 0 ? (
                                     <tr>
                                         <td colSpan={colSpanCount} className="text-center text-sm text-gray-400 py-10">
-                                            {search ? "No roles match your search" : "No roles found"}
+                                            {search ? t("roles.noRolesMatch") : t("roles.noRolesFound")}
                                         </td>
                                     </tr>
                                 ) : (
@@ -476,11 +458,11 @@ const EmpRolesPermission = () => {
                     {/* ── Pagination ──────────────────────────────────── */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
                         <p className="text-[13px] text-gray-500 font-medium">
-                            Showing{" "}
+                            {t("timeclaim.showing")}{" "}
                             <span className="font-bold text-gray-700">{showingFrom}</span>{" "}
-                            to{" "}
+                            {t("to")}{" "}
                             <span className="font-bold text-gray-700">{showingTo}</span>{" "}
-                            of{" "}
+                            {t("of")}{" "}
                             <span className="font-bold text-blue-600">{totalCount}</span>
                         </p>
                         <PaginationComponent

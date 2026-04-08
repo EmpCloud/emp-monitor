@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAutoEmailReportStore } from "@/page/protected/admin/auto-email-report/autoEmailReportStore";
 
-const DeleteReportDialog = ({ open, onOpenChange }) => {
+const DeleteReportDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const deleting = useAutoEmailReportStore((s) => s.deleting);
     const confirmDelete = useAutoEmailReportStore((s) => s.confirmDelete);
 
@@ -30,7 +32,7 @@ const DeleteReportDialog = ({ open, onOpenChange }) => {
                             Delete Report
                         </DialogTitle>
                         <DialogDescription className="text-sm text-slate-500">
-                            Are you sure you want to delete this email report? This action cannot be undone.
+                            {t("emailReport.deleteConfirm")}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -42,7 +44,7 @@ const DeleteReportDialog = ({ open, onOpenChange }) => {
                             disabled={deleting}
                         >
                             {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                            Yes, Delete
+                            {t("locDept.yesDelete")}
                         </Button>
                         <Button
                             variant="outline"

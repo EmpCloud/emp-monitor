@@ -1,4 +1,5 @@
 import React from "react"
+import { useTranslation } from "react-i18next";
 import { Trash2, Loader2, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,7 +10,8 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 
-const DeleteShiftDialog = ({ open, onOpenChange, onConfirm, deleting }) => {
+const DeleteShiftDialog = ({ open, onOpenChange, onConfirm, deleting }) => {  const { t } = useTranslation();
+
     const handleDelete = async () => {
         await onConfirm()
     }
@@ -24,7 +26,7 @@ const DeleteShiftDialog = ({ open, onOpenChange, onConfirm, deleting }) => {
                             Delete Shift
                         </DialogTitle>
                         <DialogDescription className="text-red-100 text-xs mt-1">
-                            This action cannot be undone
+                            {t("shift.cannotBeUndone")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -35,9 +37,9 @@ const DeleteShiftDialog = ({ open, onOpenChange, onConfirm, deleting }) => {
                             <AlertTriangle className="w-5 h-5 text-red-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-800">Are you sure you want to delete this shift?</p>
+                            <p className="text-sm font-medium text-slate-800">{t("shift.deleteShiftConfirm")}</p>
                             <p className="text-xs text-slate-500 mt-1">
-                                Employees assigned to this shift will be affected. This cannot be undone.
+                                {t("shift.deleteShiftWarning")}
                             </p>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -46,12 +47,14 @@ const buildChartDataFromEmployees = (employees = []) => {
 };
 
 export default function TopNonProductiveEmployees({
-  title = "Top 10 Non Productive Employees",
+  title,
   filter,
   report,
   employees = [],
   loading = false,
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("topNonProductiveEmployees");
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -259,7 +262,7 @@ export default function TopNonProductiveEmployees({
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-            {title}
+            {resolvedTitle}
           </h2>
           {report}
         </div>
@@ -270,11 +273,11 @@ export default function TopNonProductiveEmployees({
         {/* Loading / Empty states */}
         {loading ? (
           <div className="py-10 text-center text-sm text-slate-500">
-            Loading...
+            {t("loadingText")}
           </div>
         ) : !employees?.length ? (
           <div className="py-10 text-center text-sm text-slate-500">
-            No employees found for the selected filters.
+            {t("noEmployeesForFilters")}
           </div>
         ) : null}
 

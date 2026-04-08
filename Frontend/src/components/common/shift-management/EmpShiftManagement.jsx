@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
+import { useTranslation } from "react-i18next";
 import {
     Search,
     Pencil,
@@ -15,13 +16,7 @@ import CreateShift from "@/components/common/shift-management/dialog/CreateShift
 import DeleteShiftDialog from "@/components/common/shift-management/dialog/DeleteShiftDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+import ShowEntries from "@/components/common/elements/ShowEntries"
 import EmpShiftManagementLogo from "@/assets/settings/shift-management.svg"
 import { useShiftManagementStore } from "@/page/protected/admin/shift-management/shiftManagementStore"
 
@@ -57,6 +52,7 @@ const useDebounce = (callback, delay) => {
 // ─── Export Dropdown ────────────────────────────────────────────────────────
 
 const ExportDropdown = () => {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false)
     const exportExcel = useShiftManagementStore((s) => s.exportExcel)
     const exportCsv = useShiftManagementStore((s) => s.exportCsv)
@@ -83,21 +79,21 @@ const ExportDropdown = () => {
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-t-lg"
                         >
                             <FileText className="w-3.5 h-3.5 text-red-500" />
-                            Export as PDF
+                            {t("shift.exportPdf")}
                         </button>
                         <button
                             onClick={() => { exportExcel(); setOpen(false) }}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
-                            Export as Excel
+                            {t("shift.exportExcel")}
                         </button>
                         <button
                             onClick={() => { exportCsv(); setOpen(false) }}
                             className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-b-lg"
                         >
                             <FileDown className="w-3.5 h-3.5 text-blue-500" />
-                            Export as CSV
+                            {t("shift.exportCsv")}
                         </button>
                     </div>
                 </>
@@ -137,6 +133,7 @@ const getFirstTime = (data, field) => {
 // ─── Main Component ────────────────────────────────────────────────────────
 
 const EmpShiftManagement = () => {
+    const { t } = useTranslation();
     const {
         shifts,
         totalCount,
@@ -223,11 +220,11 @@ const EmpShiftManagement = () => {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Shift</span>{" "}
-                            <span className="font-normal text-gray-500">Management</span>
+                            <span className="font-semibold">{t("shift.title")}</span>{" "}
+                            <span className="font-normal text-gray-500">{t("shift.management")}</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                            Configure work shifts and assign them to employees or departments.
+                            {t("shift.description")}
                         </p>
                     </div>
                 </div>
@@ -239,42 +236,22 @@ const EmpShiftManagement = () => {
                         className="rounded-xl bg-violet-500 hover:bg-violet-600 px-6 text-xs font-semibold shadow-sm"
                         onClick={openCreateDialog}
                     >
-                        Create Shift
+                        {t("shift.createShift")}
                     </Button>
                 </div>
             </div>
 
             {/* Show entries + Search */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium">Show</span>
-                    <Select
-                        value={String(pagination.pageSize)}
-                        onValueChange={(v) => {
+                <ShowEntries value={pagination.pageSize} onChange={(v) => {
                             const num = parseInt(v, 10)
                             changePageSize(Number.isNaN(num) ? 10 : num)
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50", "100"].map((n) => (
-                                <SelectItem key={n} value={n}>
-                                    {n}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-gray-500 font-medium">
-                        Entries
-                    </span>
-                </div>
+                        }} />
 
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search"
+                        placeholder={t("search")}
                         defaultValue={search}
                         onChange={(e) => debouncedSearch(e.target.value)}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -293,19 +270,19 @@ const EmpShiftManagement = () => {
                         <thead>
                             <tr className="bg-blue-50/80">
                                 <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                    Shift Name
+                                    {t("shift.shiftName")}
                                 </th>
                                 <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                    Days
+                                    {t("shift.days")}
                                 </th>
                                 <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                    Start Time
+                                    {t("shift.startTime")}
                                 </th>
                                 <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                                    End Time
+                                    {t("shift.endTime")}
                                 </th>
                                 <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center bg-slate-200/60">
-                                    Action
+                                    {t("action")}
                                 </th>
                             </tr>
                         </thead>
@@ -316,7 +293,7 @@ const EmpShiftManagement = () => {
                                         colSpan={5}
                                         className="text-center text-sm text-gray-400 py-10"
                                     >
-                                        No data found
+                                        {t("Nodata")}
                                     </td>
                                 </tr>
                             ) : (
@@ -363,14 +340,14 @@ const EmpShiftManagement = () => {
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => openEditDialog(row.id)}
-                                                        title="Edit Shift"
+                                                        title={t("shift.editShift")}
                                                         className="w-7 h-7 rounded-lg bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors"
                                                     >
                                                         <Pencil className="w-3.5 h-3.5 text-emerald-600" />
                                                     </button>
                                                     <button
                                                         onClick={() => openDeleteDialog(row.id)}
-                                                        title="Delete Shift"
+                                                        title={t("shift.deleteShift")}
                                                         className="w-7 h-7 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5 text-red-500" />
@@ -389,15 +366,15 @@ const EmpShiftManagement = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing{" "}
+                    {t("timeclaim.showing")}{" "}
                     <span className="font-bold text-gray-700">
                         {totalCount === 0 ? 0 : (currentPage - 1) * pagination.pageSize + 1}
                     </span>{" "}
-                    to{" "}
+                    {t("to")}{" "}
                     <span className="font-bold text-gray-700">
                         {Math.min(currentPage * pagination.pageSize, totalCount)}
                     </span>{" "}
-                    of{" "}
+                    {t("of")}{" "}
                     <span className="font-bold text-blue-600">
                         {totalCount}
                     </span>

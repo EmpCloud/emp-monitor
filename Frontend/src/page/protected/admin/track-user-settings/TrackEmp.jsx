@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Settings, Info, Camera, Shield, Cpu, DollarSign, X, Loader2 } from "lucide-react";
 import { fetchEmployeeInfo } from "../employee-profile/service";
@@ -25,18 +26,21 @@ const Toggle = ({ checked, onChange }) => (
   </button>
 );
 
-const RadioPair = ({ value, onChange }) => (
+const RadioPair = ({ value, onChange }) => {
+  const { t } = useTranslation();
+  return (
   <div className="flex items-center gap-5">
     <label className="flex items-center gap-1.5 cursor-pointer">
       <input type="radio" checked={value === true} onChange={() => onChange(true)} className="w-3.5 h-3.5 accent-blue-500" />
-      <span className="text-[12px] text-blue-500 font-semibold">Enable</span>
+      <span className="text-[12px] text-blue-500 font-semibold">{t("track_enable")}</span>
     </label>
     <label className="flex items-center gap-1.5 cursor-pointer">
       <input type="radio" checked={value === false} onChange={() => onChange(false)} className="w-3.5 h-3.5 accent-red-400" />
-      <span className="text-[12px] text-red-400 font-semibold">Disabled</span>
+      <span className="text-[12px] text-red-400 font-semibold">{t("track_disabled")}</span>
     </label>
   </div>
-);
+  );
+};
 
 const Section = ({ title, icon, children }) => (
   <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -50,7 +54,9 @@ const Section = ({ title, icon, children }) => (
   </div>
 );
 
-const FeatureRow = ({ label, value, onChange, hasAdvanced, onAdvancedClick, infoIcon, showAdvancedColumn = false }) => (
+const FeatureRow = ({ label, value, onChange, hasAdvanced, onAdvancedClick, infoIcon, showAdvancedColumn = false }) => {
+  const { t } = useTranslation();
+  return (
   <div className={`py-2.5 border-b border-slate-50 last:border-0 ${showAdvancedColumn ? "grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2" : "flex items-center"}`}>
     <span className={`text-[12px] text-gray-600 flex items-center gap-1 font-medium min-w-0 ${showAdvancedColumn ? "" : "flex-1"}`}>
       {label}
@@ -63,20 +69,21 @@ const FeatureRow = ({ label, value, onChange, hasAdvanced, onAdvancedClick, info
       <div className="flex justify-end">
         {hasAdvanced ? (
           <Button size="xs" onClick={() => onAdvancedClick?.(label)} className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
-            Advanced Settings
+            {t("track_advanced_settings")}
           </Button>
         ) : null}
       </div>
     )}
     {!showAdvancedColumn && hasAdvanced ? (
       <Button size="xs" onClick={() => onAdvancedClick?.(label)} className="h-6 px-2.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md shadow-none whitespace-nowrap">
-        Advanced Settings
+        {t("track_advanced_settings")}
       </Button>
     ) : null}
   </div>
-);
+  );
+};
 
-const TagInput = ({ value = [], onChange, placeholder = "Type and press Enter" }) => {
+const TagInput = ({ value = [], onChange, placeholder }) => {
   const [input, setInput] = useState("");
   const handleKeyDown = (e) => {
     if ((e.key === "Enter" || e.key === ",") && input.trim()) {
@@ -109,12 +116,12 @@ const TagInput = ({ value = [], onChange, placeholder = "Type and press Enter" }
 };
 
 const SCENARIOS = [
-  { key: "unlimited", label: "Unlimited" },
-  { key: "fixed", label: "Fixed" },
-  { key: "manual", label: "Manual Clocked in" },
-  { key: "client", label: "Client based" },
-  { key: "network", label: "Network based" },
-  { key: "geo", label: "GEO Location" },
+  { key: "unlimited", labelKey: "track_unlimited" },
+  { key: "fixed", labelKey: "track_fixed" },
+  { key: "manual", labelKey: "track_manual_clocked_in" },
+  { key: "client", labelKey: "track_client_based" },
+  { key: "network", labelKey: "track_network_based" },
+  { key: "geo", labelKey: "track_geo_location" },
 ];
 
 const SCENARIO_MAP = { unlimited: "unlimited", fixed: "fixed", manual: "manual", client: "projectBased", network: "networkBased", geo: "geoLocation" };
@@ -130,6 +137,7 @@ const SCENARIO_COMPONENTS = {
 };
 
 export default function TrackEmp() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -142,10 +150,7 @@ export default function TrackEmp() {
   const [ssOptions, setSsOptions] = useState([]);
   const [idleOptions, setIdleOptions] = useState([]);
   const [breakOptions, setBreakOptions] = useState([]);
-  const [settingTypeItems, setSettingTypeItems] = useState([
-    { label: "Custom", value: "3" },
-    { label: "Default", value: "1" },
-  ]);
+  const [settingTypeItems, setSettingTypeItems] = useState([]);
   const [advancedPanel, setAdvancedPanel] = useState(null); // "Web Used" | "Screenshots" | null
   const [advSaving, setAdvSaving] = useState(false);
   const [advMsg, setAdvMsg] = useState({ type: "", text: "" });
@@ -202,8 +207,8 @@ export default function TrackEmp() {
 
       // Build "Setting Applied" dropdown: Custom, Default, + groups
       const items = [
-        { label: "Custom", value: "3" },
-        { label: "Default", value: "1" },
+        { label: t("custom"), value: "3" },
+        { label: t("default"), value: "1" },
       ];
       const groups = Array.isArray(groupsRes) ? groupsRes : [];
       groups.forEach((g) => {
@@ -238,10 +243,10 @@ export default function TrackEmp() {
 
     setAdvSaving(false);
     if (res?.code === 200) {
-      setAdvMsg({ type: "success", text: res.msg || "Advanced settings saved" });
+      setAdvMsg({ type: "success", text: res.msg || t("track_advanced_settings_saved") });
       setTimeout(() => { setAdvancedPanel(null); setAdvMsg({ type: "", text: "" }); }, 1000);
     } else {
-      setAdvMsg({ type: "error", text: res?.msg || res?.message || "Failed to save" });
+      setAdvMsg({ type: "error", text: res?.msg || res?.message || t("track_failed_to_save") });
     }
   };
 
@@ -255,9 +260,9 @@ export default function TrackEmp() {
 
     setSaving(false);
     if (res?.code === 200) {
-      setSaveMsg({ type: "success", text: res.msg || "Settings saved successfully" });
+      setSaveMsg({ type: "success", text: res.msg || t("track_settings_saved") });
     } else {
-      setSaveMsg({ type: "error", text: res?.msg || res?.message || "Failed to save settings" });
+      setSaveMsg({ type: "error", text: res?.msg || res?.message || t("track_failed_to_save_settings") });
     }
   };
 
@@ -281,9 +286,9 @@ export default function TrackEmp() {
     return (
       <div className="bg-slate-200 w-full p-5">
         <div className="bg-white rounded-2xl p-8 text-center min-h-[400px] flex flex-col items-center justify-center gap-4">
-          <p className="text-gray-500 text-lg">Employee not found.</p>
+          <p className="text-gray-500 text-lg">{t("track_employee_not_found")}</p>
           <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
-            <ArrowLeft size={16} /> Go Back
+            <ArrowLeft size={16} /> {t("track_go_back")}
           </Button>
         </div>
       </div>
@@ -315,7 +320,7 @@ export default function TrackEmp() {
                 onClick={() => navigate(`${routeBase}/get-employee-details?id=${employeeId}`, { state: { employee } })}
                 className="text-[13px] text-blue-500 hover:underline font-medium"
               >
-                Employee Full Details
+                {t("track_employee_full_details")}
               </button>
             </div>
             <div className="flex items-center gap-3">
@@ -329,17 +334,17 @@ export default function TrackEmp() {
                 disabled={saving}
                 className="h-9 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold shadow-sm"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? t("track_saving") : t("save")}
               </Button>
             </div>
           </div>
 
           {/* Employee General Details */}
-          <Section title="Employee General Details" icon={<Settings size={14} className="text-blue-500" />}>
+          <Section title={t("track_employee_general_details")} icon={<Settings size={14} className="text-blue-500" />}>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-5 gap-y-3">
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                  <Settings size={10} className="text-gray-400" /> Setting Applied to the user
+                  <Settings size={10} className="text-gray-400" /> {t("track_setting_applied")}
                 </label>
                 <CustomSelect placeholder="Select" items={settingTypeItems}
                   selected={settings.settingType === "2" ? `group_${settings.groupId}` : settings.settingType}
@@ -354,15 +359,15 @@ export default function TrackEmp() {
                   }} width />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-gray-500">Visibility</label>
+                <label className="text-[11px] font-semibold text-gray-500">{t("track_visibility")}</label>
                 <div className="flex items-center gap-4 h-10">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="radio" checked={settings.visibility} onChange={() => set("visibility", true)} className="w-3.5 h-3.5 accent-blue-500" />
-                    <span className="text-[12px] font-medium">Visible</span>
+                    <span className="text-[12px] font-medium">{t("track_visible")}</span>
                   </label>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="radio" checked={!settings.visibility} onChange={() => set("visibility", false)} className="w-3.5 h-3.5 accent-blue-500" />
-                    <span className="text-[12px] font-medium">Stealth</span>
+                    <span className="text-[12px] font-medium">{t("track_stealth")}</span>
                   </label>
                 </div>
               </div>
@@ -371,88 +376,88 @@ export default function TrackEmp() {
 
           {/* Tracking + DLP / Screenshots / Agent */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Section title="Tracking Features" icon={<Shield size={14} className="text-red-400" />}>
+            <Section title={t("track_tracking_features")} icon={<Shield size={14} className="text-red-400" />}>
               <div className="bg-[#f5f7fb] rounded-xl p-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2 py-2 mb-1 bg-gray-200/60 rounded-md">
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Feature</span>
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Status</span>
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide text-right">Advanced Settings</span>
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{t("track_feature")}</span>
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">{t("track_status")}</span>
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide text-right">{t("track_advanced_settings")}</span>
                 </div>
-                <FeatureRow label="Key Strokes" value={settings.features.keyStrokes} onChange={(v) => set("features.keyStrokes", v)} showAdvancedColumn />
-                <FeatureRow label="Real Time Track" value={settings.features.realTimeTrack} onChange={(v) => set("features.realTimeTrack", v)} showAdvancedColumn />
-                <FeatureRow label="Web Used" value={settings.features.webUsed} onChange={(v) => set("features.webUsed", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
-                <FeatureRow label="Screenshots" value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
-                <FeatureRow label="Screen Recording" value={settings.features.screenRecording} onChange={(v) => set("features.screenRecording", v)} showAdvancedColumn />
-                <FeatureRow label="Screen Recording With Voice" value={settings.features.screenRecordingWithVoice} onChange={(v) => set("features.screenRecordingWithVoice", v)} infoIcon showAdvancedColumn />
-                <FeatureRow label="File Upload Detection" value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
-                <FeatureRow label="File Upload Blocking" value={settings.features.fileUploadBlocking} onChange={(v) => set("features.fileUploadBlocking", v)} showAdvancedColumn />
-                <FeatureRow label="Print Blocking" value={settings.features.printBlocking} onChange={(v) => set("features.printBlocking", v)} showAdvancedColumn />
-                <FeatureRow label="Print Detection" value={settings.features.printDetection} onChange={(v) => set("features.printDetection", v)} showAdvancedColumn />
-                <FeatureRow label="Manual Clock In and Clock Out" value={settings.features.manualClockInOut} onChange={(v) => set("features.manualClockInOut", v)} showAdvancedColumn />
-                <FeatureRow label="USB Blocking" value={settings.features.usbBlocking} onChange={(v) => set("features.usbBlocking", v)} showAdvancedColumn />
-                <FeatureRow label="Attendance Override" value={settings.features.attendanceOverride} onChange={(v) => set("features.attendanceOverride", v)} showAdvancedColumn />
-                <FeatureRow label="System Lock" value={settings.features.systemLock} onChange={(v) => set("features.systemLock", v)} showAdvancedColumn />
-                <FeatureRow label="Geo Location Logs" value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
-                <FeatureRow label="Screen Casting" value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
-                <FeatureRow label="Webcam Cast" value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_key_strokes")} value={settings.features.keyStrokes} onChange={(v) => set("features.keyStrokes", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_real_time_track")} value={settings.features.realTimeTrack} onChange={(v) => set("features.realTimeTrack", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_web_used")} value={settings.features.webUsed} onChange={(v) => set("features.webUsed", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
+                <FeatureRow label={t("track_screenshots")} value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
+                <FeatureRow label={t("track_screen_recording")} value={settings.features.screenRecording} onChange={(v) => set("features.screenRecording", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_screen_recording_with_voice")} value={settings.features.screenRecordingWithVoice} onChange={(v) => set("features.screenRecordingWithVoice", v)} infoIcon showAdvancedColumn />
+                <FeatureRow label={t("track_file_upload_detection")} value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_file_upload_blocking")} value={settings.features.fileUploadBlocking} onChange={(v) => set("features.fileUploadBlocking", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_print_blocking")} value={settings.features.printBlocking} onChange={(v) => set("features.printBlocking", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_print_detection")} value={settings.features.printDetection} onChange={(v) => set("features.printDetection", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_manual_clock_in_and_out")} value={settings.features.manualClockInOut} onChange={(v) => set("features.manualClockInOut", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_usb_blocking")} value={settings.features.usbBlocking} onChange={(v) => set("features.usbBlocking", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_attendance_override")} value={settings.features.attendanceOverride} onChange={(v) => set("features.attendanceOverride", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_system_lock")} value={settings.features.systemLock} onChange={(v) => set("features.systemLock", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_geo_location_logs")} value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_screen_casting")} value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
+                <FeatureRow label={t("track_webcam_cast")} value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
               </div>
               {advancedPanel && (
                 <div className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center" onClick={() => setAdvancedPanel(null)}>
                   <div className="bg-white rounded-2xl shadow-2xl w-[min(640px,92vw)] max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                      <h3 className="text-[15px] font-bold text-gray-800">{advancedPanel}: Edit Settings</h3>
+                      <h3 className="text-[15px] font-bold text-gray-800">{advancedPanel}: {t("track_edit_settings")}</h3>
                       <button onClick={() => setAdvancedPanel(null)} className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600"><X size={16} /></button>
                     </div>
                     <div className="px-6 py-5 space-y-5">
-                      {advancedPanel === "Web Used" && (
+                      {advancedPanel === t("track_web_used") && (
                         <>
                           <div className="space-y-1.5">
-                            <label className="text-[12px] font-bold text-gray-700">Block Websites</label>
+                            <label className="text-[12px] font-bold text-gray-700">{t("track_block_websites")}</label>
                             <TagInput
                               value={settings.tracking?.domain?.websiteBlockList ?? []}
                               onChange={(v) => set("tracking.domain.websiteBlockList", v)}
-                              placeholder="Type website URL and press Enter"
+                              placeholder={t("track_type_website_url")}
                             />
-                            <p className="text-[10px] text-gray-400">Add website URLs to block for this employee</p>
+                            <p className="text-[10px] text-gray-400">{t("track_add_website_urls_block")}</p>
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[12px] font-bold text-gray-700">Block Applications</label>
+                            <label className="text-[12px] font-bold text-gray-700">{t("track_block_applications")}</label>
                             <TagInput
                               value={settings.tracking?.domain?.appBlockList ?? []}
                               onChange={(v) => set("tracking.domain.appBlockList", v)}
-                              placeholder="Type application name and press Enter"
+                              placeholder={t("track_type_app_name")}
                             />
-                            <p className="text-[10px] text-gray-400">Add application names to block for this employee</p>
+                            <p className="text-[10px] text-gray-400">{t("track_add_app_names_block")}</p>
                           </div>
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={settings.disableAllWebsites} onChange={(e) => set("disableAllWebsites", e.target.checked)} className="w-4 h-4 rounded accent-blue-500" />
-                            <span className="text-[12px] font-medium text-gray-700">Disable access to all websites</span>
+                            <span className="text-[12px] font-medium text-gray-700">{t("track_disable_all_websites")}</span>
                           </label>
                           {settings.disableAllWebsites && (
                             <div className="space-y-1.5">
-                              <label className="text-[12px] font-bold text-gray-700">Exclude Websites</label>
+                              <label className="text-[12px] font-bold text-gray-700">{t("track_exclude_websites")}</label>
                               <TagInput
                                 value={settings.tracking?.domain?.excludeWebsiteList ?? []}
                                 onChange={(v) => set("tracking.domain.excludeWebsiteList", v)}
-                                placeholder="Type website URL to exclude and press Enter"
+                                placeholder={t("track_type_website_exclude")}
                               />
                             </div>
                           )}
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={settings.loginFromOtherSystem} onChange={(e) => set("loginFromOtherSystem", e.target.checked)} className="w-4 h-4 rounded accent-blue-500" />
-                            <span className="text-[12px] font-medium text-gray-700">Allow login from other system</span>
+                            <span className="text-[12px] font-medium text-gray-700">{t("track_allow_login_other_system")}</span>
                           </label>
                         </>
                       )}
-                      {advancedPanel === "Screenshots" && (
+                      {advancedPanel === t("track_screenshots") && (
                         <div className="space-y-1.5">
-                          <label className="text-[12px] font-bold text-gray-700">Enable Screen Recording on Website Visit</label>
+                          <label className="text-[12px] font-bold text-gray-700">{t("track_enable_screen_record_visit")}</label>
                           <TagInput
                             value={settings.screenRecordWebsites ?? []}
                             onChange={(v) => set("screenRecordWebsites", v)}
-                            placeholder="Type website URL and press Enter"
+                            placeholder={t("track_type_website_url")}
                           />
-                          <p className="text-[10px] text-gray-400">Screen recording will start when the employee visits these websites</p>
+                          <p className="text-[10px] text-gray-400">{t("track_screen_record_visit_desc")}</p>
                         </div>
                       )}
                       {advMsg.text && (
@@ -464,9 +469,9 @@ export default function TrackEmp() {
                     <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
                       <Button onClick={handleAdvanceSave} disabled={advSaving} className="h-9 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold gap-2">
                         {advSaving && <Loader2 size={13} className="animate-spin" />}
-                        Save
+                        {t("save")}
                       </Button>
-                      <Button variant="outline" onClick={() => { setAdvancedPanel(null); setAdvMsg({ type: "", text: "" }); }} className="h-9 px-5 rounded-lg text-[12px] font-semibold">Cancel</Button>
+                      <Button variant="outline" onClick={() => { setAdvancedPanel(null); setAdvMsg({ type: "", text: "" }); }} className="h-9 px-5 rounded-lg text-[12px] font-semibold">{t("cancel")}</Button>
                     </div>
                   </div>
                 </div>
@@ -475,22 +480,22 @@ export default function TrackEmp() {
 
             <div className="space-y-4">
               {/* DLP */}
-              <Section title="DLP Features" icon={<Shield size={14} className="text-orange-400" />}>
-                <FeatureRow label="Bluetooth Detection" value={settings.dlp.bluetoothDetection} onChange={(v) => set("dlp.bluetoothDetection", v)} />
-                <FeatureRow label="Bluetooth Blocking" value={settings.dlp.bluetoothBlocking} onChange={(v) => set("dlp.bluetoothBlocking", v)} />
-                <FeatureRow label="Clipboard Detection" value={settings.dlp.clipboardDetection} onChange={(v) => set("dlp.clipboardDetection", v)} />
-                <FeatureRow label="Clipboard Blocking" value={settings.dlp.clipboardBlocking} onChange={(v) => set("dlp.clipboardBlocking", v)} />
+              <Section title={t("track_dlp_features")} icon={<Shield size={14} className="text-orange-400" />}>
+                <FeatureRow label={t("track_bluetooth_detection")} value={settings.dlp.bluetoothDetection} onChange={(v) => set("dlp.bluetoothDetection", v)} />
+                <FeatureRow label={t("track_bluetooth_blocking")} value={settings.dlp.bluetoothBlocking} onChange={(v) => set("dlp.bluetoothBlocking", v)} />
+                <FeatureRow label={t("track_clipboard_detection")} value={settings.dlp.clipboardDetection} onChange={(v) => set("dlp.clipboardDetection", v)} />
+                <FeatureRow label={t("track_clipboard_blocking")} value={settings.dlp.clipboardBlocking} onChange={(v) => set("dlp.clipboardBlocking", v)} />
               </Section>
 
               {/* Screenshots */}
-              <Section title="Screenshots" icon={<Camera size={14} className="text-blue-400" />}>
+              <Section title={t("track_screenshots_section")} icon={<Camera size={14} className="text-blue-400" />}>
                 <p className="text-[11px] text-gray-400 mb-3 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-800 inline-block" />
-                  Set up your preferred screenshot frequency and record video quality.
+                  {t("track_screenshot_frequency_desc")}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-gray-500">Screenshots Frequency</label>
+                    <label className="text-[11px] font-semibold text-gray-500">{t("track_screenshots_frequency")}</label>
                     <CustomSelect
                       placeholder="Select"
                       items={ssOptions.length ? ssOptions : [{ label: "2 per hour", value: "2" }]}
@@ -500,22 +505,22 @@ export default function TrackEmp() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-gray-500">Video Quality</label>
+                    <label className="text-[11px] font-semibold text-gray-500">{t("track_video_quality")}</label>
                     <CustomSelect placeholder="Select" items={[
-                      { label: "High Quality", value: "1" }, { label: "Low Quality", value: "2" }, { label: "Ultra Low", value: "3" },
+                      { label: t("track_high_quality"), value: "1" }, { label: t("track_low_quality"), value: "2" }, { label: t("track_ultra_low"), value: "3" },
                     ]} selected={settings.videoQuality} onChange={(v) => set("videoQuality", v)} width />
                   </div>
                 </div>
               </Section>
 
               {/* Agent Automatic Update */}
-              <Section title="Agent Automatic Update" icon={<Cpu size={14} className="text-emerald-500" />}>
+              <Section title={t("track_agent_automatic_update")} icon={<Cpu size={14} className="text-emerald-500" />}>
                 <p className="text-[12px] text-gray-400 mb-3 leading-relaxed">
                   <Info size={10} className="inline text-gray-400 mr-1 -mt-0.5" />
-                  Update your endpoint agents manually or automatically.
+                  {t("track_agent_update_desc")}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-gray-700">Enable Automatic Update</span>
+                  <span className="text-[12px] font-semibold text-gray-700">{t("track_enable_automatic_update")}</span>
                   <Toggle checked={settings.autoUpdate} onChange={(v) => set("autoUpdate", v)} />
                 </div>
               </Section>
@@ -523,34 +528,34 @@ export default function TrackEmp() {
           </div>
 
           {/* Work Hours Billing */}
-          <Section title="Work Hours Billing" icon={<DollarSign size={14} className="text-emerald-500" />}>
+          <Section title={t("track_work_hours_billing")} icon={<DollarSign size={14} className="text-emerald-500" />}>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-semibold text-gray-700">Enable Work Hours Billing</span>
+              <span className="text-[12px] font-semibold text-gray-700">{t("track_enable_work_hours_billing")}</span>
               <Toggle checked={settings.billingEnabled} onChange={(v) => set("billingEnabled", v)} />
             </div>
             {settings.billingEnabled && (
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">Billing Based On</label>
+                  <label className="text-[11px] font-semibold text-gray-500">{t("track_billing_based_on")}</label>
                   <CustomSelect placeholder="Select" items={[
-                    { label: "Office Hours", value: "office_hours" }, { label: "Active Hours", value: "active_hours" },
-                    { label: "Total Hours", value: "total_hours" }, { label: "Productive Hours", value: "productive_hours" },
+                    { label: t("track_office_hours"), value: "office_hours" }, { label: t("track_active_hours"), value: "active_hours" },
+                    { label: t("track_total_hours"), value: "total_hours" }, { label: t("track_productive_hours"), value: "productive_hours" },
                   ]} selected={settings.billingBasedOn} onChange={(v) => set("billingBasedOn", v)} width />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">Amount per Hours</label>
+                  <label className="text-[11px] font-semibold text-gray-500">{t("track_amount_per_hours")}</label>
                   <Input type="number" value={settings.amountPerHour} onChange={(e) => set("amountPerHour", e.target.value)} className="h-10 rounded-lg border-slate-200 text-[13px]" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">Currency</label>
+                  <label className="text-[11px] font-semibold text-gray-500">{t("track_currency")}</label>
                   <CustomSelect placeholder="Select" items={[
                     { label: "INR ₹", value: "INR" }, { label: "USD $", value: "USD" }, { label: "EUR €", value: "EUR" },
                   ]} selected={settings.currency} onChange={(v) => set("currency", v)} width />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">Invoice Duration</label>
+                  <label className="text-[11px] font-semibold text-gray-500">{t("track_invoice_duration")}</label>
                   <CustomSelect placeholder="Select" items={[
-                    { label: "Weekly", value: "weekly" }, { label: "Bi-Weekly", value: "biweekly" }, { label: "Monthly", value: "monthly" },
+                    { label: t("track_weekly"), value: "weekly" }, { label: t("track_bi_weekly"), value: "biweekly" }, { label: t("track_monthly"), value: "monthly" },
                   ]} selected={settings.invoiceDuration} onChange={(v) => set("invoiceDuration", v)} width />
                 </div>
               </div>
@@ -562,18 +567,18 @@ export default function TrackEmp() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="space-y-1.5">
                 <label className="text-[12px] font-extrabold text-red-500 flex items-center gap-1">
-                  Break Time <Info size={11} className="text-red-300" />
+                  {t("track_break_time")} <Info size={11} className="text-red-300" />
                 </label>
                 <div className="rounded-xl border-2 border-red-200 bg-red-50 overflow-hidden">
                   <CustomSelect placeholder="Select" items={breakOptions.length ? breakOptions : [
-                    { label: "No Break Time", value: "0" }, { label: "30 Min", value: "30" },
+                    { label: t("track_no_break_time"), value: "0" }, { label: "30 Min", value: "30" },
                     { label: "60 Min", value: "60" },
                   ]} selected={settings.breakInMinute} onChange={(v) => set("breakInMinute", v)} width />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[12px] font-extrabold text-orange-500 flex items-center gap-1">
-                  Idle Time <Info size={11} className="text-orange-300" />
+                  {t("track_idle_time")} <Info size={11} className="text-orange-300" />
                 </label>
                 <div className="rounded-xl border-2 border-orange-200 bg-orange-50 overflow-hidden">
                   <CustomSelect
@@ -592,7 +597,7 @@ export default function TrackEmp() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                  Idle Time for Timesheets <Info size={11} className="text-gray-400" /> ( MM:SS )
+                  {t("track_idle_time_timesheets")} <Info size={11} className="text-gray-400" /> ( MM:SS )
                 </label>
                 <Input type="text" placeholder="00:00" value={settings.timesheetIdleTime} onChange={(e) => set("timesheetIdleTime", e.target.value)} className="h-10 rounded-lg border-slate-200 text-[13px]" />
               </div>
@@ -601,7 +606,7 @@ export default function TrackEmp() {
             {/* Tracking Scenario */}
             <div className="mt-5 space-y-2">
               <label className="text-[11px] font-semibold text-gray-500 flex items-center gap-1">
-                Tracking Scenario <Info size={11} className="text-gray-400" />
+                {t("track_tracking_scenario")} <Info size={11} className="text-gray-400" />
               </label>
               <div className="bg-slate-100 rounded-full p-1 flex flex-wrap">
                 {SCENARIOS.map((s) => (
@@ -613,7 +618,7 @@ export default function TrackEmp() {
                     }`}
                   >
                     <input type="radio" name="scenario" checked={trackingScenario === s.key} onChange={() => setTrackingScenario(s.key)} className="w-3 h-3 accent-blue-500" />
-                    {s.label}
+                    {t(s.labelKey)}
                   </button>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -27,6 +28,7 @@ const getDefaultDates = () => {
 };
 
 export default function DeletedUsersModal({ isOpen, onClose }) {
+  const { t } = useTranslation();
   const defaults = getDefaultDates();
   const [startDate, setStartDate] = useState(defaults.start);
   const [endDate, setEndDate] = useState(defaults.end);
@@ -73,7 +75,7 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
 
   const handleCSV = () => {
     if (!filtered.length) return;
-    const headers = ["Name", "Email", "Computer Name", "Deleted By", "Deleted At"];
+    const headers = [t("emp_name"), t("emp_email_id"), t("emp_computer_name"), t("emp_deleted_by"), t("emp_deleted_at")];
     const rows = filtered.map((emp) => [
       emp.full_name || "-",
       emp.email || "-",
@@ -100,8 +102,8 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Deleted User History</h2>
-              <p className="text-sm text-gray-400 mt-1">View history of removed employees with deletion details.</p>
+              <h2 className="text-xl font-bold text-gray-800">{t("emp_deleted_user_history")}</h2>
+              <p className="text-sm text-gray-400 mt-1">{t("emp_view_removed_history")}</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <X className="w-5 h-5 text-gray-500" />
@@ -112,7 +114,7 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
 
           {/* Date Range Filter */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <label className="text-xs font-medium text-gray-500">Select Date Range :</label>
+            <label className="text-xs font-medium text-gray-500">{t("emp_select_date_range")} :</label>
             <DateRangeCalendar
               startDate={startDate}
               endDate={endDate}
@@ -124,7 +126,7 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
           {/* Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Show</span>
+              <span>{t("show")}</span>
               <select
                 value={pageSize}
                 onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
@@ -135,13 +137,13 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
                 <option value={50}>50</option>
                 <option value={100}>100</option>
               </select>
-              <span>Entries</span>
+              <span>{t("entries")}</span>
             </div>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t("search")}
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setCurrentPage(1); }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-100 bg-gray-50/50"
@@ -154,21 +156,21 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
             <Table className="w-full min-w-[700px] text-sm text-center border-collapse">
               <TableHeader className="bg-rose-50 sticky top-0 z-10">
                 <TableRow className="border-none">
-                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">Name</TableHead>
-                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">Email</TableHead>
-                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">Computer Name</TableHead>
-                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">Deleted By</TableHead>
-                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">Deleted At</TableHead>
+                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">{t("emp_name")}</TableHead>
+                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">{t("emp_email_id")}</TableHead>
+                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">{t("emp_computer_name")}</TableHead>
+                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">{t("emp_deleted_by")}</TableHead>
+                  <TableHead className="py-3 px-4 text-center font-semibold text-rose-700">{t("emp_deleted_at")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-gray-400">Loading...</TableCell>
+                    <TableCell colSpan={5} className="py-10 text-center text-gray-400">{t("emp_loading")}</TableCell>
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-gray-400">No deleted users found.</TableCell>
+                    <TableCell colSpan={5} className="py-10 text-center text-gray-400">{t("emp_no_deleted_users")}</TableCell>
                   </TableRow>
                 ) : pageRows.map((emp, idx) => (
                   <TableRow key={emp.id ?? idx} className="border-b border-dashed border-gray-200 last:border-0 hover:bg-rose-50/30 transition-colors">
@@ -188,8 +190,8 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
           {/* Pagination + Footer */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
             <span className="text-sm text-gray-500 font-medium">
-              Showing {filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1} to{" "}
-              {Math.min(safePage * pageSize, filtered.length)} of {filtered.length}
+              {t("emp_showing")} {filtered.length === 0 ? 0 : (safePage - 1) * pageSize + 1} {t("to")}{" "}
+              {Math.min(safePage * pageSize, filtered.length)} {t("of")} {filtered.length}
             </span>
             <PaginationComponent currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </div>
@@ -200,13 +202,13 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
               disabled={!filtered.length}
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FileSpreadsheet className="w-4 h-4" /> Generate CSV
+              <FileSpreadsheet className="w-4 h-4" /> {t("emp_generate_csv")}
             </button>
             <button
               onClick={onClose}
               className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors"
             >
-              Close
+              {t("close")}
             </button>
           </div>
         </div>

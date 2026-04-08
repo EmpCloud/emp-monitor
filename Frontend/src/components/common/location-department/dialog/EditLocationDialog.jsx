@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,8 @@ import {
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 import { TIMEZONES, validateEditLocationForm } from "@/page/protected/admin/location-department/service";
 
-const EditLocationDialog = ({ open, onOpenChange }) => {
+const EditLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const saving = useLocationDepartmentStore((s) => s.saving);
     const editLocationData = useLocationDepartmentStore((s) => s.editLocationData);
     const saveEditLocation = useLocationDepartmentStore((s) => s.saveEditLocation);
@@ -74,7 +76,7 @@ const EditLocationDialog = ({ open, onOpenChange }) => {
                             Edit Location
                         </DialogTitle>
                         <DialogDescription className="text-emerald-100 text-xs mt-1">
-                            Update the location name and timezone
+                            {t("locDept.updateLocationDesc")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -88,13 +90,13 @@ const EditLocationDialog = ({ open, onOpenChange }) => {
 
                     {/* Timezone */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Timezone *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.timezone")} *</label>
                         <select
                             value={selectedTimezone}
                             onChange={(e) => { setSelectedTimezone(e.target.value); setFormError(""); }}
                             className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         >
-                            <option value="">Select Timezone</option>
+                            <option value="">{t("locDept.selectTimezone")}</option>
                             {TIMEZONES.map((tz) => (
                                 <option key={tz.zone} value={tz.zone}>{tz.name}</option>
                             ))}
@@ -103,11 +105,11 @@ const EditLocationDialog = ({ open, onOpenChange }) => {
 
                     {/* Location Name */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Location Name *</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1.5 block">{t("locDept.locationName")} *</label>
                         <Input
                             value={locName}
                             onChange={(e) => { setLocName(e.target.value); setFormError(""); }}
-                            placeholder="Type location name"
+                            placeholder={t("locDept.typeLocationName")}
                             className="rounded-lg"
                         />
                     </div>

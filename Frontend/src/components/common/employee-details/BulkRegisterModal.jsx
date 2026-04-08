@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { bulkRegisterEmployees } from "@/page/protected/admin/employee-details/service";
 
 export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
+  const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null); // API response summary
@@ -29,7 +31,7 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
       });
       onSuccess?.();
     } else {
-      setResult({ type: "error", msg: res?.msg || "Bulk registration failed." });
+      setResult({ type: "error", msg: res?.msg || t("emp_bulk_registration_failed") });
     }
   };
 
@@ -43,7 +45,7 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
       <DialogContent className="max-w-[95vw] sm:max-w-[550px] rounded-3xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
         <div className="relative px-7 py-5 flex items-center justify-between"
           style={{ background: "linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #7c3aed 100%)" }}>
-          <h2 className="text-white text-xl font-bold tracking-tight">Bulk Register</h2>
+          <h2 className="text-white text-xl font-bold tracking-tight">{t("emp_bulk_register")}</h2>
           <DialogClose className="text-white hover:text-white/80 transition-colors rounded-sm focus:outline-none">
             <X className="h-5 w-5" />
           </DialogClose>
@@ -55,19 +57,19 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
               onChange={handleFileChange} className="hidden" />
             <div className="flex-1 px-5 py-3 text-gray-400 text-[15px] truncate cursor-default"
               onClick={() => fileInputRef.current?.click()}>
-              {file ? file.name : "Choose file\u2026"}
+              {file ? file.name : t("emp_choose_file")}
             </div>
             <button type="button" onClick={() => fileInputRef.current?.click()}
               className="px-6 py-3 bg-gray-200 text-gray-500 text-[15px] font-medium hover:bg-gray-300 transition-colors">
-              Browse
+              {t("emp_browse")}
             </button>
           </div>
 
           <p className="text-[14px] text-gray-600 leading-relaxed">
-            Note: Upload file only in <strong>.xlsx</strong> format.{" "}
+            {t("emp_upload_note_xlsx")}{" "}
             <a href="/src/assets/registration-excel/Employee Registration.xlsx" download="Employee Registration.xlsx" className="text-blue-600 font-bold hover:underline">
-              Download
-            </a>{" "}sample template.
+              {t("emp_download")}
+            </a>{" "}{t("emp_sample_template")}.
           </p>
 
           {result && (
@@ -75,11 +77,11 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
               {result.type === "success" ? (
                 <>
                   <p className="flex items-center gap-2 text-green-700 font-semibold">
-                    <CheckCircle2 size={15} /> {result.added} employee(s) registered.
+                    <CheckCircle2 size={15} /> {t("emp_count_registered", { count: result.added })}
                   </p>
-                  {result.duplicateEmails.length > 0 && <p className="text-amber-600">{result.duplicateEmails.length} duplicate email(s) skipped.</p>}
-                  {result.duplicateCodes.length > 0 && <p className="text-amber-600">{result.duplicateCodes.length} duplicate code(s) skipped.</p>}
-                  {result.failed.length > 0 && <p className="text-red-500">{result.failed.length} row(s) failed validation.</p>}
+                  {result.duplicateEmails.length > 0 && <p className="text-amber-600">{t("emp_duplicate_emails_skipped", { count: result.duplicateEmails.length })}</p>}
+                  {result.duplicateCodes.length > 0 && <p className="text-amber-600">{t("emp_duplicate_codes_skipped", { count: result.duplicateCodes.length })}</p>}
+                  {result.failed.length > 0 && <p className="text-red-500">{t("emp_rows_failed_validation", { count: result.failed.length })}</p>}
                 </>
               ) : (
                 <p className="flex items-center gap-2 text-red-600 font-semibold">
@@ -94,12 +96,12 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
 
         <div className="px-7 py-5 flex items-center justify-end gap-3">
           <DialogClose asChild>
-            <Button className="h-11 px-8 rounded-full bg-purple-400 hover:bg-purple-500 text-white text-[15px] font-semibold">No</Button>
+            <Button className="h-11 px-8 rounded-full bg-purple-400 hover:bg-purple-500 text-white text-[15px] font-semibold">{t("no")}</Button>
           </DialogClose>
           <Button onClick={handleSubmit} disabled={!file || submitting}
             className="h-11 px-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[15px] font-semibold gap-2">
             {submitting && <Loader2 size={14} className="animate-spin" />}
-            Upload
+            {t("upload")}
           </Button>
         </div>
       </DialogContent>

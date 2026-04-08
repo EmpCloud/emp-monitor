@@ -1,26 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { X, Info, Download, ArrowLeft, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import agentImg from "@/assets/agent.png";
 import linuxIcon from "@/assets/linux.png";
 import apiService from "@/services/api.service";
-
-const AGENT_TYPES = [
-  {
-    id: "stealth",
-    mode: "office",
-    label: "Stealth Agent",
-    description:
-      "Once installed in the system, the agent gets auto-registered in the dashboard and data will be visible automatically.",
-  },
-  {
-    id: "revealed",
-    mode: "personal",
-    label: "Revealed Agent",
-    description:
-      "Once installed, you need to register an employee with email and password in the dashboard, then use the same credentials to login to the agent.",
-  },
-];
 
 const WindowsIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -51,31 +35,8 @@ const LinuxIcon = ({ size = 18 }) => (
   />
 );
 
-const PLATFORMS = [
-  { id: "windows", label: "Windows", icon: WindowsIcon },
-  { id: "mac", label: "Mac", icon: MacIcon },
-  { id: "linux", label: "Linux", icon: LinuxIcon },
-];
-
-const TYPE_TO_PLATFORM = {
-  win64: "windows",
-  win86: "windows",
-  mac: "mac",
-  "mac-intel": "mac",
-  "mac-arm": "mac",
-  linux: "linux",
-};
-
-const TYPE_LABELS = {
-  win64: "Windows 64-bit",
-  win86: "Windows 32-bit",
-  mac: "Mac",
-  "mac-intel": "Mac (Intel)",
-  "mac-arm": "Mac (Apple Silicon)",
-  linux: "Linux",
-};
-
 const AgentDownloadOverlay = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState("select");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState(null);
@@ -84,6 +45,45 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
   const [error, setError] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
+  const AGENT_TYPES = [
+    {
+      id: "stealth",
+      mode: "office",
+      label: t("agentStealthLabel"),
+      description: t("agentStealthDescription"),
+    },
+    {
+      id: "revealed",
+      mode: "personal",
+      label: t("agentRevealedLabel"),
+      description: t("agentRevealedDescription"),
+    },
+  ];
+
+  const PLATFORMS = [
+    { id: "windows", label: t("agentPlatformWindows"), icon: WindowsIcon },
+    { id: "mac", label: t("agentPlatformMac"), icon: MacIcon },
+    { id: "linux", label: t("agentPlatformLinux"), icon: LinuxIcon },
+  ];
+
+  const TYPE_LABELS = {
+    win64: t("agentTypeWin64"),
+    win86: t("agentTypeWin32"),
+    mac: t("agentPlatformMac"),
+    "mac-intel": t("agentTypeMacIntel"),
+    "mac-arm": t("agentTypeMacAppleSilicon"),
+    linux: t("agentPlatformLinux"),
+  };
+
+  const TYPE_TO_PLATFORM = {
+    win64: "windows",
+    win86: "windows",
+    mac: "mac",
+    "mac-intel": "mac",
+    "mac-arm": "mac",
+    linux: "linux",
+  };
+
   const fetchBuilds = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -91,11 +91,11 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
       const res = await apiService.apiInstance.get("/organization-build/build");
       setBuilds(res.data?.data?.builds || []);
     } catch (err) {
-      setError("Failed to fetch available downloads. Please try again.");
+      setError(t("agentFetchError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (open) {
@@ -136,7 +136,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
       link.click();
       document.body.removeChild(link);
     } catch {
-      setError("Download failed. Please try again.");
+      setError(t("agentDownloadError"));
     } finally {
       setDownloadingId(null);
     }
@@ -189,15 +189,15 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
               >
                 <X size={18} />
               </button>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Agent Downloads</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">{t("agentDownloadsHeading")}</h2>
               <p className="text-sm text-slate-500 mb-8">
-                Which kind of installation process do you prefer?
+                {t("agentInstallationPreference")}
               </p>
 
               {loading && (
                 <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
                   <Loader2 size={16} className="animate-spin" />
-                  Loading available builds...
+                  {t("agentLoadingBuilds")}
                 </div>
               )}
 
@@ -256,7 +256,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
                   >
                     <ArrowLeft size={18} />
                   </button>
-                  <h2 className="text-2xl font-bold text-slate-800">Agent Downloads</h2>
+                  <h2 className="text-2xl font-bold text-slate-800">{t("agentDownloadsHeading")}</h2>
                 </div>
               </div>
 
@@ -277,7 +277,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
               )}
 
               {/* Platform tabs */}
-              <p className="text-sm text-slate-500 mb-3">Select your platform</p>
+              <p className="text-sm text-slate-500 mb-3">{t("agentSelectPlatform")}</p>
               <div className="flex gap-2 mb-6">
                 {availablePlatforms.length > 0 ? (
                   availablePlatforms.map(({ id, label, icon: Icon }) => (
@@ -296,7 +296,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
                   ))
                 ) : (
                   <p className="text-sm text-slate-400">
-                    No builds available for this agent type.
+                    {t("agentNoBuildsForType")}
                   </p>
                 )}
               </div>
@@ -333,7 +333,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
 
               {selectedPlatform && currentBuilds.length === 0 && (
                 <p className="text-sm text-slate-400">
-                  No builds available for this platform.
+                  {t("agentNoBuildsForPlatform")}
                 </p>
               )}
             </div>

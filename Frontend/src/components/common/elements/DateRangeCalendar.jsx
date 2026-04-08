@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -81,6 +82,7 @@ export default function DateRangeCalendar({
   maxDate,
   placeholder = "Select date range",
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => {
     const d = parse(startDate) || new Date();
@@ -261,14 +263,14 @@ export default function DateRangeCalendar({
           {/* Footer */}
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
             <p className="text-[10px] text-slate-400 leading-tight">
-              Double-tap to pick one date<br />or select a range.
+              {t("cal_double_tap_hint")}
             </p>
             <button
               type="button"
               onClick={handleReset}
               className="h-8 px-4 border border-slate-300 rounded-lg text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              Reset
+              {t("ts_reset")}
             </button>
           </div>
         </div>

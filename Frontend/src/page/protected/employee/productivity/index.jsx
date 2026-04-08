@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { BarChart3 } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import ProductivityTab    from "../../admin/employee-profile/ProductivityTab";
 
 export default function EmployeeProductivity() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeProductivity() {
           <BarChart3 size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">Productivity</h1>
-          <p className="text-xs text-[#A3AED0]">Detailed productivity metrics and trends</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("productivity")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_productivity_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

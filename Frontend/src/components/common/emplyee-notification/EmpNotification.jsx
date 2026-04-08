@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Download, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,18 +14,18 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-const LOCATIONS = [
-  { label: "Select Location", value: "all" },
+const getLocations = (t) => [
+  { label: t("notification.selectLocation"), value: "all" },
   { label: "default", value: "default" },
 ]
 
-const DEPARTMENTS = [
-  { label: "Select Department", value: "all" },
+const getDepartments = (t) => [
+  { label: t("notification.selectDepartment"), value: "all" },
   { label: "Default", value: "default" },
 ]
 
-const EMPLOYEES = [
-  { label: "Select Employee", value: "all" },
+const getEmployees = (t) => [
+  { label: t("notification.selectEmployee"), value: "all" },
   { label: "Rupes Dhru", value: "rupes" },
   { label: "Rakshaa R", value: "raksha" },
   { label: "Harish VS", value: "harish" },
@@ -69,6 +70,11 @@ const initialsFromName = (name = "") =>
     .toUpperCase()
 
 const EmpNotification = () => {
+  const { t } = useTranslation()
+  const LOCATIONS = getLocations(t)
+  const DEPARTMENTS = getDepartments(t)
+  const EMPLOYEES = getEmployees(t)
+
   const [location, setLocation] = useState("all")
   const [department, setDepartment] = useState("all")
   const [employee, setEmployee] = useState("all")
@@ -118,7 +124,7 @@ const EmpNotification = () => {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Notifications</span>
+            <span className="font-semibold">{t("notification.notifications")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
@@ -174,7 +180,7 @@ const EmpNotification = () => {
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -191,19 +197,19 @@ const EmpNotification = () => {
           <TableHeader>
             <TableRow className="bg-blue-50/80">
               <TableHead className="text-xs font-semibold text-slate-700">
-                Employee Name
+                {t("notification.employeeName")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Location
+                {t("location")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Department
+                {t("department")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Shift
+                {t("notification.shift")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Employee Code
+                {t("notification.employeeCode")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-white text-center bg-blue-300">
                 1 Thursday
@@ -249,13 +255,13 @@ const EmpNotification = () => {
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-4 mt-4">
         <p className="text-xs text-slate-500">
-          Showing{" "}
+          {t("notification.showing")}{" "}
           {filtered.length === 0
             ? 0
             : (Math.min(filtered.length, perPage) * (currentPage - 1) + 1)}
-          {" "}to{" "}
-          {Math.min(filtered.length, currentPage * perPage)} of{" "}
-          {filtered.length} entries
+          {" "}{t("notification.to")}{" "}
+          {Math.min(filtered.length, currentPage * perPage)} {t("notification.of")}{" "}
+          {filtered.length} {t("notification.entries")}
         </p>
 
         <PaginationComponent

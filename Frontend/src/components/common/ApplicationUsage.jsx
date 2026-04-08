@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -27,9 +28,11 @@ const fallbackData = {
 
 export default function AppUsageChart({
   data,
-  title = "Top 10 Application Usage",
+  title,
   report
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("topTenAppUsage");
   const chartRef = useRef(null);
   const rootRef = useRef(null);
   const seriesRef = useRef(null);
@@ -95,7 +98,7 @@ export default function AppUsageChart({
 
     root.container.children.push(
       am5.Label.new(root, {
-        text: "Application", // "Application\nUsage"
+        text: t("application"),
         fontSize: 13,
         fontWeight: "500",
         fill: am5.color(0x6b7280),
@@ -147,12 +150,12 @@ export default function AppUsageChart({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-slate-900 font-bold text-xl sm:text-2xl tracking-tight">
-            {title}
+            {resolvedTitle}
           </h2>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <p className="text-xs font-medium text-slate-400">
-              From 1–6 Dec, 2020
+              {t("fromDateRange")}
             </p>
           </div>
         </div>

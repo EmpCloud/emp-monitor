@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { NonAdminLogin, forgotPassword } from "./service";
 import useNonAdminSession from "@/sessions/useNonAdminSession";
 import useEmployeeSession from "@/sessions/employeeSession";
 import useAdminSession    from "@/sessions/adminSession";
+import { syncLanguageFromSession } from "@/i18n/syncLanguage";
 import userBgIllustration from "@/assets/user-bg.png";
 import "./style.css";
 import empLogo from "@/assets/emp.png";
@@ -26,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
    NonAdmin Login Component
    ======================================================================== */
 export const Login = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,10 +53,10 @@ export const Login = () => {
     const res = await forgotPassword(forgotEmail.trim());
     setForgotLoading(false);
     if (res?.code === 200) {
-      setForgotMsg({ type: "success", text: res.msg || "Password reset link sent to your email." });
+      setForgotMsg({ type: "success", text: res.msg || t("auth_reset_link_sent") });
       setForgotEmail("");
     } else {
-      setForgotMsg({ type: "error", text: res?.msg || res?.message || "Failed to send reset link." });
+      setForgotMsg({ type: "error", text: res?.msg || res?.message || t("auth_reset_link_failed") });
     }
   };
 
@@ -71,7 +74,7 @@ export const Login = () => {
       }
 
       if (!result?.data || result.code !== 200) {
-        setError(result.message || "Login failed");
+        setError(result.message || t("auth_login_failed"));
         return;
       }
 
@@ -80,6 +83,7 @@ export const Login = () => {
       // Managers / teamleads → non-admin session (dashboard TBD).
       // Mirror Laravel logic: route by role string, not boolean flags
       const role = (result.role || "").toLowerCase().replace(/\s+/g, "");
+      syncLanguageFromSession();
       if (role === "employee") {
         setEmployee(result);
         navigate("/employee/dashboard");
@@ -91,7 +95,7 @@ export const Login = () => {
         navigate("/non-admin/dashboard");
       }
     } catch (err) {
-      setError("Unexpected error during login.");
+      setError(t("auth_unexpected_error"));
       // eslint-disable-next-line no-console
       console.error(err);
     } finally {
@@ -141,7 +145,7 @@ export const Login = () => {
             {/* Title */}
             <div className="text-center mb-7">
               <h2 className="text-[20px] font-bold tracking-tight text-[#0f1e3a]">
-                Login to your Account
+                {t("auth_login_to_account")}
               </h2>
             </div>
 
@@ -161,7 +165,7 @@ export const Login = () => {
                   htmlFor="email"
                   className="text-[13px] font-semibold text-[#3a5a7a]"
                 >
-                  Email address
+                  {t("auth_email_address")}
                 </Label>
 
                 <Input
@@ -172,7 +176,7 @@ export const Login = () => {
                   onFocus={() => setFocusedField("email")}
                   onBlur={() => setFocusedField(null)}
                   required
-                  placeholder="Enter Email address"
+                  placeholder={t("auth_enter_email_address")}
                   className={`
                   emp-input px-4 h-11 rounded-xl text-sm text-[#1a2a4a]
                   bg-white/80 placeholder:text-[#aac4d8] border-[1.5px]
@@ -188,7 +192,7 @@ export const Login = () => {
                   htmlFor="password"
                   className="text-[13px] font-semibold text-[#3a5a7a]"
                 >
-                  Password
+                  {t("password")}
                 </Label>
 
                 <div className="relative">
@@ -200,7 +204,7 @@ export const Login = () => {
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
                     required
-                    placeholder="Enter Password"
+                    placeholder={t("auth_enter_password")}
                     className={`
                     emp-input px-4 pr-11 h-11 rounded-xl text-sm text-[#1a2a4a]
                     bg-white/80 placeholder:text-[#aac4d8] border-[1.5px]
@@ -216,7 +220,7 @@ export const Login = () => {
                     size="icon"
                     tabIndex={-1}
                     aria-label={
-                      showPassword ? "Hide password" : "Show password"
+                      showPassword ? t("auth_hide_password") : t("auth_show_password")
                     }
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8
@@ -237,7 +241,7 @@ export const Login = () => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded border-[#c8dde9] accent-[#2079FD] cursor-pointer"
                   />
-                  <span className="text-[13px] font-semibold text-[#3a5a7a]">Remember password</span>
+                  <span className="text-[13px] font-semibold text-[#3a5a7a]">{t("auth_remember_password")}</span>
                 </Label>
                 <Button
                   type="button"
@@ -247,7 +251,7 @@ export const Login = () => {
                   transition-opacity duration-200"
                   onClick={() => { setForgotEmail(""); setForgotMsg({ type: "", text: "" }); setForgotOpen(true); }}
                 >
-                  Forgot password?
+                  {t("auth_forgot_password")}
                 </Button>
               </div>
 
@@ -261,10 +265,10 @@ export const Login = () => {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <Loader2 size={17} className="animate-spin" />
-                      Logging in...
+                      {t("auth_logging_in")}
                     </span>
                   ) : (
-                    "Log in"
+                    t("auth_log_in")
                   )}
                 </Button>
               </div>
@@ -279,7 +283,7 @@ export const Login = () => {
                 hover:text-[#2079FD] hover:bg-transparent hover:underline"
                 onClick={() => navigate("/admin-login")}
               >
-                Admin Login?
+                {t("auth_admin_login_question")}
               </Button>
             </div>
           </div>
@@ -295,7 +299,7 @@ export const Login = () => {
             className="px-6 py-4 flex items-center justify-between"
             style={{ background: "linear-gradient(135deg, #2079FD 0%, #5CE1FD 100%)" }}
           >
-            <h2 className="text-white text-lg font-bold">Forgot Password :</h2>
+            <h2 className="text-white text-lg font-bold">{t("auth_forgot_password_title")}</h2>
             <DialogClose className="text-white hover:text-white/80 transition-colors focus:outline-none">
               <X className="h-5 w-5" />
             </DialogClose>
@@ -303,17 +307,17 @@ export const Login = () => {
 
           <div className="px-6 pt-6 pb-4 space-y-4">
             <Label className="text-[15px] font-semibold text-gray-800">
-              Email address
+              {t("auth_email_address")}
             </Label>
             <Input
               type="email"
-              placeholder="Enter email"
+              placeholder={t("auth_enter_email")}
               value={forgotEmail}
               onChange={(e) => setForgotEmail(e.target.value)}
               className="h-12 rounded-xl border-gray-300 text-sm px-4 placeholder:text-gray-400"
             />
             <p className="text-[13px] text-gray-500">
-              We'll never share your email with anyone else.
+              {t("auth_email_privacy")}
             </p>
             {forgotMsg.text && (
               <p className={`text-[13px] font-medium ${forgotMsg.type === "success" ? "text-green-600" : "text-red-500"}`}>
@@ -325,7 +329,7 @@ export const Login = () => {
           <div className="px-6 py-4 flex items-center justify-end gap-3">
             <DialogClose asChild>
               <Button className="h-10 px-6 rounded-full bg-gray-300 hover:bg-gray-400 text-gray-700 text-[14px] font-semibold shadow-none">
-                Close
+                {t("close")}
               </Button>
             </DialogClose>
             <Button
@@ -333,7 +337,7 @@ export const Login = () => {
               disabled={!forgotEmail.trim() || forgotLoading}
               className="h-10 px-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[14px] font-semibold disabled:opacity-50"
             >
-              {forgotLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Sending...</> : "Submit"}
+              {forgotLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> {t("auth_sending")}</> : t("submit")}
             </Button>
           </div>
         </DialogContent>

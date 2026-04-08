@@ -1,4 +1,5 @@
 import React from "react"
+import { useTranslation } from "react-i18next"
 import { Download } from "lucide-react"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
@@ -28,28 +29,29 @@ const InsightsFilter = ({
   onPageSizeChange = () => {},
   onDownloadCsv = () => {},
 }) => {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-wrap items-start justify-between gap-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-5">
         <div className="min-w-[220px]">
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Select Date
+            {t("insights_select_date")}
           </Label>
           <br />
           <DateRangeCalendar
             startDate={selectedDate}
             endDate={selectedDate}
             onChange={(start) => onSelectedDateChange(start)}
-            placeholder="Select date"
+            placeholder={t("insights.selectDate")}
           />
         </div>
 
         <div className="min-w-[220px]">
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Role
+            {t("emp_role")}
           </Label>
           <CustomSelect
-            placeholder="See all"
+            placeholder={t("insights.seeAll")}
             items={roles}
             selected={roleValue}
             onChange={onRoleChange}
@@ -59,10 +61,10 @@ const InsightsFilter = ({
 
         <div className="min-w-[220px]">
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Location
+            {t("location")}
           </Label>
           <CustomSelect
-            placeholder="See all"
+            placeholder={t("insights.seeAll")}
             items={locations}
             selected={locationValue}
             onChange={onLocationChange}
@@ -72,10 +74,10 @@ const InsightsFilter = ({
 
         <div className="min-w-[220px]">
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Department
+            {t("department")}
           </Label>
           <CustomSelect
-            placeholder="See all"
+            placeholder={t("insights.seeAll")}
             items={departments}
             selected={departmentValue}
             onChange={onDepartmentChange}
@@ -85,10 +87,10 @@ const InsightsFilter = ({
 
         <div className="min-w-[220px]">
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Employee
+            {t("employee")}
           </Label>
           <CustomSelect
-            placeholder="See All Employee"
+            placeholder={t("insights.seeAllEmployee")}
             items={employees}
             selected={employeeValue}
             onChange={onEmployeeChange}
@@ -105,7 +107,7 @@ const InsightsFilter = ({
             onClick={onDownloadCsv}
           >
             <Download className="mr-2 h-4 w-4" />
-            Download CSV File
+            {t("insights_download_csv")}
           </Button>
         </div>
       )}

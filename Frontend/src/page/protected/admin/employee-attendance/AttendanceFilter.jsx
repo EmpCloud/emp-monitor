@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useAttendanceStore } from "./attendanceStore";
 import EmpFilter from "@/components/common/employee-attendance/EmpFilter";
 
@@ -9,6 +10,7 @@ const MONTHS = [
 ];
 
 const AttendanceFilter = () => {
+  const { t } = useTranslation();
   const { locations, departments, shifts, filters, setFilter } =
     useAttendanceStore();
 
@@ -17,7 +19,7 @@ const AttendanceFilter = () => {
       months={MONTHS}
       locations={locations}
       departments={departments}
-      shifts={shifts.length ? shifts : [{ label: "All Shifts", value: "all" }]}
+      shifts={shifts.length ? shifts : [{ label: t("allShifts"), value: "all" }]}
       monthValue={filters.date}
       locationValue={filters.locationId}
       departmentValue={filters.departmentId}

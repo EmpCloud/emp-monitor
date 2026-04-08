@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 
 import Headers from "@/components/common/employee-realtime-insights/Headers"
 import SearchSection from "@/components/common/employee-realtime-insights/SearchSection"
@@ -8,6 +9,7 @@ import EmployeeCard from "@/components/common/employee-realtime-insights/Employe
 import { useRealtimeInsightsStore } from "./realtimeInsightsStore"
 
 const EmpRealtimeInsights = () => {
+  const { t } = useTranslation()
   const employees = useRealtimeInsightsStore((s) => s.employees)
   const loading = useRealtimeInsightsStore((s) => s.loading)
   const error = useRealtimeInsightsStore((s) => s.error)
@@ -122,7 +124,7 @@ const EmpRealtimeInsights = () => {
 
       {!filteredEmployees.length && !loading && (
         <div className="text-center text-slate-400 py-12 text-sm">
-          No employees found
+          {t("noEmployeesFound")}
         </div>
       )}
     </div>

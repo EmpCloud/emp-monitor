@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Info, Eye, Trash2, CheckCircle, XCircle, Plus } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
@@ -7,9 +8,7 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -22,18 +21,18 @@ import {
   fetchIdleAppWebData, fetchTotalOfflineTime, fetchReasons,
 } from "@/page/protected/admin/time-claim/service";
 
-const REQUEST_TYPE_OPTIONS = [
-  { key: "Idle", value: REQUEST_TYPES.IDLE },
-  { key: "Offline", value: REQUEST_TYPES.OFFLINE },
-  { key: "Break", value: REQUEST_TYPES.BREAK },
-  { key: "Attendance", value: REQUEST_TYPES.ATTENDANCE },
+const getRequestTypeOptions = (t) => [
+  { key: t("timeclaim.idle"), value: REQUEST_TYPES.IDLE },
+  { key: t("timeclaim.offline"), value: REQUEST_TYPES.OFFLINE },
+  { key: t("timeclaim.break"), value: REQUEST_TYPES.BREAK },
+  { key: t("timeclaim.attendance"), value: REQUEST_TYPES.ATTENDANCE },
 ];
 
-const STATUS_OPTIONS = [
-  { label: "All", value: "all" },
-  { label: "Pending", value: "0" },
-  { label: "Approved", value: "1" },
-  { label: "Declined", value: "2" },
+const getStatusOptions = (t) => [
+  { label: t("timeclaim.all"), value: "all" },
+  { label: t("timeclaim.pending"), value: "0" },
+  { label: t("timeclaim.approved"), value: "1" },
+  { label: t("timeclaim.declined"), value: "2" },
 ];
 
 const avatarColors = ["bg-blue-500", "bg-cyan-500", "bg-sky-500", "bg-amber-500", "bg-rose-500"];
@@ -54,6 +53,7 @@ const StatusBadge = ({ status }) => {
 // ─── View Request Modal ─────────────────────────────────────────────────────
 
 const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestType, isEmployee = false }) => {
+  const { t } = useTranslation();
   if (!row) return null;
 
   const isPending = row.status === 0;
@@ -63,47 +63,47 @@ const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestTyp
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>View Request</DialogTitle>
+          <DialogTitle>{t("timeclaim.viewRequest")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 text-sm">
           <div className="grid grid-cols-2 gap-3">
-            <div><span className="text-slate-500">Name:</span> <span className="font-medium">{row.name}</span></div>
-            <div><span className="text-slate-500">Date:</span> <span className="font-medium">{row.date}</span></div>
+            <div><span className="text-slate-500">{t("timeclaim.fullName")}:</span> <span className="font-medium">{row.name}</span></div>
+            <div><span className="text-slate-500">{t("timeclaim.date")}:</span> <span className="font-medium">{row.date}</span></div>
             {isIdle ? (
               <>
-                <div><span className="text-slate-500">Start Time:</span> <span className="font-medium">{row.startTime}</span></div>
-                <div><span className="text-slate-500">End Time:</span> <span className="font-medium">{row.endTime}</span></div>
+                <div><span className="text-slate-500">{t("timeclaim.startTime")}:</span> <span className="font-medium">{row.startTime}</span></div>
+                <div><span className="text-slate-500">{t("timeclaim.endTime")}:</span> <span className="font-medium">{row.endTime}</span></div>
               </>
             ) : requestType === REQUEST_TYPES.OFFLINE ? (
-              <div><span className="text-slate-500">Offline Time:</span> <span className="font-medium">{row.offlineTime}</span></div>
+              <div><span className="text-slate-500">{t("timeclaim.offlineTime")}:</span> <span className="font-medium">{row.offlineTime}</span></div>
             ) : (
               <>
-                <div><span className="text-slate-500">Start Time:</span> <span className="font-medium">{row.startTime}</span></div>
-                <div><span className="text-slate-500">End Time:</span> <span className="font-medium">{row.endTime}</span></div>
+                <div><span className="text-slate-500">{t("timeclaim.startTime")}:</span> <span className="font-medium">{row.startTime}</span></div>
+                <div><span className="text-slate-500">{t("timeclaim.endTime")}:</span> <span className="font-medium">{row.endTime}</span></div>
               </>
             )}
-            {row.computerName && <div><span className="text-slate-500">Computer:</span> <span className="font-medium">{row.computerName}</span></div>}
-            {row.taskName && <div><span className="text-slate-500">Task:</span> <span className="font-medium">{row.taskName}</span></div>}
+            {row.computerName && <div><span className="text-slate-500">{t("screenshotLogs.computer")}:</span> <span className="font-medium">{row.computerName}</span></div>}
+            {row.taskName && <div><span className="text-slate-500">{t("timeclaim.task")}:</span> <span className="font-medium">{row.taskName}</span></div>}
           </div>
           <div>
-            <span className="text-slate-500">Reason:</span>
+            <span className="text-slate-500">{t("timeclaim.reason")}:</span>
             <p className="mt-1 font-medium bg-slate-50 p-2 rounded">{row.reason}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-slate-500">Status:</span>
+            <span className="text-slate-500">{t("timeclaim.status")}:</span>
             <StatusBadge status={row.status} />
           </div>
-          <div><span className="text-slate-500">Approver:</span> <span className="font-medium">{row.approverName}</span></div>
+          <div><span className="text-slate-500">{t("timeclaim.approver")}:</span> <span className="font-medium">{row.approverName}</span></div>
 
           {isIdle && row.activities?.length > 0 && (
             <div>
-              <p className="text-slate-500 mb-1">Activities:</p>
+              <p className="text-slate-500 mb-1">{t("timeclaim.activities")}:</p>
               <div className="max-h-40 overflow-y-auto border rounded">
                 <table className="w-full text-xs">
                   <thead className="bg-slate-100">
                     <tr>
-                      <th className="px-2 py-1 text-left">App/URL</th>
-                      <th className="px-2 py-1 text-left">Status</th>
+                      <th className="px-2 py-1 text-left">{t("timeclaim.appUrl")}</th>
+                      <th className="px-2 py-1 text-left">{t("timeclaim.status")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -111,9 +111,9 @@ const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestTyp
                       <tr key={i} className="border-t">
                         <td className="px-2 py-1">{act.url || act.app?.name || "-"}</td>
                         <td className="px-2 py-1">
-                          {act.status === 1 ? <span className="text-green-600">Productive</span> :
-                            act.status === 2 ? <span className="text-red-600">Unproductive</span> :
-                              <span className="text-amber-600">Neutral</span>}
+                          {act.status === 1 ? <span className="text-green-600">{t("timeclaim.productive")}</span> :
+                            act.status === 2 ? <span className="text-red-600">{t("timeclaim.unproductive")}</span> :
+                              <span className="text-amber-600">{t("timeclaim.neutral")}</span>}
                         </td>
                       </tr>
                     ))}
@@ -126,10 +126,10 @@ const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestTyp
         {isPending && !isEmployee && (
           <DialogFooter className="gap-2">
             <Button onClick={() => onApprove(row)} className="bg-green-600 hover:bg-green-700 text-xs">
-              <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
+              <CheckCircle className="w-3.5 h-3.5 mr-1" /> {t("timeclaim.approve")}
             </Button>
             <Button onClick={() => onDecline(row)} variant="destructive" className="text-xs">
-              <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
+              <XCircle className="w-3.5 h-3.5 mr-1" /> {t("timeclaim.decline")}
             </Button>
           </DialogFooter>
         )}
@@ -140,54 +140,59 @@ const ViewRequestModal = ({ open, onClose, row, onApprove, onDecline, requestTyp
 
 // ─── Delete Confirmation Modal ──────────────────────────────────────────────
 
-const DeleteModal = ({ open, onClose, onConfirm }) => (
+const DeleteModal = ({ open, onClose, onConfirm }) => {
+  const { t } = useTranslation();
+  return (
   <Dialog open={open} onOpenChange={onClose}>
     <DialogContent className="max-w-sm">
       <DialogHeader>
-        <DialogTitle>Delete Request</DialogTitle>
+        <DialogTitle>{t("timeclaim.deleteRequest")}</DialogTitle>
       </DialogHeader>
-      <p className="text-sm text-slate-600">Are you sure you want to delete this request?</p>
+      <p className="text-sm text-slate-600">{t("timeclaim.deleteConfirm")}</p>
       <DialogFooter className="gap-2">
-        <Button variant="outline" onClick={onClose} className="text-xs">Cancel</Button>
-        <Button variant="destructive" onClick={onConfirm} className="text-xs">Delete</Button>
+        <Button variant="outline" onClick={onClose} className="text-xs">{t("cancel")}</Button>
+        <Button variant="destructive" onClick={onConfirm} className="text-xs">{t("delete")}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 );
+};
 
 // ─── Table Components Per Request Type ──────────────────────────────────────
 
-const IdleTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => (
+const IdleTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => {
+  const { t } = useTranslation();
+  return (
   <Table className="min-w-[1100px] w-full">
     <TableHeader>
       <TableRow className="bg-[#E9E9E9] h-12">
         <TableHead className="w-10 px-2">
           <input type="checkbox" onChange={toggleSelectAll} checked={rows.filter((r) => r.status === 0).length > 0 && rows.filter((r) => r.status === 0).every((r) => selectedIds.includes(r._id))} className="accent-blue-500" />
         </TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Full Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Date</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.fullName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.date")}</TableHead>
         <TableHead className="text-xs px-2 font-semibold">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EDF3FF] text-blue-500">
-            <span className="w-2 h-2 rounded-full bg-blue-500" /> Start Time
+            <span className="w-2 h-2 rounded-full bg-blue-500" /> {t("timeclaim.startTime")}
           </span>
         </TableHead>
         <TableHead className="text-xs px-2 font-semibold">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF0F0] text-red-500">
-            <span className="w-2 h-2 rounded-full bg-red-500" /> End Time
+            <span className="w-2 h-2 rounded-full bg-red-500" /> {t("timeclaim.endTime")}
           </span>
         </TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Computer Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Reason</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Approver</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Status</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">Action</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.computerName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.reason")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.approver")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.status")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">{t("action")}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody className="bg-[#F9F9F9]">
       {tableLoading ? (
         <TableRow><TableCell colSpan={10} className="text-center py-10"><Spinner /></TableCell></TableRow>
       ) : rows.length === 0 ? (
-        <TableRow><TableCell colSpan={10} className="text-center text-sm text-gray-400 py-10">No records found</TableCell></TableRow>
+        <TableRow><TableCell colSpan={10} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</TableCell></TableRow>
       ) : rows.map((row, idx) => (
         <TableRow key={row._id} className="h-12 text-xs text-slate-600">
           <TableCell className="px-2">
@@ -225,29 +230,32 @@ const IdleTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSe
     </TableBody>
   </Table>
 );
+};
 
-const OfflineTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => (
+const OfflineTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => {
+  const { t } = useTranslation();
+  return (
   <Table className="min-w-[1000px] w-full">
     <TableHeader>
       <TableRow className="bg-[#E9E9E9] h-12">
         <TableHead className="w-10 px-2">
           <input type="checkbox" onChange={toggleSelectAll} checked={rows.filter((r) => r.status === 0).length > 0 && rows.filter((r) => r.status === 0).every((r) => selectedIds.includes(r._id))} className="accent-blue-500" />
         </TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Full Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Date</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Offline Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Computer Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Reason</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Approver</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Status</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">Action</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.fullName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.date")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.offlineTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.computerName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.reason")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.approver")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.status")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">{t("action")}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody className="bg-[#F9F9F9]">
       {tableLoading ? (
         <TableRow><TableCell colSpan={9} className="text-center py-10"><Spinner /></TableCell></TableRow>
       ) : rows.length === 0 ? (
-        <TableRow><TableCell colSpan={9} className="text-center text-sm text-gray-400 py-10">No records found</TableCell></TableRow>
+        <TableRow><TableCell colSpan={9} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</TableCell></TableRow>
       ) : rows.map((row, idx) => (
         <TableRow key={row._id} className="h-12 text-xs text-slate-600">
           <TableCell className="px-2">
@@ -282,30 +290,33 @@ const OfflineTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggl
     </TableBody>
   </Table>
 );
+};
 
-const BreakTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => (
+const BreakTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleSelect, toggleSelectAll }) => {
+  const { t } = useTranslation();
+  return (
   <Table className="min-w-[1100px] w-full">
     <TableHeader>
       <TableRow className="bg-[#E9E9E9] h-12">
         <TableHead className="w-10 px-2">
           <input type="checkbox" onChange={toggleSelectAll} checked={rows.filter((r) => r.status === 0).length > 0 && rows.filter((r) => r.status === 0).every((r) => selectedIds.includes(r._id))} className="accent-blue-500" />
         </TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Full Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Date</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Break Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Start Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">End Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Reason</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Approver</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Status</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">Action</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.fullName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.date")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.breakTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.startTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.endTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.reason")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.approver")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.status")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">{t("action")}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody className="bg-[#F9F9F9]">
       {tableLoading ? (
         <TableRow><TableCell colSpan={10} className="text-center py-10"><Spinner /></TableCell></TableRow>
       ) : rows.length === 0 ? (
-        <TableRow><TableCell colSpan={10} className="text-center text-sm text-gray-400 py-10">No records found</TableCell></TableRow>
+        <TableRow><TableCell colSpan={10} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</TableCell></TableRow>
       ) : rows.map((row, idx) => (
         <TableRow key={row._id} className="h-12 text-xs text-slate-600">
           <TableCell className="px-2">
@@ -341,27 +352,30 @@ const BreakTable = ({ rows, tableLoading, onView, onDelete, selectedIds, toggleS
     </TableBody>
   </Table>
 );
+};
 
-const AttendanceTable = ({ rows, tableLoading, onView }) => (
+const AttendanceTable = ({ rows, tableLoading, onView }) => {
+  const { t } = useTranslation();
+  return (
   <Table className="min-w-[1100px] w-full">
     <TableHeader>
       <TableRow className="bg-[#E9E9E9] h-12">
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Full Name</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Task</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Date</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Start Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">End Time</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Reason</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Approver</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-slate-700">Status</TableHead>
-        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">Action</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.fullName")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.task")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.date")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.startTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.endTime")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.reason")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.approver")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-slate-700">{t("timeclaim.status")}</TableHead>
+        <TableHead className="text-xs px-4 font-semibold text-white bg-[#7B9CDA] text-center">{t("action")}</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody className="bg-[#F9F9F9]">
       {tableLoading ? (
         <TableRow><TableCell colSpan={9} className="text-center py-10"><Spinner /></TableCell></TableRow>
       ) : rows.length === 0 ? (
-        <TableRow><TableCell colSpan={9} className="text-center text-sm text-gray-400 py-10">No records found</TableCell></TableRow>
+        <TableRow><TableCell colSpan={9} className="text-center text-sm text-gray-400 py-10">{t("Nodata")}</TableCell></TableRow>
       ) : rows.map((row, idx) => (
         <TableRow key={row._id} className="h-12 text-xs text-slate-600">
           <TableCell className="px-4">
@@ -389,10 +403,12 @@ const AttendanceTable = ({ rows, tableLoading, onView }) => (
     </TableBody>
   </Table>
 );
+};
 
 // ─── Create Request Modal ────────────────────────────────────────────────────
 
 const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
+  const { t } = useTranslation();
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -447,7 +463,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (!reason.trim()) { setError("Reason is required"); return; }
+    if (!reason.trim()) { setError(t("timeclaim.ranking")); return; }
     setSaving(true); setError("");
 
     let res;
@@ -488,7 +504,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create {isIdle ? "Idle" : isOffline ? "Offline" : isAttendance ? "Attendance" : "Break"} Request</DialogTitle>
+          <DialogTitle>Create {isIdle ? "Idle" : isOffline ? "Offline" : isAttendance ? "Attendance" : "Break"} {t("timeclaim.claim")}</DialogTitle>
         </DialogHeader>
 
         {error && <p className="text-red-500 text-xs bg-red-50 p-2 rounded">{error}</p>}
@@ -496,7 +512,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
         <div className="space-y-4">
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t("timeclaim.date")}</label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split("T")[0]} className="text-sm" />
           </div>
 
@@ -504,11 +520,11 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
           {(isIdle || isAttendance) && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("timeclaim.startTime")}</label>
                 <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">End Time</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("timeclaim.endTime")}</label>
                 <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="text-sm" />
               </div>
             </div>
@@ -518,7 +534,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
           {isIdle && (
             <div>
               <Button size="sm" variant="outline" onClick={handleGetActivities} disabled={loadingActivities} className="text-xs mb-2">
-                {loadingActivities ? "Loading..." : "Get Activity List"}
+                {loadingActivities ? t("loadingText") : t("timeclaim.getActivityList")}
               </Button>
               {activities.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded text-xs">
@@ -526,9 +542,9 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
                         <th className="px-2 py-1 text-left w-8"><input type="checkbox" onChange={(e) => setSelectedApps(e.target.checked ? activities.map((a) => a._id || a.activity_id) : [])} checked={selectedApps.length === activities.length && activities.length > 0} className="accent-blue-500" /></th>
-                        <th className="px-2 py-1 text-left">App / URL</th>
-                        <th className="px-2 py-1 text-left">Ranking</th>
-                        <th className="px-2 py-1 text-left">Idle Time</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.appUrl")}</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.ranking")}</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.idleTime")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -554,7 +570,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
           {isOffline && (
             <div>
               <Button size="sm" variant="outline" onClick={handleGetOfflineSlots} disabled={loadingActivities || !date} className="text-xs mb-2">
-                {loadingActivities ? "Loading..." : "Get Offline Periods"}
+                {loadingActivities ? t("loadingText") : t("timeclaim.getOfflinePeriods")}
               </Button>
               {offlineSlots.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded text-xs">
@@ -562,9 +578,9 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
                     <thead className="bg-slate-100 sticky top-0">
                       <tr>
                         <th className="px-2 py-1 w-8"><input type="checkbox" onChange={(e) => setSelectedSlots(e.target.checked ? offlineSlots.map((_, i) => i) : [])} checked={selectedSlots.length === offlineSlots.length && offlineSlots.length > 0} className="accent-blue-500" /></th>
-                        <th className="px-2 py-1 text-left">Start</th>
-                        <th className="px-2 py-1 text-left">End</th>
-                        <th className="px-2 py-1 text-left">Duration</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.start")}</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.end")}</th>
+                        <th className="px-2 py-1 text-left">{t("timeclaim.duration")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -585,23 +601,23 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Reason</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t("timeclaim.reason")}</label>
             {reasons.length > 0 ? (
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400"
               >
-                <option value="">Select reason</option>
+                <option value="">{t("timeclaim.selectReason")}</option>
                 {reasons.map((r) => (
                   <option key={r._id || r.reason_value} value={r.reason_name || r.reason_value}>{r.reason_name}</option>
                 ))}
-                <option value="__other">Other</option>
+                <option value="__other">{t("timeclaim.other")}</option>
               </select>
             ) : null}
             {(reasons.length === 0 || reason === "__other") && (
               <Input
-                placeholder="Enter reason"
+                placeholder={t("timeclaim.enterReason")}
                 value={reason === "__other" ? "" : reason}
                 onChange={(e) => setReason(e.target.value)}
                 className="mt-1 text-sm"
@@ -613,7 +629,7 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
         <DialogFooter className="gap-2 mt-2">
           <Button variant="outline" onClick={() => onClose(false)} className="text-xs">Cancel</Button>
           <Button onClick={handleSubmit} disabled={saving} className="bg-blue-500 hover:bg-blue-600 text-xs">
-            {saving ? "Submitting..." : "Submit Request"}
+            {saving ? t("timeclaim.submitting") : t("timeclaim.submitRequest")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -631,6 +647,9 @@ const Spinner = () => (
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const EmpTimeclaim = ({ isEmployee = false }) => {
+  const { t } = useTranslation();
+  const REQUEST_TYPE_OPTIONS = getRequestTypeOptions(t);
+  const STATUS_OPTIONS = getStatusOptions(t);
   const store = useTimeClaimStore();
   const {
     rows, totalDocs, filters, loading, tableLoading, autoApprove, selectedIds,
@@ -742,12 +761,11 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
       <div className="flex relative items-start justify-between gap-4 mb-8">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Time</span>{" "}
-            <span className="font-normal text-gray-500">Claim</span>
+            <span className="font-semibold">{t("timeclaim.title")}</span>{" "}
+            <span className="font-normal text-gray-500">{t("timeclaim.claim")}</span>
           </h2>
           <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-            Manage employee time claim requests for idle, offline,
-            <br />break, and attendance adjustments.
+            {t("timeclaim.description")}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -756,7 +774,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
             className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
             onClick={() => setCreateOpen(true)}
           >
-            <Plus className="w-4 h-4 mr-1" /> Create Request
+            <Plus className="w-4 h-4 mr-1" /> {t("timeclaim.createRequest")}
           </Button>
           <div className="hidden lg:flex items-end gap-1">
             <img alt="timeclaim" className="w-24" src={EmpTimeclaimLogo} />
@@ -769,7 +787,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
         {/* Date Range */}
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-            Select Date Ranges :
+            {t("timeclaim.selectDateRanges")} :
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
             <DateRangeCalendar
@@ -781,7 +799,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("timeclaim.status")}</label>
           <CustomSelect
             placeholder="All"
             items={STATUS_OPTIONS}
@@ -793,7 +811,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
 
         {/* Request Type */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Request Type</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("timeclaim.requestType")}</label>
           <div className="flex items-center gap-2 flex-nowrap">
             {REQUEST_TYPE_OPTIONS.map(({ key, value }) => (
               <button
@@ -819,7 +837,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
         {/* Auto Approve (admin/manager only) */}
         {!isEmployee && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Auto Approve</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("timeclaim.autoApprove")}</label>
             <div className="flex items-center gap-2 h-10">
               <button
                 onClick={handleAutoApproveToggle}
@@ -827,7 +845,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
               >
                 <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoApprove ? "translate-x-6" : "translate-x-1"}`} />
               </button>
-              <span className="text-sm text-slate-600">{autoApprove ? "On" : "Off"}</span>
+              <span className="text-sm text-slate-600">{autoApprove ? t("on") : t("off")}</span>
             </div>
           </div>
         )}
@@ -837,10 +855,10 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
       {!isEmployee && selectedIds.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 mb-7">
           <Button size="lg" onClick={() => bulkAction(1)} className="rounded-md bg-green-600 hover:bg-green-700 px-5 text-xs font-semibold shadow-sm">
-            <CheckCircle className="w-4 h-4 mr-1" /> Approve Selected ({selectedIds.length})
+            <CheckCircle className="w-4 h-4 mr-1" /> {t("timeclaim.approveSelected")} ({selectedIds.length})
           </Button>
           <Button size="lg" onClick={() => bulkAction(2)} className="rounded-md bg-red-500 hover:bg-red-600 px-5 text-xs font-semibold shadow-sm">
-            <XCircle className="w-4 h-4 mr-1" /> Decline Selected ({selectedIds.length})
+            <XCircle className="w-4 h-4 mr-1" /> {t("timeclaim.declineSelected")} ({selectedIds.length})
           </Button>
         </div>
       )}
@@ -848,25 +866,12 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-500 font-medium">Show</span>
-          <Select value={String(filters.limit)} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {["10", "25", "50", "100"].map((n) => (
-                <SelectItem key={n} value={n}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-          </div>
+          <ShowEntries value={filters.limit} onChange={handlePageSizeChange} />
         </div>
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -885,10 +890,10 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold">{totalDocs === 0 ? 0 : (currentPage - 1) * filters.limit + 1}</span>{" "}
-          to <span className="font-bold">{Math.min(currentPage * filters.limit, totalDocs)}</span>{" "}
-          of <span className="font-bold">{totalDocs}</span>
+          {t("to")} <span className="font-bold">{Math.min(currentPage * filters.limit, totalDocs)}</span>{" "}
+          {t("of")} <span className="font-bold">{totalDocs}</span>
         </p>
         <PaginationComponent currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>

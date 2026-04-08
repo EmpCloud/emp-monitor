@@ -5,6 +5,18 @@ import autoTable from "jspdf-autotable";
 
 // ─── Frequency Helpers ───────────────────────────────────────────────────────
 
+export const FREQUENCY_KEY_MAP = {
+    1: "emailReport.daily",
+    2: "emailReport.weekly",
+    3: "emailReport.monthly",
+    4: "emailReport.custom",
+    5: "emailReport.dateLabel",
+    6: "emailReport.unproductiveLabel",
+    7: "emailReport.monthly",
+    9: "emailReport.timeLabel",
+};
+
+// For non-i18n contexts (exports, etc.)
 export const FREQUENCY_MAP = {
     1: "Daily",
     2: "Weekly",
@@ -19,6 +31,9 @@ export const FREQUENCY_MAP = {
 export const getFrequencyLabel = (freq) =>
     FREQUENCY_MAP[Number(freq)] || "NA";
 
+export const getFrequencyKey = (freq) =>
+    FREQUENCY_KEY_MAP[Number(freq)] || null;
+
 // ─── Content Labels ──────────────────────────────────────────────────────────
 
 export const CONTENT_LABELS = {
@@ -31,11 +46,28 @@ export const CONTENT_LABELS = {
     manager_log: "Manager/TL Log",
 };
 
+export const CONTENT_KEY_MAP = {
+    productivity: "emailReport.productivity",
+    timesheet: "emailReport.timesheet",
+    apps_usage: "emailReport.appUsage",
+    websites_usage: "emailReport.websiteUsage",
+    attendance: "emailReport.employeeAttendance",
+    hrms_attendance: "emailReport.hrmsAttendance",
+    manager_log: "emailReport.managerLog",
+};
+
 export const getContentLabels = (content) => {
     if (!content || typeof content !== "object") return [];
     return Object.entries(content)
         .filter(([key, val]) => parseInt(val) === 1 && CONTENT_LABELS[key])
         .map(([key]) => CONTENT_LABELS[key]);
+};
+
+export const getContentKeys = (content) => {
+    if (!content || typeof content !== "object") return [];
+    return Object.entries(content)
+        .filter(([key, val]) => parseInt(val) === 1 && CONTENT_KEY_MAP[key])
+        .map(([key]) => CONTENT_KEY_MAP[key]);
 };
 
 // ─── Filter Type Labels ─────────────────────────────────────────────────────
@@ -46,6 +78,14 @@ export const FILTER_TYPE_MAP = {
     3: "Specific Departments",
     4: "Specific Locations",
     5: "Specific Shifts",
+};
+
+export const FILTER_TYPE_KEY_MAP = {
+    1: "emailReport.wholeOrg",
+    2: "emailReport.specificEmployees",
+    3: "emailReport.specificDepts",
+    4: "emailReport.specificLocs",
+    5: "emailReport.specificShifts",
 };
 
 // ─── API: Fetch Email Reports (paginated) ────────────────────────────────────

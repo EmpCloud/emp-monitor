@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import Stats             from "@/components/common/Stats";
 import ActivitySnapshot  from "@/components/common/Snapshot";
@@ -22,6 +23,7 @@ import useNonAdminSession from "../../../../sessions/useNonAdminSession";
 import { usePermission }  from "../../../../hooks/usePermission";
 
 const NonAdminDashboard = () => {
+  const { t } = useTranslation();
   const { nonAdmin }   = useNonAdminSession();
   const { canView }    = usePermission(nonAdmin);
 
@@ -174,8 +176,8 @@ const NonAdminDashboard = () => {
           <>
             <div className="xl:col-span-6 col-span-12">
               <TopProductiveEmployees
-                title="Top 10 Productive Employees"
-                columns={["Employee Name", "Time (Hours)"]}
+                title={t("top10productive")}
+                columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
                 employees={productiveEmployees}
                 loading={productiveEmployeesLoading}
                 report={reportControls}
@@ -196,8 +198,8 @@ const NonAdminDashboard = () => {
 
             <div className="xl:col-span-6 col-span-12">
               <TopNonProductiveEmployees
-                title="Top 10 Non Productive Employees"
-                columns={["Employee Name", "Time (Hours)"]}
+                title={t("top10nonproductive")}
+                columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
                 employees={unproductiveEmployees}
                 loading={unproductiveEmployeesLoading}
                 report={reportControls}
@@ -223,7 +225,7 @@ const NonAdminDashboard = () => {
           <>
             <div className="xl:col-span-6 col-span-12">
               <ActiveEmp
-                title="Top 10 Active Employees"
+                title={t("top10active")}
                 employees={activeEmployees}
                 loading={activeEmployeesLoading}
                 report={reportControls}
@@ -244,7 +246,7 @@ const NonAdminDashboard = () => {
 
             <div className="xl:col-span-6 col-span-12">
               <NonActiveEmp
-                title="Top 10 Non Active Employees"
+                title={t("top10nonactive")}
                 employees={nonActiveEmployees}
                 loading={nonActiveEmployeesLoading}
                 report={reportControls}
@@ -268,7 +270,7 @@ const NonAdminDashboard = () => {
         {/* Location & Department Performance — always visible for non-admin */}
         <div className="xl:col-span-6 col-span-12">
           <LocationPerformance
-            title="Location Performance"
+            title={t("locPerform")}
             data={locationPerformance}
             loading={locationPerformanceLoading}
             report={reportControls}
@@ -278,7 +280,7 @@ const NonAdminDashboard = () => {
                 typeValue={filters.locationPerformanceType}
                 onTabChange={(v) => handleTabChange(v, "locationPerformance")}
                 onTypeChange={(v) => setFilter("locationPerformanceType", v)}
-                typePlaceholder="Idle"
+                typePlaceholder={t("idleLabel")}
               />
             }
           />
@@ -286,7 +288,7 @@ const NonAdminDashboard = () => {
 
         <div className="xl:col-span-6 col-span-12">
           <DepartmentPerformance
-            title="Department Performance"
+            title={t("deptPerform")}
             data={departmentPerformance}
             loading={departmentPerformanceLoading}
             report={reportControls}
@@ -296,7 +298,7 @@ const NonAdminDashboard = () => {
                 typeValue={filters.departmentPerformanceType}
                 onTabChange={(v) => handleTabChange(v, "departmentPerformance")}
                 onTypeChange={(v) => setFilter("departmentPerformanceType", v)}
-                typePlaceholder="Productive"
+                typePlaceholder={t("productive")}
               />
             }
           />
@@ -306,7 +308,7 @@ const NonAdminDashboard = () => {
         {showWebUsage && (
           <div className="xl:col-span-6 col-span-12">
             <WebUsageChart
-              title="Top 10 Website Usage"
+              title={t("top10webUsage")}
               data={webUsage}
               report={reportControls}
             />
@@ -317,7 +319,7 @@ const NonAdminDashboard = () => {
         {showAppUsage && (
           <div className="xl:col-span-6 col-span-12">
             <AppUsageChart
-              title="Top 10 Application Usage"
+              title={t("top10appUsage")}
               data={appUsage}
               report={reportControls}
             />

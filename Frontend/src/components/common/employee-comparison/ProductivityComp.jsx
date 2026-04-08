@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as am5 from "@amcharts/amcharts5"
 import * as am5percent from "@amcharts/amcharts5/percent"
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated"
@@ -14,20 +15,20 @@ const BASE_CHART_DATA = [
   { name: "Other",        value: 0, color: "#F59E0B" },
 ]
 
-const BASE_LEGEND_ITEMS = [
-  { label: "Productive time vs total", value: "0.00%", dotColor: "bg-blue-500",  textColor: "text-blue-500"  },
-  { label: "Unproductive time (est.)", value: "0.00%", dotColor: "bg-orange-500", textColor: "text-orange-500" },
-  { label: "Neutral time (est.)",      value: "0.00%", dotColor: "bg-green-500",  textColor: "text-green-500"  },
-  { label: "Other",                    value: "0.00%", dotColor: "bg-slate-400",  textColor: "text-slate-500"  },
+const getBaseLegendItems = (t) => [
+  { label: t("comparison.productiveTimeVsTotal"), value: "0.00%", dotColor: "bg-blue-500",  textColor: "text-blue-500"  },
+  { label: t("comparison.unproductiveTimeEst"),   value: "0.00%", dotColor: "bg-orange-500", textColor: "text-orange-500" },
+  { label: t("comparison.neutralTimeEst"),        value: "0.00%", dotColor: "bg-green-500",  textColor: "text-green-500"  },
+  { label: t("comparison.other"),                 value: "0.00%", dotColor: "bg-slate-400",  textColor: "text-slate-500"  },
 ]
 
-const BASE_TIME_STATS = [
-  { label: "Office Time",       value: "00:00:00 hrs", Icon: Clock,        iconBg: "bg-blue-50",   iconColor: "text-blue-500"   },
-  { label: "Unproductive Time", value: "00:00:00 hrs", Icon: TrendingDown, iconBg: "bg-orange-50", iconColor: "text-orange-400" },
-  { label: "Active Time",       value: "00:00:00 hrs", Icon: Activity,     iconBg: "bg-teal-50",   iconColor: "text-teal-500"   },
-  { label: "Neutral Time",      value: "00:00:00 hrs", Icon: Minus,        iconBg: "bg-green-50",  iconColor: "text-green-500"  },
-  { label: "Productive Time",   value: "00:00:00 hrs", Icon: Zap,          iconBg: "bg-purple-50", iconColor: "text-purple-500" },
-  { label: "Productivity",      value: "0.00%",        Icon: Settings2,    iconBg: "bg-red-50",    iconColor: "text-red-400"    },
+const getBaseTimeStats = (t) => [
+  { label: t("comparison.officeTime"),       value: "00:00:00 hrs", Icon: Clock,        iconBg: "bg-blue-50",   iconColor: "text-blue-500"   },
+  { label: t("comparison.unproductiveTime"), value: "00:00:00 hrs", Icon: TrendingDown, iconBg: "bg-orange-50", iconColor: "text-orange-400" },
+  { label: t("comparison.activeTime"),       value: "00:00:00 hrs", Icon: Activity,     iconBg: "bg-teal-50",   iconColor: "text-teal-500"   },
+  { label: t("comparison.neutralTime"),      value: "00:00:00 hrs", Icon: Minus,        iconBg: "bg-green-50",  iconColor: "text-green-500"  },
+  { label: t("comparison.productiveTime"),   value: "00:00:00 hrs", Icon: Zap,          iconBg: "bg-purple-50", iconColor: "text-purple-500" },
+  { label: t("comparison.productivity"),     value: "0.00%",        Icon: Settings2,    iconBg: "bg-red-50",    iconColor: "text-red-400"    },
 ]
 
 function DonutChart({ data, centerText, centerSubText }) {
@@ -95,6 +96,7 @@ function DonutChart({ data, centerText, centerSubText }) {
 const LEGEND_COLORS = ["#3B82F6", "#f97316", "#22C55E", "#6366f1", "#a855f7", "#f59e0b"]
 
 function ComparisonCard({ chartData, legendItems, timeStats, centerText = "0%", stats }) {
+  const { t } = useTranslation()
   const hasData =
     stats &&
     (
@@ -110,9 +112,9 @@ function ComparisonCard({ chartData, legendItems, timeStats, centerText = "0%", 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex-1 min-w-0 flex items-center justify-center">
         <div className="text-center text-slate-400">
           <div className="text-3xl mb-2">📊</div>
-          <p className="text-sm font-semibold text-slate-600">No Activity Data</p>
+          <p className="text-sm font-semibold text-slate-600">{t("comparison.noActivityData")}</p>
           <p className="text-xs text-slate-400 mt-1">
-            No employee activity recorded for the selected date.
+            {t("comparison.noActivityDesc")}
           </p>
         </div>
       </div>
@@ -181,9 +183,13 @@ function ComparisonCard({ chartData, legendItems, timeStats, centerText = "0%", 
 }
 
 const ProductivityComp = () => {
+  const { t } = useTranslation()
   const today = new Date().toISOString().split('T')[0]
 
-  const [employees, setEmployees] = useState([{ value: "all", label: "See All Employee" }])
+  const BASE_LEGEND_ITEMS = getBaseLegendItems(t)
+  const BASE_TIME_STATS = getBaseTimeStats(t)
+
+  const [employees, setEmployees] = useState([{ value: "all", label: t("comparison.seeAllEmployee") }])
   const [leftEmployee,   setLeftEmployee]   = useState("all")
   const [leftDateFrom,   setLeftDateFrom]   = useState(today)
   const [leftDateTo,     setLeftDateTo]     = useState(today)
@@ -278,15 +284,16 @@ const ProductivityComp = () => {
   const buildTimeStats = (stats) => {
     if (!stats) return BASE_TIME_STATS
 
-    return BASE_TIME_STATS.map((item) => {
-      switch (item.label) {
-        case "Office Time":
+    return BASE_TIME_STATS.map((item, idx) => {
+      // Map by index: 0=Office, 1=Unproductive, 2=Active, 3=Neutral, 4=Productive, 5=Productivity
+      switch (idx) {
+        case 0:
           return { ...item, value: stats.officeTime }
-        case "Active Time":
+        case 2:
           return { ...item, value: stats.activeTime }
-        case "Productive Time":
+        case 4:
           return { ...item, value: stats.productiveTime }
-        case "Productivity":
+        case 5:
           return { ...item, value: stats.productivityPercent }
         default:
           return item
@@ -300,8 +307,8 @@ const ProductivityComp = () => {
       <div className="flex items-start justify-between mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Productivity</span>{" "}
-            <span className="font-normal text-gray-500">Comparison</span>
+            <span className="font-semibold">{t("comparison.productivityLabel")}</span>{" "}
+            <span className="font-normal text-gray-500">{t("comparison.comparisonLabel")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-xs leading-tight">
             &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci&quot;

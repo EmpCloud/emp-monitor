@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAttendanceStore } from "@/page/protected/admin/employee-attendance/AttendanceStore";
 import { Download, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import attendanceImage from "@/assets/calendar.png";
@@ -11,15 +12,15 @@ import { Input } from "@/components/ui/input";
 
 const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Tooltip labels — mirrors ATTENDANCETITLE in employee_attendance.js
-const ATTENDANCE_TITLE = {
-  P:  "Present",
-  A:  "Absent",
-  D:  "Day Off",
-  O:  "Over Time",
-  EL: "Early Logout",
-  L:  "Late Login",
-  H:  "Half Day",
+// Tooltip label keys — resolved at render time via t()
+const ATTENDANCE_TITLE_KEYS = {
+  P:  "att_present",
+  A:  "att_absent",
+  D:  "att_day_off",
+  O:  "att_overtime",
+  EL: "att_early_logout",
+  L:  "att_late_login",
+  H:  "att_half_day",
 };
 
 // Colour class per primary attendance marker
@@ -33,22 +34,22 @@ const STATUS_CLS = {
   EL: "text-purple-600 bg-purple-50",
 };
 
-// Summary columns — P L H A O D EL (matches Laravel header order)
-const SUMMARY_COLS = [
-  { key: "P",  label: "P",  title: "Total Present"     },
-  { key: "L",  label: "L",  title: "Total Late"        },
-  { key: "H",  label: "H",  title: "Total Half Day"    },
-  { key: "A",  label: "A",  title: "Total Absent"      },
-  { key: "O",  label: "O",  title: "Total Overtime"    },
-  { key: "D",  label: "D",  title: "Day Off"           },
-  { key: "EL", label: "EL", title: "Early Logout"      },
+// Summary columns — keys for title resolved via t() inside component
+const getSummaryCols = (t) => [
+  { key: "P",  label: "P",  title: t("att_total_present")  },
+  { key: "L",  label: "L",  title: t("att_total_late")     },
+  { key: "H",  label: "H",  title: t("att_total_half_day") },
+  { key: "A",  label: "A",  title: t("att_total_absent")   },
+  { key: "O",  label: "O",  title: t("att_total_overtime") },
+  { key: "D",  label: "D",  title: t("att_day_off")        },
+  { key: "EL", label: "EL", title: t("att_early_logout")   },
 ];
 
 // Sortable fixed columns
-const SORT_COLS = [
-  { key: "name",       label: "Employee Name", minW: "min-w-[160px]" },
-  { key: "location",   label: "Location",      minW: "min-w-[100px]" },
-  { key: "department", label: "Department",    minW: "min-w-[110px]" },
+const getSortCols = (t) => [
+  { key: "name",       label: t("att_emp_name"),   minW: "min-w-[160px]" },
+  { key: "location",   label: t("location"),   minW: "min-w-[100px]" },
+  { key: "department", label: t("department"), minW: "min-w-[110px]" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -81,33 +82,34 @@ const getDaysInMonth = (dateValue) => {
  *     marker
  *     overTime_duration>0 → append "/O"
  */
-const renderDayStatus = (dayData) => {
+const renderDayStatus = (dayData, t) => {
   if (!dayData?.log) return { status: "-", title: "", cls: "text-slate-300" };
   const { isWorkDay, log } = dayData;
   let status = "";
   let title  = "";
+  const getTitle = (key) => (ATTENDANCE_TITLE_KEYS[key] ? t(ATTENDANCE_TITLE_KEYS[key]) : "");
 
   if (isWorkDay) {
     if (log.late && log.lateTime > 0) {
       status = log.late + "/";
-      title  = ATTENDANCE_TITLE[log.late] ?? "";
+      title  = getTitle(log.late);
     }
     status += log.marker ?? "-";
-    title  += (title ? " " : "") + (ATTENDANCE_TITLE[log.marker] ?? "");
+    title  += (title ? " " : "") + getTitle(log.marker);
     if (log.earlyLogout && log.earlyLogout_duration > 0) {
       status += "/" + log.earlyLogout;
-      title  += " " + (ATTENDANCE_TITLE[log.earlyLogout] ?? "");
+      title  += " " + getTitle(log.earlyLogout);
     }
     if (log.overtime && log.overTime_duration > 0) {
       status += "/" + log.overtime;
-      title  += " " + (ATTENDANCE_TITLE[log.overtime] ?? "");
+      title  += " " + getTitle(log.overtime);
     }
   } else {
     status = log.marker ?? "-";
-    title  = ATTENDANCE_TITLE[log.marker] ?? "";
+    title  = getTitle(log.marker);
     if (log.overtime && log.overTime_duration > 0) {
       status += "/" + log.overtime;
-      title  += " " + (ATTENDANCE_TITLE[log.overtime] ?? "");
+      title  += " " + getTitle(log.overtime);
     }
   }
 
@@ -121,11 +123,15 @@ const renderDayStatus = (dayData) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const EmployeeAttendance = () => {
+  const { t } = useTranslation();
   const {
     attendance, locations, departments, shifts,
     filters, loading, pageCount, empCount,
     setFilter, loadAttendance, fetchDepartments, fetchAttendance, exportAttendance,
   } = useAttendanceStore((state) => state);
+
+  const SORT_COLS = useMemo(() => getSortCols(t), [t]);
+  const SUMMARY_COLS = useMemo(() => getSummaryCols(t), [t]);
 
   const isFirstRender = useRef(true);
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
@@ -177,9 +183,9 @@ const EmployeeAttendance = () => {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Attendance</span>
+            <span className="font-semibold">{t("att_attendance")}</span>
           </h2>
-          <p className="text-xs text-gray-400 mt-1">Employee attendance overview by month</p>
+          <p className="text-xs text-gray-400 mt-1">{t("att_overview")}</p>
         </div>
         <img src={attendanceImage} alt="attendance" className="w-32 h-24 object-contain" />
       </div>
@@ -201,14 +207,14 @@ const EmployeeAttendance = () => {
           onClick={exportAttendance}
         >
           <Download className="w-3.5 h-3.5 mr-1.5" />
-          Export Excel
+          {t("att_export_excel")}
         </Button>
       </div>
 
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2 text-[13px] text-gray-500 font-medium">
-          Show
+          {t("show")}
           <select
             value={filters.limit}
             onChange={(e) => setFilter("limit", Number(e.target.value))}
@@ -218,13 +224,13 @@ const EmployeeAttendance = () => {
               <option key={n} value={n}>{n}</option>
             ))}
           </select>
-          Entries
+          {t("entries")}
         </div>
 
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search..."
+            placeholder={t("search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9 h-9 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -251,12 +257,12 @@ const EmployeeAttendance = () => {
                 ))}
 
                 {/* Non-sortable fixed columns */}
-                <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">Shift</th>
+                <th className="px-3 py-2.5 text-left font-semibold whitespace-nowrap">{t("att_shift")}</th>
                 <th
                   onClick={() => handleSort("emp_code")}
                   className="px-3 py-2.5 text-left font-semibold whitespace-nowrap cursor-pointer select-none min-w-[90px]"
                 >
-                  Emp Code <SortIcon col="emp_code" />
+                  {t("att_emp_code")} <SortIcon col="emp_code" />
                 </th>
 
                 {/* Day columns — dynamically generated for selected month */}
@@ -289,7 +295,7 @@ const EmployeeAttendance = () => {
               ) : attendance.length === 0 ? (
                 <tr>
                   <td colSpan={5 + daysInMonth.length + SUMMARY_COLS.length} className="py-12 text-center text-slate-400">
-                    No data available
+                    {t("att_no_data")}
                   </td>
                 </tr>
               ) : (
@@ -328,7 +334,7 @@ const EmployeeAttendance = () => {
                       {/* Day cells — exactly mirrors the jQuery $.each(data.date) logic */}
                       {typeof row.date === "object" && row.date !== null
                         ? daysInMonth.map(({ day }) => {
-                            const { status, title, cls } = renderDayStatus(row.date[day]);
+                            const { status, title, cls } = renderDayStatus(row.date[day], t);
                             return (
                               <td key={day} title={title} className="px-1 py-2 text-center whitespace-nowrap">
                                 {status !== "-" ? (
@@ -363,12 +369,12 @@ const EmployeeAttendance = () => {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 border-t border-gray-100 bg-gray-50/50">
           <p className="text-[13px] text-gray-500 font-medium">
-            Showing{" "}
+            {t("timeclaim.showing")}{" "}
             <span className="font-bold text-gray-700">{empCount > 0 ? filters.skip + 1 : 0}</span>
-            {" "}to{" "}
+            {" "}{t("to")}{" "}
             <span className="font-bold text-gray-700">{Math.min(filters.skip + filters.limit, empCount)}</span>
-            {" "}of{" "}
-            <span className="font-bold text-blue-600">{empCount}</span> entries
+            {" "}{t("of")}{" "}
+            <span className="font-bold text-blue-600">{empCount}</span> {t("entries")}
           </p>
           <PaginationComponent
             currentPage={Math.floor(filters.skip / filters.limit) + 1}

@@ -1,5 +1,6 @@
 import React from 'react'
 import { CalendarClock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpShiftManagement from '@/components/common/shift-management/EmpShiftManagement'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const ShiftManagement = () => (
-  <Placeholder
-    title="Shift Management"
-    description="Configure work shifts and assign them to employees or departments."
-    Icon={CalendarClock}
-  />
-)
+const ShiftManagement = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("shiftManagementTitle")}
+      description={t("shiftManagementDescription")}
+      Icon={CalendarClock}
+    />
+  )
+}
 
 export default ShiftManagement

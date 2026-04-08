@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useMemo } from "react"
+import { useTranslation } from "react-i18next";
 import { Search, Settings, Edit2, Trash2, ChevronDown } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
@@ -7,13 +8,7 @@ import DeleteGroupDialog from "@/components/common/monitoring-control/dialog/Del
 import MonitoringControlDialog from "@/components/common/monitoring-control/dialog/MonitoringControlDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ShowEntries from "@/components/common/elements/ShowEntries"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,13 +26,15 @@ const CUSTOM_PRODUCTIVITY_TIMES = [
   { label: "10:00", value: "10:00" },
 ]
 
-const PRODUCTIVITY_CATEGORIES = [
-  { label: "Neutral", value: "0" },
-  { label: "Productive", value: "1" },
-  { label: "Unproductive", value: "2" },
-]
+const getProductivityCategories = (t) => [
+  { label: t("prodReport.neutral"), value: "0" },
+  { label: t("productive"), value: "1" },
+  { label: t("prodReport.unproductive"), value: "2" },
+];
 
 const EmpMonitoringControl = () => {
+    const { t } = useTranslation();
+  const PRODUCTIVITY_CATEGORIES = getProductivityCategories(t);
   const {
     groups,
     totalCount,
@@ -111,11 +108,11 @@ const EmpMonitoringControl = () => {
         key="default-0"
         className="border-b border-slate-100 text-xs text-slate-600 bg-blue-50/30"
       >
-        <td className="px-4 py-4 font-semibold text-slate-800">Default Settings</td>
+        <td className="px-4 py-4 font-semibold text-slate-800">{t("monitoring.defaultSettings")}</td>
         <td className="px-4 py-4">All</td>
         <td className="px-4 py-4">All</td>
         <td className="px-4 py-4">All</td>
-        <td className="px-4 py-4">All Employees</td>
+        <td className="px-4 py-4">{t("monitoring.allEmployees")}</td>
         <td className="px-4 py-4 text-center">
           <Button
             size="sm"
@@ -139,17 +136,17 @@ const EmpMonitoringControl = () => {
           className="border-b border-slate-100 last:border-b-0 text-xs text-slate-600"
         >
           <td className="px-4 py-4 font-medium text-slate-700">{group.name || "—"}</td>
-          <td className="px-4 py-4">{group.role_name || "All"}</td>
-          <td className="px-4 py-4">{group.location_name || "All"}</td>
-          <td className="px-4 py-4">{group.department_name || "All"}</td>
+          <td className="px-4 py-4">{group.role_name || t("timeclaim.all")}</td>
+          <td className="px-4 py-4">{group.location_name || t("timeclaim.all")}</td>
+          <td className="px-4 py-4">{group.department_name || t("timeclaim.all")}</td>
           <td className="px-4 py-4">
-            {group.employee_count != null ? `${group.employee_count} employees` : "All"}
+            {group.employee_count != null ? `${group.employee_count} ${t("employees")}` : t("timeclaim.all")}
           </td>
           <td className="px-4 py-4 text-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1">
-                  Actions <ChevronDown className="w-3 h-3" />
+                  {t("monitoring.actions")} <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
@@ -157,19 +154,19 @@ const EmpMonitoringControl = () => {
                   onClick={() => openMonitoringDialog(group.group_id, rules)}
                   className="text-xs gap-2"
                 >
-                  <Settings className="w-3.5 h-3.5" /> Settings
+                  <Settings className="w-3.5 h-3.5" /> {t("monitoring.settings")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => openEditDialog(group)}
                   className="text-xs gap-2"
                 >
-                  <Edit2 className="w-3.5 h-3.5" /> Edit
+                  <Edit2 className="w-3.5 h-3.5" /> {t("edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => openDeleteDialog(group)}
                   className="text-xs gap-2 text-red-600 focus:text-red-600"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                  <Trash2 className="w-3.5 h-3.5" /> {t("delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -187,11 +184,11 @@ const EmpMonitoringControl = () => {
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Monitoring</span>{" "}
-            <span className="font-normal text-gray-500">Control</span>
+            <span className="font-semibold">{t("monitoring.title")}</span>{" "}
+            <span className="font-normal text-gray-500">{t("monitoring.control")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-            Control monitoring settings, screenshot intervals and data collection policies.
+            {t("monitoring.description")}
           </p>
         </div>
         <div className="flex items-end gap-1 mr-2">
@@ -203,11 +200,11 @@ const EmpMonitoringControl = () => {
       <div className="flex flex-wrap items-end gap-x-10 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Custom Productivity Time
+            {t("monitoring.customProductivityTime")}
           </label>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 font-medium">
-              Productivity calculation based on custom hours :
+              {t("monitoring.productivityCalc")}
             </span>
             <CustomSelect
               placeholder="08:00"
@@ -220,7 +217,7 @@ const EmpMonitoringControl = () => {
 
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
-            Productivity Category
+            {t("monitoring.productivityCategory")}
             <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
             <span className="w-3 h-3 rounded-full bg-slate-800 inline-block" />
           </label>
@@ -236,42 +233,24 @@ const EmpMonitoringControl = () => {
       {/* Show entries + Create Group + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-500 font-medium">Show</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => {
+          <ShowEntries value={pageSize} onChange={(v) => {
                 const num = parseInt(v, 10)
                 setPageSize(Number.isNaN(num) ? 10 : num)
-              }}
-            >
-              <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                <SelectValue placeholder="10" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {["10", "25", "50", "100"].map((n) => (
-                  <SelectItem key={n} value={n}>
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-          </div>
+              }} />
 
           <Button
             size="lg"
             className="rounded-xl bg-emerald-500 hover:bg-emerald-600 px-5 text-xs font-semibold shadow-sm"
             onClick={() => setCreateDialogOpen(true)}
           >
-            Create Group
+            {t("monitoring.createGroup")}
           </Button>
         </div>
 
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -285,22 +264,22 @@ const EmpMonitoringControl = () => {
           <thead>
             <tr className="bg-blue-50/80">
               <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                Group Name
+                {t("monitoring.groupName")}
               </th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                Role
+                {t("monitoring.role")}
               </th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                Location
+                {t("location")}
               </th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                Department
+                {t("department")}
               </th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">
-                Employees
+                {t("employees")}
               </th>
               <th className="px-4 py-3 text-xs font-semibold text-white bg-blue-500 text-center rounded-tr-2xl">
-                Action
+                {t("action")}
               </th>
             </tr>
           </thead>
@@ -308,7 +287,7 @@ const EmpMonitoringControl = () => {
             {loading || tableLoading ? (
               <tr>
                 <td colSpan={6} className="text-center text-sm text-gray-400 py-10">
-                  Loading...
+                  {t("loadingText")}
                 </td>
               </tr>
             ) : (
@@ -317,7 +296,7 @@ const EmpMonitoringControl = () => {
             {!loading && !tableLoading && groups.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center text-sm text-gray-400 py-6">
-                  No groups found. Create one to get started.
+                  {t("monitoring.noGroupsFound")}
                 </td>
               </tr>
             )}
@@ -328,15 +307,15 @@ const EmpMonitoringControl = () => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold text-gray-700">
             {totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}
           </span>{" "}
-          to{" "}
+          {t("to")}{" "}
           <span className="font-bold text-gray-700">
             {Math.min(currentPage * pageSize, totalCount)}
           </span>{" "}
-          of{" "}
+          {t("of")}{" "}
           <span className="font-bold text-blue-600">{totalCount}</span>
         </p>
         <PaginationComponent

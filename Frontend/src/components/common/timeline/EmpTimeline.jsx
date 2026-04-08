@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import EmpTimelineLogo from "@/assets/timeline/timeline.svg";
 import { Input } from "@/components/ui/input";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 
 // ─── Sample Data ───────────────────────────────────────────────────────────────
 const generateEmployees = () => {
@@ -109,6 +111,7 @@ const CustomSelect = ({ placeholder, options = [], value, onChange }) => {
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function EmpTimeline() {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,7 +152,7 @@ export default function EmpTimeline() {
               <div className="flex items-center gap-2 ">
 
               <h1 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                <span className="font-semibold">Timeline</span>
+                <span className="font-semibold">{t("timeline.title")}</span>
               </h1>
               <div className="flex items-end gap-1 mr-2">
                 <img
@@ -183,10 +186,10 @@ export default function EmpTimeline() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-0.5">
-              Location
+              {t("location")}
             </label>
             <CustomSelect
-              placeholder="Select Location"
+              placeholder={t("timeline.selectLocation")}
               options={["Location A", "Location B", "Location C"]}
               value={location}
               onChange={setLocation}
@@ -194,10 +197,10 @@ export default function EmpTimeline() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-0.5">
-              Department
+              {t("department")}
             </label>
             <CustomSelect
-              placeholder="Select Department"
+              placeholder={t("timeline.selectDepartment")}
               options={["Engineering", "Design", "Marketing", "HR"]}
               value={department}
               onChange={setDepartment}
@@ -205,10 +208,10 @@ export default function EmpTimeline() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-0.5">
-              Employee
+              {t("employee")}
             </label>
             <CustomSelect
-              placeholder="Select Employee"
+              placeholder={t("timeline.selectEmployee")}
               options={[
                 "user12 user12",
                 "user21 user21",
@@ -221,10 +224,10 @@ export default function EmpTimeline() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-0.5">
-              Shift
+              {t("shift")}
             </label>
             <CustomSelect
-              placeholder="Select Shift"
+              placeholder={t("timeline.selectShift")}
               options={["Morning", "Evening", "Night"]}
               value={shift}
               onChange={setShift}
@@ -232,7 +235,7 @@ export default function EmpTimeline() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-0.5">
-              Select Date Ranges :{" "}
+              {t("timeline.selectDateRanges")} :{" "}
               <Info className="w-3 h-3 inline text-blue-500" />
             </label>
             <button className="flex items-center gap-2 w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all">
@@ -259,27 +262,15 @@ export default function EmpTimeline() {
 
         {/* ── Show Entries + Search ──────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-7 gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>Show</span>
-            <select
-              value={entriesPerPage}
-              onChange={(e) => {
-                setEntriesPerPage(Number(e.target.value));
+          <ShowEntries value={entriesPerPage} onChange={(v) => {
+                setEntriesPerPage(Number(v));
                 setCurrentPage(1);
-              }}
-              className="border border-gray-200 rounded-md px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-            <span>Entries</span>
-          </div>
+              }} />
 
           <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
           />
         </div>
@@ -292,35 +283,35 @@ export default function EmpTimeline() {
               <thead>
                 <tr className="bg-gradient-to-r from-[#5C6BC0] via-[#5C6BC0] to-[#2598EB] rounded-xl">
                   <th className="text-left px-4 py-3 font-semibold text-white text-xs whitespace-nowrap first:rounded-l-xl">
-                    Full Name
+                    {t("fullName")}
                   </th>
                   <th className="text-left px-4 py-3 font-semibold text-white text-xs whitespace-nowrap">
-                    Email id
+                    {t("emailid")}
                   </th>
                   <th className="text-left px-4 py-3 font-semibold text-white text-xs whitespace-nowrap">
-                    Emp-Code
+                    {t("empCode")}
                   </th>
                   <th className="text-left px-4 py-3 font-semibold text-white text-xs whitespace-nowrap">
-                    Department
+                    {t("department")}
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-xs whitespace-nowrap">
                     <span className="inline-block px-4 py-1 rounded-full text-white text-xs font-semibold bg-[#4CAF50]">
-                      Clock In
+                      {t("timeline.clockIn")}
                     </span>
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-xs whitespace-nowrap">
                     <span className="inline-block px-4 py-1 rounded-full text-white text-xs font-semibold bg-[#EF5350]">
-                      Clock Out
+                      {t("timeline.clockOut")}
                     </span>
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-white text-xs whitespace-nowrap">
-                    Office Hours
+                    {t("officeHours")}
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-white text-xs whitespace-nowrap">
-                    Active Hours
+                    {t("activeHours")}
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-xs whitespace-nowrap last:rounded-r-xl bg-[#2598EB]">
-                    <span className="text-white font-bold">Productive</span>
+                    <span className="text-white font-bold">{t("productive")}</span>
                   </th>
                 </tr>
               </thead>
@@ -394,8 +385,8 @@ export default function EmpTimeline() {
         {/* ── Pagination ────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-5 gap-3">
           <p className="text-xs text-gray-500">
-            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
-            {Math.min(currentPage * entriesPerPage, filtered.length)} of{" "}
+            {t("timeclaim.showing")} {(currentPage - 1) * entriesPerPage + 1} {t("to")}{" "}
+            {Math.min(currentPage * entriesPerPage, filtered.length)} {t("of")}{" "}
             {filtered.length}
           </p>
 

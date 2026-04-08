@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next";
 import { Users, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import useMonitoringControlStore from "@/page/protected/admin/monitoring-control/monitoringControlStore"
 
-const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
+const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {  const { t } = useTranslation();
+
   const {
     roles,
     locations,
@@ -90,7 +92,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
 
   const handleSubmit = async () => {
     if (!groupName.trim()) {
-      setError("Group name is required")
+      setError(t("monitoring.groupNameRequired"))
       return
     }
     setError("")
@@ -137,12 +139,12 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
             </div>
             <div>
               <DialogTitle className="text-xl font-black text-white">
-                {isEdit ? "Edit Group" : "Create Group"}
+                {isEdit ? t("monitoring.editGroup") : t("monitoring.createGroup")}
               </DialogTitle>
               <DialogDescription className="text-xs text-violet-200 mt-0.5">
                 {isEdit
-                  ? "Modify group details and employee assignments"
-                  : "Set up a new monitoring group with specific rules"}
+                  ? t("monitoring.modifyGroupDetails")
+                  : t("monitoring.setupNewGroup")}
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -159,13 +161,13 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2 sm:min-w-[140px]">
               <span className="w-1 h-5 rounded-full bg-blue-500" />
-              <span className="text-sm font-semibold text-slate-700">Group Name</span>
+              <span className="text-sm font-semibold text-slate-700">{t("monitoring.groupName")}</span>
             </div>
             <Input
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               className="h-10 rounded-lg border-slate-200 text-sm"
-              placeholder="Enter group name"
+              placeholder={t("monitoring.enterGroupName")}
             />
           </div>
 
@@ -173,7 +175,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("monitoring.role")}</label>
                 <CustomSelect
                   placeholder="All Roles"
                   items={roles}
@@ -183,7 +185,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
                 <CustomSelect
                   placeholder="All Locations"
                   items={locations}
@@ -193,7 +195,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("department")}</label>
                 <CustomSelect
                   placeholder="All Departments"
                   items={departments}
@@ -203,7 +205,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Employees</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("monitoring.employees")}</label>
                 <div className="flex items-center flex-wrap gap-1.5 min-h-[40px]">
                   {employeeIds.length === 0 ? (
                     <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-semibold">
@@ -253,7 +255,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
                   </label>
                 ))}
               {employees.filter((e) => e.value !== "all").length === 0 && (
-                <p className="text-xs text-slate-400 py-2 text-center">No employees found</p>
+                <p className="text-xs text-slate-400 py-2 text-center">{t("monitoring.noEmployeesFound")}</p>
               )}
             </div>
           </div>
@@ -262,12 +264,12 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="w-1 h-5 rounded-full bg-blue-500" />
-              <span className="text-sm font-semibold text-slate-700">Note</span>
+              <span className="text-sm font-semibold text-slate-700">{t("common.note")}</span>
             </div>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note for this group"
+              placeholder={t("monitoring.optionalNote")}
               rows={4}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -291,7 +293,7 @@ const CreateGroup = ({ open, onOpenChange, isEdit = false }) => {
               disabled={saving}
             >
               <Users className="w-4 h-4" />
-              {saving ? "Saving..." : isEdit ? "Update Group" : "Create Group"}
+              {saving ? t("common.saving") : isEdit ? t("monitoring.updateGroup") : t("monitoring.createGroup")}
             </Button>
           </div>
         </div>

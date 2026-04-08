@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X, ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProjectStore } from "@/page/protected/admin/mobile-task-clients/projectStore";
 
 function MultiSelectDropdown({ label, items, selectedIds, onToggle, onSelectAll }) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const ref = useRef(null);
@@ -51,14 +53,14 @@ function MultiSelectDropdown({ label, items, selectedIds, onToggle, onSelectAll 
                     <div className="sticky top-0 bg-white border-b border-slate-100 p-1.5">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
+                            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`${t("search")}...`}
                                 className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-400" />
                         </div>
                     </div>
                     <div className="overflow-y-auto max-h-48">
                         <label className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 cursor-pointer hover:bg-slate-50">
                             <input type="checkbox" checked={allSelected} onChange={() => onSelectAll(!allSelected)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-500" />
-                            <span className="text-xs font-semibold text-blue-600">Select All</span>
+                            <span className="text-xs font-semibold text-blue-600">{t("projects.selectAll")}</span>
                         </label>
                         {filtered.map((item) => (
                             <label key={item.value} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-slate-50">
@@ -66,7 +68,7 @@ function MultiSelectDropdown({ label, items, selectedIds, onToggle, onSelectAll 
                                 <span className="text-xs text-slate-600">{item.label}</span>
                             </label>
                         ))}
-                        {filtered.length === 0 && <p className="px-3 py-2 text-xs text-slate-400">No results</p>}
+                        {filtered.length === 0 && <p className="px-3 py-2 text-xs text-slate-400">{t("projects.noResults")}</p>}
                     </div>
                 </div>,
                 document.body
@@ -76,6 +78,7 @@ function MultiSelectDropdown({ label, items, selectedIds, onToggle, onSelectAll 
 }
 
 export default function AddEditProjectModal() {
+    const { t } = useTranslation();
     const createOpen = useProjectStore((s) => s.createModalOpen);
     const editOpen = useProjectStore((s) => s.editModalOpen);
     const project = useProjectStore((s) => s.editingProject);
@@ -155,30 +158,30 @@ export default function AddEditProjectModal() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between px-6 py-5 bg-blue-500 rounded-t-2xl shrink-0">
-                    <h3 className="text-white font-semibold text-lg">{isEdit ? "Edit Project" : "Create Project"}</h3>
+                    <h3 className="text-white font-semibold text-lg">{isEdit ? t("projects.editProject") : t("projects.createProject")}</h3>
                     <button onClick={close} className="text-white/80 hover:text-white"><X className="w-5 h-5" /></button>
                 </div>
                 <div className="p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Project Name <span className="text-red-500">*</span></label>
-                        <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Enter project name" className="h-10 text-sm" />
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t("projects.projectName")} <span className="text-red-500">*</span></label>
+                        <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder={t("projects.enterProjectName")} className="h-10 text-sm" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Start Date</label>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t("projects.startDate")}</label>
                             <Input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="h-10 text-sm" />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">End Date</label>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t("projects.endDate")}</label>
                             <Input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="h-10 text-sm" />
                         </div>
                     </div>
 
                     {/* Managers multi-select dropdown */}
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Managers</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t("projects.managers")}</label>
                         <MultiSelectDropdown
-                            label="Select Managers"
+                            label={t("projects.selectManagers")}
                             items={managers}
                             selectedIds={form.managers}
                             onToggle={toggleManager}
@@ -198,9 +201,9 @@ export default function AddEditProjectModal() {
 
                     {/* Employees multi-select dropdown */}
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Employees</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t("employees")}</label>
                         <MultiSelectDropdown
-                            label="Select Employees"
+                            label={t("projects.selectEmployees")}
                             items={employees}
                             selectedIds={form.employees}
                             onToggle={toggleEmployee}
@@ -219,8 +222,8 @@ export default function AddEditProjectModal() {
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0 bg-slate-50/50 rounded-b-2xl">
-                    <Button variant="outline" onClick={close} className="px-5">Cancel</Button>
-                    <Button className="bg-blue-500 hover:bg-blue-600 px-6" onClick={handleSubmit} disabled={saving}>{saving ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
+                    <Button variant="outline" onClick={close} className="px-5">{t("common.cancel")}</Button>
+                    <Button className="bg-blue-500 hover:bg-blue-600 px-6" onClick={handleSubmit} disabled={saving}>{saving ? t("projects.saving") : isEdit ? t("common.update") : t("common.create")}</Button>
                 </div>
             </div>
         </div>

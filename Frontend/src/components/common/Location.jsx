@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin } from "lucide-react";
 import Customreport from "../../components/common/elements/Customreport";
 import * as am5 from "@amcharts/amcharts5";
@@ -180,7 +181,7 @@ function AmChartsMap({ locations }) {
   if (!locations || locations.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-        No data available
+        {/* No data available - translated in parent */}
       </div>
     );
   }
@@ -189,12 +190,14 @@ function AmChartsMap({ locations }) {
 }
 
 export default function LocationPerformance({
-  title = "Location Performance",
+  title,
   data = { rows: [] },
   loading = false,
   report,
   filter,
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("locPerform");
   const rows = data?.rows || [];
 
   return (
@@ -204,7 +207,7 @@ export default function LocationPerformance({
           {/* ── Header ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
             <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-              {title}
+              {resolvedTitle}
             </h2>
             {report}
           </div>
@@ -222,7 +225,7 @@ export default function LocationPerformance({
               <div className="w-full h-72 p-2">
                 {loading ? (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-                    Loading...
+                    {t("loadingText")}
                   </div>
                 ) : (
                   <AmChartsMap locations={rows} />
@@ -235,20 +238,20 @@ export default function LocationPerformance({
               {/* Column headers */}
               <div className="flex items-center justify-between px-1 mb-2">
                 <span className="text-slate-500 text-xs font-medium">
-                  Default
+                  {t("default")}
                 </span>
                 <span className="text-slate-500 text-xs font-medium">
-                  Time / Percentage
+                  {t("timePercentage")}
                 </span>
               </div>
 
               {loading ? (
                 <div className="text-center py-8 text-slate-400 text-sm">
-                  Loading...
+                  {t("loadingText")}
                 </div>
               ) : rows.length === 0 ? (
                 <div className="text-center py-8 text-slate-400 text-sm">
-                  No data available
+                  {t("noDataAvailable")}
                 </div>
               ) : (
                 <div className="divide-y divide-dashed divide-slate-200">

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Printer } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpPrintLogs from '@/components/common/print-logs/EmpPrintLogs'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const PrintLogs = () => (
-  <Placeholder
-    title="Print Logs"
-    description="Monitor all print jobs sent from employee machines."
-    Icon={Printer}
-  />
-)
+const PrintLogs = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("printLogsTitle")}
+      description={t("printLogsDescription")}
+      Icon={Printer}
+    />
+  )
+}
 
 export default PrintLogs

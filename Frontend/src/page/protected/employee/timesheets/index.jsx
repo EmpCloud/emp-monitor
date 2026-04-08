@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Clock } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import TimesheetsTab      from "../../admin/employee-profile/TimesheetsTab";
 
 export default function EmployeeTimesheets() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeTimesheets() {
           <Clock size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">Timesheets</h1>
-          <p className="text-xs text-[#A3AED0]">Your work hours and attendance</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("timesheets")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_timesheets_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

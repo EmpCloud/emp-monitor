@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { Button } from "@/components/ui/button";
@@ -6,21 +7,23 @@ import { Input } from "@/components/ui/input";
 import EmpResellerSettingsLogo from "@/assets/reseller/reseller-settings.svg";
 import { useResellerSettingsStore } from "@/page/protected/admin/reseller-settings/settingsStore";
 
-const FIELDS = [
-    { key: "facebook", label: "Facebook", placeholder: "Facebook Page Link" },
-    { key: "instagram", label: "Instagram", placeholder: "Instagram Page Link" },
-    { key: "twitter", label: "Twitter", placeholder: "Twitter Page Link" },
-    { key: "brand_name", label: "Brand Name *", placeholder: "Brand Name" },
-    { key: "copyright_name", label: "Copyright Name", placeholder: "Copyright Name" },
-    { key: "copyright_year", label: "Copyright Year", placeholder: "YYYY-YYYY" },
-    { key: "support_text", label: "Support Text", placeholder: "Support Text" },
-    { key: "support_mail", label: "Support Email", placeholder: "Support Email" },
-    { key: "skype_email", label: "Skype Email", placeholder: "Skype Email" },
-    { key: "help_link", label: "Help Link", placeholder: "Help Link" },
-    { key: "admin_email", label: "Admin Email", placeholder: "Admin Email" },
+const getFields = (t) => [
+    { key: "facebook", label: "Facebook", placeholder: t("reseller.facebookLink") },
+    { key: "instagram", label: "Instagram", placeholder: t("reseller.instagramLink") },
+    { key: "twitter", label: "Twitter", placeholder: t("reseller.twitterLink") },
+    { key: "brand_name", label: t("reseller.brandName") + " *", placeholder: t("reseller.brandName") },
+    { key: "copyright_name", label: t("reseller.copyrightName"), placeholder: t("reseller.copyrightName") },
+    { key: "copyright_year", label: t("reseller.copyrightYear"), placeholder: "YYYY-YYYY" },
+    { key: "support_text", label: t("reseller.supportText"), placeholder: t("reseller.supportText") },
+    { key: "support_mail", label: t("reseller.supportEmail"), placeholder: t("reseller.supportEmail") },
+    { key: "skype_email", label: t("reseller.skypeEmail"), placeholder: t("reseller.skypeEmail") },
+    { key: "help_link", label: t("reseller.helpLink"), placeholder: t("reseller.helpLink") },
+    { key: "admin_email", label: t("reseller.adminEmail"), placeholder: t("reseller.adminEmail") },
 ];
 
 const EmpResellerSettings = () => {
+    const { t } = useTranslation();
+    const FIELDS = getFields(t);
     const form = useResellerSettingsStore((s) => s.form);
     const loading = useResellerSettingsStore((s) => s.loading);
     const saving = useResellerSettingsStore((s) => s.saving);
@@ -41,14 +44,14 @@ const EmpResellerSettings = () => {
 
     useEffect(() => {
         if (successMsg) {
-            Swal.fire({ icon: "success", title: "Success", text: successMsg, timer: 2500, showConfirmButton: false });
+            Swal.fire({ icon: "success", title: t("success"), text: successMsg, timer: 2500, showConfirmButton: false });
             clearMessages();
         }
     }, [successMsg]);
 
     useEffect(() => {
         if (error) {
-            Swal.fire({ icon: "error", title: "Error", text: error, showConfirmButton: true });
+            Swal.fire({ icon: "error", title: t("reseller.error"), text: error, showConfirmButton: true });
             clearMessages();
         }
     }, [error]);
@@ -59,7 +62,7 @@ const EmpResellerSettings = () => {
         img.onload = () => {
             URL.revokeObjectURL(url);
             if (img.width > maxW || img.height > maxH) {
-                Swal.fire({ icon: "warning", title: "Image too large", text: `Max dimensions: ${maxW}×${maxH}px` });
+                Swal.fire({ icon: "warning", title: t("reseller.imageTooLarge"), text: `${t("reseller.maxDimensions")}: ${maxW}×${maxH}px` });
                 if (inputEl) inputEl.value = "";
             } else {
                 setter(file);
@@ -94,8 +97,8 @@ const EmpResellerSettings = () => {
                 <div className="flex items-center gap-2">
                     <img alt="settings" className="w-20 h-20" src={EmpResellerSettingsLogo} />
                     <div className="border-l-2 border-blue-500 pl-4">
-                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">Reseller</span>{" "}<span className="font-normal text-gray-500">Settings</span></h2>
-                        <p className="text-xs text-gray-400 mt-1">Email template & branding settings</p>
+                        <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}><span className="font-semibold">{t("reseller.reseller")}</span>{" "}<span className="font-normal text-gray-500">{t("settings")}</span></h2>
+                        <p className="text-xs text-gray-400 mt-1">{t("reseller.settingsDescription")}</p>
                     </div>
                 </div>
             </div>
@@ -121,26 +124,26 @@ const EmpResellerSettings = () => {
 
                 {/* Brand Logo */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-700 uppercase sm:w-48 shrink-0">Brand Logo</label>
+                    <label className="text-sm font-semibold text-slate-700 uppercase sm:w-48 shrink-0">{t("reseller.brandLogo")}</label>
                     <div className="flex-1">
                         <input ref={logoRef} type="file" accept=".png" onChange={handleLogoChange} className="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
-                        <p className="text-[11px] text-slate-400 mt-1">PNG only. Max 990×220px</p>
+                        <p className="text-[11px] text-slate-400 mt-1">{t("reseller.pngOnly")} 990×220px</p>
                     </div>
                 </div>
 
                 {/* Brand Favicon */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-700 uppercase sm:w-48 shrink-0">Brand Favicon</label>
+                    <label className="text-sm font-semibold text-slate-700 uppercase sm:w-48 shrink-0">{t("reseller.brandFavicon")}</label>
                     <div className="flex-1">
                         <input ref={faviconRef} type="file" accept=".png" onChange={handleFaviconChange} className="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
-                        <p className="text-[11px] text-slate-400 mt-1">PNG only. Max 220×220px</p>
+                        <p className="text-[11px] text-slate-400 mt-1">{t("reseller.pngOnly")} 220×220px</p>
                     </div>
                 </div>
 
                 {/* Save */}
                 <div className="flex justify-center pt-4">
                     <Button className="bg-blue-500 hover:bg-blue-600 px-12 text-sm font-semibold" onClick={saveSettings} disabled={saving}>
-                        {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</> : "Save"}
+                        {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> {t("save")}...</> : t("save")}
                     </Button>
                 </div>
             </div>

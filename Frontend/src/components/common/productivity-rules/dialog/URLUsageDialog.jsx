@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { useProductivityRulesStore } from "@/page/protected/admin/productivity-r
 import moment from "moment";
 
 const URLUsageDialog = () => {
+    const { t } = useTranslation();
     const {
         urlUsageDialogOpen,
         closeURLUsageDialog,
@@ -87,7 +89,7 @@ const URLUsageDialog = () => {
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-blue-500" />
-                        <DialogTitle>Time Usage</DialogTitle>
+                        <DialogTitle>{t("prodRules.timeUsage")}</DialogTitle>
                     </div>
                     <DialogDescription>
                         Activity: <span className="font-semibold text-slate-700">{urlUsageAppName}</span>
@@ -98,7 +100,7 @@ const URLUsageDialog = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 py-2">
                     {/* Location */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Location</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">{t("location")}</label>
                         <Select
                             value={urlUsageFilters.locationId || "all"}
                             onValueChange={handleLocationChange}
@@ -107,7 +109,7 @@ const URLUsageDialog = () => {
                                 <SelectValue placeholder="All Locations" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                                <SelectItem value="all">All Locations</SelectItem>
+                                <SelectItem value="all">{t("prodRules.allLocations")}</SelectItem>
                                 {locations.map((loc) => (
                                     <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>
                                 ))}
@@ -117,7 +119,7 @@ const URLUsageDialog = () => {
 
                     {/* Department */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Department</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">{t("department")}</label>
                         <Select
                             value={urlUsageFilters.departmentId || "all"}
                             onValueChange={handleDeptChange}
@@ -126,7 +128,7 @@ const URLUsageDialog = () => {
                                 <SelectValue placeholder="All Departments" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                                <SelectItem value="all">All Departments</SelectItem>
+                                <SelectItem value="all">{t("prodRules.allDepartments")}</SelectItem>
                                 {depts.map((d) => (
                                     <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                                 ))}
@@ -136,7 +138,7 @@ const URLUsageDialog = () => {
 
                     {/* Employee */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Employee</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">{t("employee")}</label>
                         <Select
                             value={urlUsageFilters.employeeId || "all"}
                             onValueChange={handleEmployeeChange}
@@ -145,7 +147,7 @@ const URLUsageDialog = () => {
                                 <SelectValue placeholder="All Employees" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                                <SelectItem value="all">All Employees</SelectItem>
+                                <SelectItem value="all">{t("prodRules.allEmployees")}</SelectItem>
                                 {emps.map((e) => (
                                     <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
                                 ))}
@@ -155,7 +157,7 @@ const URLUsageDialog = () => {
 
                     {/* Start Date */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Start Date</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">{t("prodRules.startDate")}</label>
                         <input
                             type="date"
                             value={dateRange.start}
@@ -167,7 +169,7 @@ const URLUsageDialog = () => {
 
                     {/* End Date */}
                     <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">End Date</label>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">{t("prodRules.endDate")}</label>
                         <input
                             type="date"
                             value={dateRange.end}
@@ -184,14 +186,14 @@ const URLUsageDialog = () => {
                     <table className="w-full min-w-[700px]">
                         <thead>
                             <tr className="bg-blue-50/80">
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Name</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Email</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Location</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Department</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Productive</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Unproductive</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Neutral</th>
-                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">Idle</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.name")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.email")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("location")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("department")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.productive")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.unproductive")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.neutral")}</th>
+                                <th className="px-3 py-2.5 text-xs font-semibold text-slate-700 text-left">{t("prodRules.idle")}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -204,7 +206,7 @@ const URLUsageDialog = () => {
                             ) : urlUsageData.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="text-center text-sm text-gray-400 py-10">
-                                        No data found
+                                        {t("Nodata")}
                                     </td>
                                 </tr>
                             ) : (

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -31,6 +32,7 @@ const colorMap = {
 import Customreport from "../../components/common/elements/Customreport";
 
 export default function ActivitySnapshot({ data }) {
+  const { t } = useTranslation();
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -98,7 +100,7 @@ export default function ActivitySnapshot({ data }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-            Today Activity Snapshot
+            {t("snapshot")}
           </h2>
           <Customreport showMaximize={true} showDownload={true} />
         </div>
@@ -112,9 +114,9 @@ export default function ActivitySnapshot({ data }) {
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-center text-slate-400">
                 <div className="text-3xl mb-2">📊</div>
-                <p className="text-sm font-semibold text-slate-600">No Activity Data</p>
+                <p className="text-sm font-semibold text-slate-600">{t("noActivityData")}</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  No employee activity recorded for the selected date.
+                  {t("noActivityRecorded")}
                 </p>
               </div>
             )}
@@ -122,20 +124,29 @@ export default function ActivitySnapshot({ data }) {
 
           {/* Legend */}
           <div className="2xl:flex w-fit flex-col gap-4 flex-1 hidden ">
-            {LEGEND_ITEMS.map((item) => (
-              <div key={item.label} className="flex items-center gap-3">
-                <div
-                  className="w-4 h-4 rounded-full shrink-0"
-                  style={{
-                    backgroundColor: item.color,
-                    boxShadow: `0 0 6px ${item.color}80`,
-                  }}
-                />
-                <span className="text-slate-600 text-sm font-medium">
-                  {item.label}
-                </span>
-              </div>
-            ))}
+            {LEGEND_ITEMS.map((item) => {
+              const legendKeyMap = {
+                "Idle Time": "idleTime",
+                "Active Time": "activeTime",
+                "Productive Time": "productiveTime",
+                "Non-Productive Time": "nonProductiveTime",
+                "Neutral Time": "neutralTime",
+              };
+              return (
+                <div key={item.label} className="flex items-center gap-3">
+                  <div
+                    className="w-4 h-4 rounded-full shrink-0"
+                    style={{
+                      backgroundColor: item.color,
+                      boxShadow: `0 0 6px ${item.color}80`,
+                    }}
+                  />
+                  <span className="text-slate-600 text-sm font-medium">
+                    {t(legendKeyMap[item.label] || item.label)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

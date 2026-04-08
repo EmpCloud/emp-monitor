@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+/** Shared download format options for DLP pages. Call inside a component with t from useTranslation. */
+export const getDownloadOptions = (t) => [
+  { label: t("usbDetection.selectOption"), value: "all" },
+  { label: "PDF", value: "pdf" },
+  { label: "Excel", value: "excel" },
+];
+
 /**
  * Custom hook that encapsulates all shared DLP filter/pagination behavior.
  *

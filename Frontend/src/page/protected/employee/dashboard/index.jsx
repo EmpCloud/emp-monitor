@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import moment from "moment";
 import {
   BarChart3, Clock, Camera, Monitor, Video,
@@ -16,15 +17,15 @@ import WebHistoryTab      from "../../admin/employee-profile/WebHistoryTab";
 import AppHistoryTab      from "../../admin/employee-profile/AppHistoryTab";
 import KeyStrokesTab      from "../../admin/employee-profile/KeyStrokesTab";
 
-const tabs = [
-  { key: "productivity",    label: "Productivity",     icon: BarChart3  },
-  { key: "timesheets",      label: "Timesheets",        icon: Clock      },
-  { key: "screenshots",     label: "Screenshots",       icon: Camera     },
-  { key: "screencast",      label: "Screen Cast",       icon: Monitor    },
-  { key: "screenrecording", label: "Screen Recording",  icon: Video      },
-  { key: "webhistory",      label: "Web History",       icon: Globe      },
-  { key: "apphistory",      label: "App History",       icon: LayoutGrid },
-  { key: "keystrokes",      label: "Key Strokes",       icon: PenTool    },
+const getTabItems = (t) => [
+  { key: "productivity",    label: t("productivity"),        icon: BarChart3  },
+  { key: "timesheets",      label: t("timesheets"),          icon: Clock      },
+  { key: "screenshots",     label: t("ss"),                  icon: Camera     },
+  { key: "screencast",      label: t("screenCast"),          icon: Monitor    },
+  { key: "screenrecording", label: t("ep_screen_recording"), icon: Video      },
+  { key: "webhistory",      label: t("ep_web_history"),      icon: Globe      },
+  { key: "apphistory",      label: t("ep_app_history"),      icon: LayoutGrid },
+  { key: "keystrokes",      label: t("keystroke"),           icon: PenTool    },
 ];
 
 const tabComponents = {
@@ -39,16 +40,19 @@ const tabComponents = {
 };
 
 export default function EmployeeDashboard() {
+  const { t } = useTranslation();
   const { employee: session } = useEmployeeSession();
 
   const [activeTab, setActiveTab] = useState("productivity");
   const [startDate, setStartDate] = useState(moment().subtract(6, "days").format("YYYY-MM-DD"));
   const [endDate,   setEndDate]   = useState(moment().format("YYYY-MM-DD"));
 
+  const tabs = getTabItems(t);
+
   // Build the employee object all tab components expect
   const employee = {
     id:   session?.user_id  ?? null,
-    name: session?.full_name ?? session?.user_name ?? "My Account",
+    name: session?.full_name ?? session?.user_name ?? t("ep_my_account"),
   };
 
   const ActiveComponent = tabComponents[activeTab];

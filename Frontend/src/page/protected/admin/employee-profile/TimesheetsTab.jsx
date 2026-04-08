@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import "@/components/common/employee-details/emp.css";
 import TableToolbar from "@/components/common/TableToolbar";
@@ -6,14 +7,14 @@ import PaginationFooter from "@/components/common/PaginationFooter";
 import { fetchTimesheets } from "./service";
 import { secToHMS, fmtDateTime } from "@/lib/dateTimeUtils";
 
-const columns = [
-  { key: "clockIn",            label: "Clock In",             className: "text-gray-800" },
-  { key: "clockOut",           label: "Clock Out",            className: "text-gray-800" },
-  { key: "totalHours",         label: "Total Hours",          className: "text-gray-800" },
-  { key: "officeHours",        label: "Office Hours",         className: "text-gray-800" },
-  { key: "activeHours",        label: "Active Hours",         className: "text-gray-800" },
-  { key: "productiveHours",    label: "Productive Hours",     className: "text-green-600", hasInfo: true },
-  { key: "unproductiveHours",  label: "Unproductive Hours",   className: "text-red-500",   hasInfo: true },
+const columnDefs = [
+  { key: "clockIn",            labelKey: "clockin",         className: "text-gray-800" },
+  { key: "clockOut",           labelKey: "clockout",        className: "text-gray-800" },
+  { key: "totalHours",         labelKey: "totalHours",      className: "text-gray-800" },
+  { key: "officeHours",        labelKey: "officeHours",     className: "text-gray-800" },
+  { key: "activeHours",        labelKey: "activeHours",     className: "text-gray-800" },
+  { key: "productiveHours",    labelKey: "prodHour",        className: "text-green-600", hasInfo: true },
+  { key: "unproductiveHours",  labelKey: "unProdHour",      className: "text-red-500",   hasInfo: true },
 ];
 
 // API: { code, data: { user_data: [{start_time, end_time, total_time, office_time,
@@ -29,6 +30,8 @@ const mapRow = (d) => ({
 });
 
 export default function TimesheetsTab({ employee, startDate, endDate }) {
+  const { t } = useTranslation();
+  const columns = columnDefs.map((col) => ({ ...col, label: t(col.labelKey) }));
   const [rows, setRows]             = useState([]);
   const [loading, setLoading]       = useState(false);
   const [search, setSearch]         = useState("");
@@ -85,11 +88,11 @@ export default function TimesheetsTab({ employee, startDate, endDate }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-10 text-sm text-gray-400">Loading…</td>
+                <td colSpan={columns.length} className="text-center py-10 text-sm text-gray-400">{t("Loading")}…</td>
               </tr>
             ) : paged.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-10 text-sm text-gray-400 italic">No data available</td>
+                <td colSpan={columns.length} className="text-center py-10 text-sm text-gray-400 italic">{t("noDataAvailable")}</td>
               </tr>
             ) : paged.map((row, ri) => (
               <tr key={ri} className="bg-white">

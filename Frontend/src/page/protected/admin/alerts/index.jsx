@@ -1,5 +1,6 @@
 import React from 'react'
 import { BellRing } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpAlerts from '@/components/common/alerts/EmpAlerts'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const Alerts = () => (
-  <Placeholder
-    title="Alerts"
-    description="View and manage triggered behaviour alerts across the organization."
-    Icon={BellRing}
-  />
-)
+const Alerts = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("alertsTitle")}
+      description={t("alertsDescription")}
+      Icon={BellRing}
+    />
+  )
+}
 
 export default Alerts

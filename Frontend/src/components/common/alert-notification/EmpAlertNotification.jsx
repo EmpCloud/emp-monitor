@@ -1,27 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Info, ArrowUp, ArrowDown } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import ShowEntries from "@/components/common/elements/ShowEntries";
 import EmpAlertNotificationLogo from "@/assets/behavior/alert-notifs.svg";
 import { useAlertNotificationStore } from "@/page/protected/admin/alert-notification/alertNotificationStore";
 
-const SORTABLE_COLUMNS = [
-    { key: "datetime", label: "Date / Time" },
-    { key: "employee", label: "Employee" },
-    { key: "computer", label: "Employee Code" },
-    { key: "policy", label: "Rule Name" },
-    { key: "behavior_rule", label: "Alert Triggered Point" },
-    { key: "action", label: "Action" },
-    { key: "risk_level", label: "Risk Level" },
+const getSortableColumns = (t) => [
+    { key: "datetime", label: t("alert_date_time") },
+    { key: "employee", label: t("employee") },
+    { key: "computer", label: t("alert_emp_code") },
+    { key: "policy", label: t("alert_rule_name") },
+    { key: "behavior_rule", label: t("alert_triggered_point") },
+    { key: "action", label: t("alert_action") },
+    { key: "risk_level", label: t("alert_risk_level") },
 ];
 
 const SortHeader = ({ column, currentSort, currentOrder, onSort }) => (
@@ -47,6 +42,8 @@ const SortHeader = ({ column, currentSort, currentOrder, onSort }) => (
 );
 
 const EmpAlertNotification = () => {
+    const { t } = useTranslation();
+    const SORTABLE_COLUMNS = useMemo(() => getSortableColumns(t), [t]);
     const rows = useAlertNotificationStore((s) => s.rows);
     const totalCount = useAlertNotificationStore((s) => s.totalCount);
     const locations = useAlertNotificationStore((s) => s.locations);
@@ -144,10 +141,10 @@ const EmpAlertNotification = () => {
             <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
                 <div className="border-l-2 border-blue-500 pl-4">
                     <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                        <span className="font-semibold">Alerts Notifications</span>
+                        <span className="font-semibold">{t("alert_title")}</span>
                     </h2>
                     <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                        View and manage triggered alert notifications across the organization
+                        {t("alert_description")}
                     </p>
                 </div>
                 <div className="flex items-end gap-1 mr-2">
@@ -162,20 +159,20 @@ const EmpAlertNotification = () => {
             {/* Filters */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-9">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Locations</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("alert_locations")}</label>
                     <CustomSelect placeholder="All Locations" items={locations} selected={filters.location} onChange={handleLocationChange} width="full" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Departments</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("alert_departments")}</label>
                     <CustomSelect placeholder="All Departments" items={departments} selected={filters.department} onChange={handleDepartmentChange} width="full" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Employees</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("alert_employees")}</label>
                     <CustomSelect placeholder="All Employees" items={employees} selected={filters.employee} onChange={handleEmployeeChange} width="full" />
                 </div>
                 <div>
                     <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-                        Select Date Ranges <Info className="w-3.5 h-3.5 text-blue-500" />
+                        {t("alert_date_ranges")} <Info className="w-3.5 h-3.5 text-blue-500" />
                     </label>
                     <DateRangeCalendar
                         startDate={filters.startDate}
@@ -187,27 +184,11 @@ const EmpAlertNotification = () => {
 
             {/* Show entries + Search */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#424242] font-medium">Show</span>
-                    <Select
-                        value={String(pagination.pageSize)}
-                        onValueChange={handlePageSizeChange}
-                    >
-                        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-                            <SelectValue placeholder="10" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            {["10", "25", "50", "100"].map((n) => (
-                                <SelectItem key={n} value={n}>{n}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <span className="text-[13px] text-[#424242] font-medium">Entries</span>
-                </div>
+                <ShowEntries value={pagination.pageSize} onChange={handlePageSizeChange} />
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search"
+                        placeholder={t("search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -234,11 +215,11 @@ const EmpAlertNotification = () => {
                     <tbody className="bg-white">
                         {tableLoading ? (
                             <tr>
-                                <td colSpan={7} className="text-center text-sm text-gray-400 py-10">Loading...</td>
+                                <td colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("loadingText")}</td>
                             </tr>
                         ) : rows.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="text-center text-sm text-gray-400 py-10">No Data Found !</td>
+                                <td colSpan={7} className="text-center text-sm text-gray-400 py-10">{t("alert_no_data")}</td>
                             </tr>
                         ) : (
                             rows.map((row, idx) => (
@@ -262,9 +243,9 @@ const EmpAlertNotification = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5 pt-10">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span>{" "}
-                    to <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span>{" "}
-                    of <span className="font-bold text-blue-600">{totalCount}</span>
+                    {t("timeclaim.showing")} <span className="font-bold text-gray-700">{totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}</span>{" "}
+                    {t("to")} <span className="font-bold text-gray-700">{Math.min(pagination.page * pagination.pageSize, totalCount)}</span>{" "}
+                    {t("of")} <span className="font-bold text-blue-600">{totalCount}</span>
                 </p>
                 <PaginationComponent currentPage={pagination.page} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>

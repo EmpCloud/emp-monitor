@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import {
 import { useProductivityRulesStore } from "@/page/protected/admin/productivity-rules/productivityRulesStore";
 
 const AlwaysActiveDialog = () => {
+    const { t } = useTranslation();
     const {
         alwaysActiveDialogOpen,
         closeAlwaysActiveDialog,
@@ -38,10 +40,10 @@ const AlwaysActiveDialog = () => {
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-violet-500" />
-                        <DialogTitle>Set Always Active Time</DialogTitle>
+                        <DialogTitle>{t("prodRules.setAlwaysActiveTime")}</DialogTitle>
                     </div>
                     <DialogDescription>
-                        Set the duration (HH:MM) for which this activity will be considered always active.
+                        {t("prodRules.setAlwaysActiveDesc")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -57,7 +59,7 @@ const AlwaysActiveDialog = () => {
                         maxLength={5}
                     />
                     <p className="text-xs text-slate-400 mt-1.5">
-                        Format: Hours:Minutes (e.g., 02:30 = 2 hours 30 minutes)
+                        {t("prodRules.timeFormat")}
                     </p>
                 </div>
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Briefcase, MapPin, Search } from "lucide-react";
@@ -16,6 +17,7 @@ const DAYS = [
 
 /* ── Unlimited Tab ── */
 export function UnlimitedTab() {
+  const { t } = useTranslation();
   const [workingDays, setWorkingDays] = useState({
     Monday: true, Tuesday: true, Wednesday: true, Thursday: true,
     Friday: true, Saturday: true, Sunday: false,
@@ -26,8 +28,8 @@ export function UnlimitedTab() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
       <div>
-        <h4 className="text-base font-bold text-gray-800">Select Working Days</h4>
-        <p className="text-xs text-gray-400 mt-0.5">Tracker is constantly working.</p>
+        <h4 className="text-base font-bold text-gray-800">{t("track_select_working_days")}</h4>
+        <p className="text-xs text-gray-400 mt-0.5">{t("track_tracker_constantly_working")}</p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {DAYS.map((d) => {
@@ -56,6 +58,7 @@ export function UnlimitedTab() {
 
 /* ── Fixed Tab ── */
 export function FixedTab() {
+  const { t } = useTranslation();
   const [workingDays, setWorkingDays] = useState(
     DAYS.reduce((acc, d) => {
       acc[d.name] = true;
@@ -83,8 +86,8 @@ export function FixedTab() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
       <div>
-        <h4 className="text-base font-bold text-gray-800">Select Working Days & timings</h4>
-        <p className="text-xs text-gray-400 mt-0.5">Define fixed working hours (09:00 AM to 06:00 PM )</p>
+        <h4 className="text-base font-bold text-gray-800">{t("track_select_working_days_timings")}</h4>
+        <p className="text-xs text-gray-400 mt-0.5">{t("track_fixed_hours_desc")}</p>
       </div>
 
       <div className="bg-[#F8FAFC] border border-gray-100 rounded-3xl p-6">
@@ -135,7 +138,7 @@ export function FixedTab() {
                   <div key={d.name} className="grid grid-cols-2 gap-x-12 items-center">
                     <div className="flex items-center justify-end gap-3">
                       <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                        Shift Starts at
+                        {t("track_shift_starts_at")}
                       </span>
                       <Input
                         type="time"
@@ -148,7 +151,7 @@ export function FixedTab() {
 
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                        Shift Ends at
+                        {t("track_shift_ends_at")}
                       </span>
                       <Input
                         type="time"
@@ -170,7 +173,7 @@ export function FixedTab() {
               onClick={applyToAll}
               className="h-9 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold"
             >
-              Apply to all
+              {t("track_apply_to_all")}
             </Button>
           </div>
         </div>
@@ -181,16 +184,16 @@ export function FixedTab() {
 
 /* ── Manual Clocked In Tab ── */
 export function ManualClockedInTab() {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h4 className="text-base font-bold text-gray-800 mb-8">Manual clock-in-out</h4>
+      <h4 className="text-base font-bold text-gray-800 mb-8">{t("track_manual_clock_in_out")}</h4>
       <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
         <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
           <Briefcase size={36} className="text-gray-400" />
         </div>
         <p className="text-sm text-gray-500 max-w-md leading-relaxed">
-          Employees will clock-in and clock-out using EmpMonitor on their computer. Their
-          activities will be tracked while they are clocked-in.
+          {t("track_manual_clock_desc")}
         </p>
       </div>
     </div>
@@ -199,14 +202,15 @@ export function ManualClockedInTab() {
 
 /* ── Client Based Tab ── */
 export function ClientBasedTab() {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h4 className="text-base font-bold text-gray-800 mb-8">Clients List</h4>
+      <h4 className="text-base font-bold text-gray-800 mb-8">{t("track_clients_list")}</h4>
       <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
         <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
           <Search size={32} className="text-gray-400" />
         </div>
-        <p className="text-sm text-gray-500">No data found</p>
+        <p className="text-sm text-gray-500">{t("track_no_data_found")}</p>
       </div>
     </div>
   );
@@ -214,6 +218,7 @@ export function ClientBasedTab() {
 
 /* ── Network Based Tab ── */
 export function NetworkBasedTab() {
+  const { t } = useTranslation();
   const [networkName, setNetworkName] = useState("");
   const [ipAddress, setIpAddress] = useState("");
 
@@ -221,9 +226,9 @@ export function NetworkBasedTab() {
     <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 space-y-6">
       {/* Title + Button */}
       <div className="flex flex-wrap items-center gap-4">
-        <h4 className="text-lg font-bold text-gray-800">Specific Network Track</h4>
+        <h4 className="text-lg font-bold text-gray-800">{t("track_specific_network")}</h4>
         <Button className="h-8 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold">
-          Add New Location
+          {t("track_add_new_location")}
         </Button>
       </div>
 
@@ -231,9 +236,9 @@ export function NetworkBasedTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
         {/* Network Name */}
         <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-gray-600">Network Name :</label>
+          <label className="text-[12px] font-medium text-gray-600">{t("track_network_name")}</label>
           <Input
-            placeholder="Enter Network Name"
+            placeholder={t("track_enter_network_name")}
             value={networkName}
             onChange={(e) => setNetworkName(e.target.value)}
             className="h-10 rounded-xl border-gray-200 text-sm"
@@ -242,9 +247,9 @@ export function NetworkBasedTab() {
 
         {/* IP Address */}
         <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-gray-600">IP Address :</label>
+          <label className="text-[12px] font-medium text-gray-600">{t("track_ip_address")}</label>
           <Input
-            placeholder="Enter IP Address"
+            placeholder={t("track_enter_ip_address")}
             value={ipAddress}
             onChange={(e) => setIpAddress(e.target.value)}
             className="h-10 rounded-xl border-gray-200 text-sm"
@@ -259,13 +264,13 @@ export function NetworkBasedTab() {
                 <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <span className="text-[13px] font-semibold">Office Network</span>
+            <span className="text-[13px] font-semibold">{t("track_office_network")}</span>
           </div>
         </div>
 
         {/* Note */}
         <div className="flex items-center">
-          <span className="text-[12px] text-gray-500">Note : Office Network refers to Public IP address</span>
+          <span className="text-[12px] text-gray-500">{t("track_office_network_note")}</span>
         </div>
       </div>
     </div>
@@ -274,6 +279,7 @@ export function NetworkBasedTab() {
 
 /* ── GEO Location Tab ── */
 export function GeoLocationTab() {
+  const { t } = useTranslation();
   const [location, setLocation] = useState("");
   const [latLng, setLatLng] = useState("");
   const [range, setRange] = useState("");
@@ -281,17 +287,17 @@ export function GeoLocationTab() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5">
       <div className="flex items-center gap-3">
-        <h4 className="text-base font-bold text-gray-800">GEO Location</h4>
+        <h4 className="text-base font-bold text-gray-800">{t("track_geo_location_title")}</h4>
         <Button className="h-8 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold">
-          Add New Location
+          {t("track_add_new_location")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">Location:</label>
+          <label className="text-xs font-medium text-gray-600">{t("track_location")}</label>
           <Input
-            placeholder="Enter Location"
+            placeholder={t("track_enter_location")}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="h-10 rounded-lg border-gray-200 text-sm"
@@ -299,19 +305,19 @@ export function GeoLocationTab() {
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
-            Latitude , Longitude : <MapPin size={12} className="text-gray-400" />
+            {t("track_lat_lng")} <MapPin size={12} className="text-gray-400" />
           </label>
           <Input
-            placeholder="Enter Latitude, Enter Longitude"
+            placeholder={t("track_enter_lat_lng")}
             value={latLng}
             onChange={(e) => setLatLng(e.target.value)}
             className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">Range ( mts )</label>
+          <label className="text-xs font-medium text-gray-600">{t("track_range_mts")}</label>
           <Input
-            placeholder="Enter Range"
+            placeholder={t("track_enter_range")}
             value={range}
             onChange={(e) => setRange(e.target.value)}
             className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
@@ -320,7 +326,7 @@ export function GeoLocationTab() {
       </div>
 
       <Button variant="outline" className="h-9 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold border-0">
-        Add New Location
+        {t("track_add_new_location")}
       </Button>
     </div>
   );

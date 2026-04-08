@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Globe } from "lucide-react";
 import useEmployeeSession from "../../../../sessions/employeeSession";
 import WebHistoryTab      from "../../admin/employee-profile/WebHistoryTab";
 
 export default function EmployeeWebUsage() {
+  const { t } = useTranslation();
   const { employee } = useEmployeeSession();
   const employeeData = { id: employee?.user_id ?? null, name: employee?.full_name ?? "" };
 
@@ -13,8 +15,8 @@ export default function EmployeeWebUsage() {
           <Globe size={20} className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#2B3674]">Web Usage</h1>
-          <p className="text-xs text-[#A3AED0]">Websites visited during work hours</p>
+          <h1 className="text-xl font-bold text-[#2B3674]">{t("webUsage")}</h1>
+          <p className="text-xs text-[#A3AED0]">{t("ep_web_usage_desc")}</p>
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

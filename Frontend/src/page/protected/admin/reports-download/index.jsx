@@ -1,5 +1,6 @@
 import React from 'react'
 import { Download } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import EmpReportsDownload from '@/components/common/reports-download/EmpReportsDownload'
 
 const Placeholder = ({ title, description, Icon }) => (
@@ -8,12 +9,15 @@ const Placeholder = ({ title, description, Icon }) => (
   </div>
 )
 
-const ReportsDownload = () => (
-  <Placeholder
-    title="Reports Download"
-    description="Download detailed reports in various formats for offline analysis."
-    Icon={Download}
-  />
-)
+const ReportsDownload = () => {
+  const { t } = useTranslation()
+  return (
+    <Placeholder
+      title={t("reportsDownloadTitle")}
+      description={t("reportsDownloadDescription")}
+      Icon={Download}
+    />
+  )
+}
 
 export default ReportsDownload

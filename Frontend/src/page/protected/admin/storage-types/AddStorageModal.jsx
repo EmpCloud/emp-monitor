@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ function buildFormFromItem(item) {
 }
 
 export default function AddStorageModal({ open, onOpenChange, editItem, onSuccess }) {
+  const { t } = useTranslation();
   const isEdit = Boolean(editItem);
 
   // API-fetched storage types: [{ label, value (config key), providerId (numeric) }]
@@ -108,12 +110,12 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
 
   const handleSubmit = async () => {
     if (!storageType || !providerId) {
-      setError("Please select a storage type.");
+      setError(t("storage_select_type_error"));
       return;
     }
     for (const field of fields) {
       if (!formValues[field.key]?.trim()) {
-        setError(`${field.label} is required.`);
+        setError(`${field.label} ${t("storage_field_required")}`);
         return;
       }
     }
@@ -137,7 +139,7 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
       onSuccess?.();
       handleClose();
     } else {
-      setError("Failed to save. Please try again.");
+      setError(t("storage_save_failed"));
     }
   };
 
@@ -152,11 +154,11 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
           }}
         >
           <h2 className="text-white text-xl font-bold tracking-tight">
-            {isEdit ? "Edit Storage" : "Add Storage"}
+            {isEdit ? t("storage_edit_title") : t("storage_add_title")}
           </h2>
           <DialogClose className="text-white hover:text-white/80 transition-colors focus:outline-none focus:ring-2 focus:ring-white/40">
             <X className="h-5 w-5" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("close")}</span>
           </DialogClose>
         </div>
 
@@ -170,10 +172,10 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
 
           <div>
             <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-              Storage Type <span className="text-red-500">*</span>
+              {t("storage_type")} <span className="text-red-500">*</span>
             </label>
             <CustomSelect
-              placeholder="Select Storage Type"
+              placeholder={t("storage_select_type")}
               items={typeOptions}
               selected={selectValue}
               onChange={handleTypeChange}
@@ -196,7 +198,7 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
                   }
                   value={formValues[field.key] ?? ""}
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  placeholder={`Enter ${field.label}`}
+                  placeholder={`${t("storage_enter_prefix")} ${field.label}`}
                   className="h-10 text-[13px] pr-10"
                 />
                 {field.type === "password" && (
@@ -224,13 +226,13 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
           {storageType && (
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                Note
+                {t("note")}
               </label>
               <Input
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional note"
+                placeholder={t("storage_optional_note")}
                 className="h-10 text-[13px]"
               />
             </div>
@@ -248,7 +250,7 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
               className="h-10 px-6 rounded-full text-[14px] font-semibold"
               disabled={saving}
             >
-              Cancel
+              {t("cancel")}
             </Button>
           </DialogClose>
           <Button
@@ -256,7 +258,7 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
             disabled={saving || !storageType}
             className="h-10 px-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[14px] font-semibold shadow-sm disabled:opacity-50"
           >
-            {saving ? "Saving..." : isEdit ? "Save Changes" : "Add"}
+            {saving ? t("storage_saving") : isEdit ? t("storage_save_changes") : t("add")}
           </Button>
         </div>
       </DialogContent>

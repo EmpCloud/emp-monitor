@@ -1,4 +1,5 @@
 import React, { useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Download, Fullscreen } from "lucide-react";
 import aiVideo from "@/assets/ai.webm";
@@ -9,13 +10,15 @@ const Customreport = ({
   title ="",
   showShield = false,
   showButton = false,
-  buttonText = "View Report",
+  buttonText,
   showMaximize = false,
   showDownload = false,
   onViewReport,
   onAiClick,
 }) => {
+  const { t } = useTranslation();
   const videoRef = useRef(null);
+  const resolvedButtonText = buttonText || t("viewReport");
 
   const handleVideoMouseEnter = useCallback(() => {
     const el = videoRef.current;
@@ -58,7 +61,7 @@ const Customreport = ({
           className="text-blue-500 border-blue-200 hover:bg-blue-50 font-semibold rounded-lg px-4 text-sm h-9"
           onClick={onViewReport}
         >
-          {buttonText}
+          {resolvedButtonText}
         </Button>
       )}
 

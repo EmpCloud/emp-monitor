@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { Search, Info, Eye, Send, Inbox, Paperclip } from "lucide-react"
 import moment from "moment"
 import PaginationComponent from "@/components/common/Pagination"
@@ -17,23 +18,20 @@ import {
 } from "@/components/ui/dialog"
 import EmpEmailActivityLogLogo from "@/assets/dlp/email-activity-logs.svg"
 import { useEmailActivityLogsStore } from "@/page/protected/admin/email-activity-logs/emailActivityLogsStore"
-import { useDlpFilters } from "@/hooks/useDlpFilters"
+import { useDlpFilters, getDownloadOptions } from "@/hooks/useDlpFilters"
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 
-const TYPE_OPTIONS = [
-  { label: "Sent Mails", value: "0" },
-  { label: "Received Mails", value: "4" },
-  { label: "Click Event", value: "1" },
-  { label: "Page Visit", value: "2" },
-]
-
-const DOWNLOAD_OPTIONS = [
-  { label: "Select Option", value: "all" },
-  { label: "PDF", value: "pdf" },
-  { label: "Excel", value: "excel" },
+const getTypeOptions = (t) => [
+  { label: t("email_sent_mails"), value: "0" },
+  { label: t("email_received_mails"), value: "4" },
+  { label: t("email_click_event"), value: "1" },
+  { label: t("email_page_visit"), value: "2" },
 ]
 
 const EmpEmailActivityLog = () => {
+  const { t } = useTranslation()
+  const TYPE_OPTIONS = useMemo(() => getTypeOptions(t), [t])
+  const DOWNLOAD_OPTIONS = useMemo(() => getDownloadOptions(t), [t])
   const store = useEmailActivityLogsStore()
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading, setFilters } = store
 
@@ -70,11 +68,11 @@ const EmpEmailActivityLog = () => {
         </div>
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Email</span>{" "}
-            <span className="font-normal text-gray-500">Activity Logs</span>
+            <span className="font-semibold">{t("email_title")}</span>{" "}
+            <span className="font-normal text-gray-500">{t("email_activity_logs")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-            Granular email activity logs including attachments and recipients.
+            {t("email_description")}
           </p>
         </div>
       </div>
@@ -82,24 +80,24 @@ const EmpEmailActivityLog = () => {
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-4 mb-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
           <CustomSelect placeholder="All Locations" items={locations} selected={filters.locationId} onChange={handleLocationChange} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("department")}</label>
           <CustomSelect placeholder="All Departments" items={departments} selected={filters.departmentId} onChange={handleDepartmentChange} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Employee</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("employee")}</label>
           <CustomSelect placeholder="All Employees" items={employees} selected={filters.employeeId} onChange={handleEmployeeChange} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("email_type")}</label>
           <CustomSelect placeholder="Sent Mails" items={TYPE_OPTIONS} selected={filters.type} onChange={handleTypeChange} />
         </div>
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-            Select Date Ranges :
+            {t("email_date_ranges")}
             <Info className="w-3.5 h-3.5 text-blue-500" />
           </label>
           <div className="relative">
@@ -111,15 +109,15 @@ const EmpEmailActivityLog = () => {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Download</label>
-          <CustomSelect placeholder="Select Option" items={DOWNLOAD_OPTIONS} selected={downloadOption} onChange={handleDownload} />
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("email_download")}</label>
+          <CustomSelect placeholder={t("email_select_option")} items={DOWNLOAD_OPTIONS} selected={downloadOption} onChange={handleDownload} />
         </div>
       </div>
 
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
+          <span className="text-[13px] text-gray-500 font-medium">{t("show")}</span>
           <Select value={String(filters.limit)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
               <SelectValue placeholder="10" />
@@ -130,11 +128,11 @@ const EmpEmailActivityLog = () => {
               ))}
             </SelectContent>
           </Select>
-          <span className="text-[13px] text-gray-500 font-medium">Entries</span>
+          <span className="text-[13px] text-gray-500 font-medium">{t("entries")}</span>
         </div>
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs" />
+          <Input placeholder={t("search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs" />
         </div>
       </div>
 
@@ -144,15 +142,15 @@ const EmpEmailActivityLog = () => {
           <Table className="min-w-[1100px] w-full">
             <TableHeader>
               <TableRow className="bg-blue-50/80">
-                <TableHead className="text-xs font-semibold text-slate-700 w-[60px]">View</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Employee</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">{filters.type === "4" ? "From" : "To"}</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">CC</TableHead>
-                {filters.type === "0" && <TableHead className="text-xs font-semibold text-slate-700">BCC</TableHead>}
-                <TableHead className="text-xs font-semibold text-slate-700">Subject</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Body</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Attachments</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Event Date</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700 w-[60px]">{t("email_view")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_employee_col")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{filters.type === "4" ? t("email_from") : t("email_to")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_cc")}</TableHead>
+                {filters.type === "0" && <TableHead className="text-xs font-semibold text-slate-700">{t("email_bcc")}</TableHead>}
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_subject")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_body")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_attachments")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_event_date")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white">
@@ -161,13 +159,13 @@ const EmpEmailActivityLog = () => {
                   <TableCell colSpan={filters.type === "0" ? 9 : 8} className="text-center text-sm text-gray-400 py-10">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      Loading...
+                      {t("loadingText")}
                     </div>
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={filters.type === "0" ? 9 : 8} className="text-center text-sm text-gray-400 py-10">No records found</TableCell>
+                  <TableCell colSpan={filters.type === "0" ? 9 : 8} className="text-center text-sm text-gray-400 py-10">{t("email_no_records")}</TableCell>
                 </TableRow>
               ) : (
                 rows.map((row) => (
@@ -209,12 +207,12 @@ const EmpEmailActivityLog = () => {
           <Table className="min-w-[950px] w-full">
             <TableHeader>
               <TableRow className="bg-blue-50/80">
-                <TableHead className="text-xs font-semibold text-slate-700">Employee</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Page Title</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">URL</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Label</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Start Time</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">End Time</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_employee_col")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_page_title")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_url")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_label")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_start_time")}</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">{t("email_end_time")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white">
@@ -223,13 +221,13 @@ const EmpEmailActivityLog = () => {
                   <TableCell colSpan={6} className="text-center text-sm text-gray-400 py-10">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      Loading...
+                      {t("loadingText")}
                     </div>
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-sm text-gray-400 py-10">No records found</TableCell>
+                  <TableCell colSpan={6} className="text-center text-sm text-gray-400 py-10">{t("email_no_records")}</TableCell>
                 </TableRow>
               ) : (
                 rows.map((row) => (
@@ -255,10 +253,10 @@ const EmpEmailActivityLog = () => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold text-gray-700">{totalDocs === 0 ? 0 : (currentPage - 1) * filters.limit + 1}</span>{" "}
-          to <span className="font-bold text-gray-700">{Math.min(currentPage * filters.limit, totalDocs)}</span>{" "}
-          of <span className="font-bold text-blue-600">{totalDocs}</span>
+          {t("to")} <span className="font-bold text-gray-700">{Math.min(currentPage * filters.limit, totalDocs)}</span>{" "}
+          {t("of")} <span className="font-bold text-blue-600">{totalDocs}</span>
         </p>
         <PaginationComponent currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
@@ -271,26 +269,26 @@ const EmpEmailActivityLog = () => {
               <div className="bg-gradient-to-r from-blue-500 to-violet-500 px-6 py-4">
                 <DialogHeader>
                   <DialogTitle className="text-white text-base font-semibold flex items-center gap-2 flex-wrap">
-                    {viewRow.subject !== "-" ? viewRow.subject : "(No Subject)"}
+                    {viewRow.subject !== "-" ? viewRow.subject : t("email_no_subject")}
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       filters.type === "4" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
                     }`}>
-                      {filters.type === "4" ? <><Inbox className="w-3 h-3" /> RECEIVED</> : <><Send className="w-3 h-3" /> SENT</>}
+                      {filters.type === "4" ? <><Inbox className="w-3 h-3" /> {t("email_received")}</> : <><Send className="w-3 h-3" /> {t("email_sent")}</>}
                     </span>
                   </DialogTitle>
-                  <DialogDescription className="sr-only">Email details</DialogDescription>
+                  <DialogDescription className="sr-only">{t("email_details")}</DialogDescription>
                 </DialogHeader>
               </div>
 
               <div className="px-6 py-4 space-y-0">
                 {filters.type === "4" ? (
                   <div className="flex items-start gap-3 py-2.5 border-b border-slate-100">
-                    <span className="text-xs font-medium text-slate-400 w-16 shrink-0 pt-0.5">From:</span>
+                    <span className="text-xs font-medium text-slate-400 w-16 shrink-0 pt-0.5">{t("email_from")}:</span>
                     <span className="inline-block px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-700">{viewRow.from}</span>
                   </div>
                 ) : (
                   <div className="flex items-start gap-3 py-2.5 border-b border-slate-100">
-                    <span className="text-xs font-medium text-slate-400 w-16 shrink-0 pt-0.5">To:</span>
+                    <span className="text-xs font-medium text-slate-400 w-16 shrink-0 pt-0.5">{t("email_to")}:</span>
                     <span className="inline-block px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-700">{viewRow.to}</span>
                   </div>
                 )}
@@ -318,21 +316,21 @@ const EmpEmailActivityLog = () => {
                 )}
 
                 <div className="flex items-center gap-3 py-2.5 border-b border-slate-100">
-                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">Date:</span>
+                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">{t("email_date")}</span>
                   <span className="text-xs text-slate-700">
                     {viewRow.timestamp !== "-" ? moment(viewRow.timestamp, "YYYY-MM-DD HH:mm:ss").format("DD MMM YYYY") : "-"}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 py-2.5 border-b border-slate-100">
-                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">Time:</span>
+                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">{t("email_time")}</span>
                   <span className="text-xs text-slate-700">
                     {viewRow.timestamp !== "-" ? moment(viewRow.timestamp, "YYYY-MM-DD HH:mm:ss").format("hh:mm A") : "-"}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 py-2.5 border-b border-slate-100">
-                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">Subject:</span>
+                  <span className="text-xs font-medium text-slate-400 w-16 shrink-0">{t("email_subject")}:</span>
                   <span className="text-sm font-semibold text-slate-800">{viewRow.subject}</span>
                 </div>
 
@@ -342,7 +340,7 @@ const EmpEmailActivityLog = () => {
 
                 {viewRow.attachments.length > 0 && (
                   <div className="border-t border-slate-100 pt-3">
-                    <p className="text-xs font-medium text-slate-500 mb-2">Attachments:</p>
+                    <p className="text-xs font-medium text-slate-500 mb-2">{t("email_attachments_label")}</p>
                     <div className="flex flex-wrap gap-2">
                       {viewRow.attachments.map((att, i) => (
                         <a key={i} href={att.link || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-blue-600 hover:bg-blue-50 transition-colors">
@@ -357,7 +355,7 @@ const EmpEmailActivityLog = () => {
 
               <DialogFooter className="px-6 py-3 border-t border-slate-100">
                 <DialogClose asChild>
-                  <Button className="rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-6">Close</Button>
+                  <Button className="rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-6">{t("email_close")}</Button>
                 </DialogClose>
               </DialogFooter>
             </>

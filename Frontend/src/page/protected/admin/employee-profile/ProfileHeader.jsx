@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function ProfileHeader({ employee, startDate, endDate, onDateChange, showActions = true, onEdit }) {
-  const name = employee?.name || "Employee";
+  const { t } = useTranslation();
+  const name = employee?.name || t("employee");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,20 +45,20 @@ export default function ProfileHeader({ employee, startDate, endDate, onDateChan
             <span className="font-extrabold">{name}</span>
           </h1>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-gray-500">Employee Full Details</span>
+            <span className="text-sm text-gray-500">{t("employeeFullDetails")}</span>
             {showActions && (
               <>
                 <Badge
                   className="text-[10px] bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-md px-2 py-0.5 cursor-pointer"
                   onClick={onEdit}
                 >
-                  Edit
+                  {t("edit")}
                 </Badge>
                 <Badge
                   className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white border-0 rounded-md px-2 py-0.5 cursor-pointer"
                   onClick={handleSettingsClick}
                 >
-                  Settings
+                  {t("settings")}
                 </Badge>
               </>
             )}

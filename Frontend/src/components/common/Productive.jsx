@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -40,26 +41,29 @@ const formatDuration = (value) => {
 };
 
 export default function TopProductiveEmployees({
-  title = "Top 10 Productive Employees",
-  columns = [
-    "Employee Name",
-    "Shift",
-    "Clocked In",
-    "Clocked Out",
-    "Time Hours"
-  ],
+  title,
+  columns,
   filter,
   report,
   employees = [],
   loading = false
 }) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("topProductiveEmployees");
+  const resolvedColumns = columns || [
+    t("empName"),
+    t("shift"),
+    t("clockedIn"),
+    t("clockedOut"),
+    t("timeHoursCol")
+  ];
   return (
     <>
       <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-4xl p-6 h-full">
         {/* ── Top Header Row ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
-            {title}
+            {resolvedTitle}
           </h2>
 
           {report}
@@ -71,7 +75,7 @@ export default function TopProductiveEmployees({
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-200 hover:bg-transparent">
-              {columns.map((h) => (
+              {resolvedColumns.map((h) => (
                 <TableHead
                   key={h}
                   className="text-slate-500 font-medium text-sm pb-3"
@@ -85,14 +89,14 @@ export default function TopProductiveEmployees({
           <TableBody>
             {loading ? (
               <TableRow className="border-b border-dashed border-slate-200 hover:bg-slate-50/60 transition-colors">
-                <TableCell colSpan={columns.length} className="py-6 text-slate-500 text-sm">
-                  Loading...
+                <TableCell colSpan={resolvedColumns.length} className="py-6 text-slate-500 text-sm">
+                  {t("loadingText")}
                 </TableCell>
               </TableRow>
             ) : !employees?.length ? (
               <TableRow className="border-b border-dashed border-slate-200 hover:bg-slate-50/60 transition-colors">
-                <TableCell colSpan={columns.length} className="py-6 text-slate-500 text-sm">
-                  No employees found for the selected filters.
+                <TableCell colSpan={resolvedColumns.length} className="py-6 text-slate-500 text-sm">
+                  {t("noEmployeesForFilters")}
                 </TableCell>
               </TableRow>
             ) : employees.map((emp, idx) => (
@@ -101,7 +105,7 @@ export default function TopProductiveEmployees({
                 className="border-b border-dashed border-slate-200 hover:bg-slate-50/60 transition-colors"
               >
                 {/* Dynamic column rendering (supports the 2-column dashboard usage) */}
-                {columns.map((col, cIdx) => {
+                {resolvedColumns.map((col, cIdx) => {
                   const key = `${col}-${cIdx}`;
 
                   if (/employee\s*name/i.test(col)) {

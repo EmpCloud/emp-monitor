@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next";
 import { Settings, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +16,9 @@ import useMonitoringControlStore from "@/page/protected/admin/monitoring-control
 
 // ─── Toggle Row Component ────────────────────────────────────────────────────
 
-const ToggleRow = ({ label, name, value, onChange }) => (
+const ToggleRow = ({ label, name, value, onChange }) => {
+    const { t } = useTranslation();
+    return (
     <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
         <span className="text-sm text-slate-700">{label}</span>
         <div className="flex items-center gap-3">
@@ -27,7 +30,7 @@ const ToggleRow = ({ label, name, value, onChange }) => (
                     onChange={() => onChange("1")}
                     className="w-3.5 h-3.5 accent-emerald-500"
                 />
-                <span className="text-xs text-slate-600">Enable</span>
+                <span className="text-xs text-slate-600">{t("common.enable")}</span>
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -37,15 +40,17 @@ const ToggleRow = ({ label, name, value, onChange }) => (
                     onChange={() => onChange("0")}
                     className="w-3.5 h-3.5 accent-red-500"
                 />
-                <span className="text-xs text-slate-600">Disable</span>
+                <span className="text-xs text-slate-600">{t("common.disable")}</span>
             </label>
         </div>
     </div>
-)
+    );
+}
 
 // ─── Accordion Section Component ─────────────────────────────────────────────
 
-const AccordionSection = ({ title, children, defaultOpen = false }) => {
+const AccordionSection = ({ title, children, defaultOpen = false }) => {  const { t } = useTranslation();
+
     const [isOpen, setIsOpen] = useState(defaultOpen)
 
     return (
@@ -141,6 +146,7 @@ const INVOICE_DURATIONS = [
 // ─── Main Dialog Component ───────────────────────────────────────────────────
 
 const MonitoringControlDialog = ({ open, onOpenChange }) => {
+    const { t } = useTranslation();
     const {
         settingsGroupId,
         settingsGroupRules,
@@ -339,8 +345,8 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             </DialogTitle>
                             <DialogDescription className="text-xs text-blue-200 mt-0.5">
                                 {settingsGroupId === 0
-                                    ? "Default settings for all users"
-                                    : "Group-specific monitoring settings"}
+                                    ? t("monitoring.defaultSettingsDesc")
+                                    : t("monitoring.groupSpecificSettings")}
                             </DialogDescription>
                         </div>
                     </DialogHeader>
@@ -354,10 +360,10 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     )}
 
                     {/* 1. General Settings */}
-                    <AccordionSection title="General Settings" defaultOpen={true}>
+                    <AccordionSection title={t("monitoring.generalSettings")} defaultOpen={true}>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between py-2.5">
-                                <span className="text-sm text-slate-700">Visibility Mode</span>
+                                <span className="text-sm text-slate-700">{t("monitoring.visibilityMode")}</span>
                                 <div className="flex items-center gap-3">
                                     <label className="flex items-center gap-1.5 cursor-pointer">
                                         <input
@@ -367,7 +373,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                             onChange={() => updateRule("system.visibility", "true")}
                                             className="w-3.5 h-3.5 accent-blue-500"
                                         />
-                                        <span className="text-xs text-slate-600">Visible</span>
+                                        <span className="text-xs text-slate-600">{t("monitoring.visible")}</span>
                                     </label>
                                     <label className="flex items-center gap-1.5 cursor-pointer">
                                         <input
@@ -377,13 +383,13 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                             onChange={() => updateRule("system.visibility", "false")}
                                             className="w-3.5 h-3.5 accent-blue-500"
                                         />
-                                        <span className="text-xs text-slate-600">Stealth</span>
+                                        <span className="text-xs text-slate-600">{t("monitoring.stealth")}</span>
                                     </label>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between py-2.5 border-t border-slate-100">
-                                <span className="text-sm text-slate-700">Agent Automatic Update</span>
+                                <span className="text-sm text-slate-700">{t("monitoring.agentAutoUpdate")}</span>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -392,7 +398,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                         className="w-4 h-4 accent-blue-500"
                                     />
                                     <span className="text-xs text-slate-600">
-                                        {String(rules.system?.autoUpdate) === "1" ? "Enabled" : "Disabled"}
+                                        {String(rules.system?.autoUpdate) === "1" ? t("common.enabled") : t("common.disabled")}
                                     </span>
                                 </label>
                             </div>
@@ -400,7 +406,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     </AccordionSection>
 
                     {/* 2. Tracking Features */}
-                    <AccordionSection title="Tracking Features" defaultOpen={true}>
+                    <AccordionSection title={t("monitoring.trackingFeatures")} defaultOpen={true}>
                         <div className="space-y-0">
                             <ToggleRow
                                 label="Keystroke Monitoring"
@@ -496,7 +502,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     </AccordionSection>
 
                     {/* 3. DLP Features */}
-                    <AccordionSection title="DLP Features">
+                    <AccordionSection title={t("monitoring.dlpFeatures")}>
                         <div className="space-y-0">
                             <ToggleRow
                                 label="Bluetooth Detection"
@@ -526,10 +532,10 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     </AccordionSection>
 
                     {/* 4. Screenshot Settings */}
-                    <AccordionSection title="Screenshot Settings">
+                    <AccordionSection title={t("monitoring.screenshotSettings")}>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <span className="text-sm text-slate-700 min-w-[150px]">Screenshot Frequency</span>
+                                <span className="text-sm text-slate-700 min-w-[150px]">{t("monitoring.screenshotFrequency")}</span>
                                 <CustomSelect
                                     placeholder="Select frequency"
                                     items={SCREENSHOT_FREQUENCIES}
@@ -539,7 +545,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             </div>
                             {String(rules.features?.screen_record) === "1" && (
                                 <div className="flex items-center gap-4">
-                                    <span className="text-sm text-slate-700 min-w-[150px]">Video Quality</span>
+                                    <span className="text-sm text-slate-700 min-w-[150px]">{t("monitoring.videoQuality")}</span>
                                     <CustomSelect
                                         placeholder="Select quality"
                                         items={VIDEO_QUALITY_OPTIONS}
@@ -552,10 +558,10 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     </AccordionSection>
 
                     {/* 5. Tracking Time Configuration */}
-                    <AccordionSection title="Tracking Time Configuration">
+                    <AccordionSection title={t("monitoring.trackingTimeConfig")}>
                         <div className="space-y-5">
                             <div className="flex items-center gap-4">
-                                <span className="text-sm text-slate-700 min-w-[150px]">Idle Time</span>
+                                <span className="text-sm text-slate-700 min-w-[150px]">{t("monitoring.idleTime")}</span>
                                 <CustomSelect
                                     placeholder="Select idle time"
                                     items={IDLE_TIMES}
@@ -565,7 +571,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <span className="text-sm text-slate-700 min-w-[150px]">Timesheet Idle Time</span>
+                                <span className="text-sm text-slate-700 min-w-[150px]">{t("monitoring.timesheetIdleTime")}</span>
                                 <Input
                                     type="text"
                                     value={rules.timesheetIdleTime || "00:00"}
@@ -577,7 +583,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
 
                             {/* Tracking Mode Tabs */}
                             <div>
-                                <span className="text-sm font-medium text-slate-700 mb-3 block">Tracking Scenario</span>
+                                <span className="text-sm font-medium text-slate-700 mb-3 block">{t("monitoring.trackingScenario")}</span>
                                 <div className="flex flex-wrap gap-1 mb-4">
                                     {TRACKING_MODES.map((mode) => (
                                         <button
@@ -823,10 +829,10 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                     </AccordionSection>
 
                     {/* 6. Work Hours Billing */}
-                    <AccordionSection title="Work Hours Billing">
+                    <AccordionSection title={t("monitoring.workHoursBilling")}>
                         <div className="space-y-4">
                             <div className="flex items-center justify-between py-2">
-                                <span className="text-sm text-slate-700">Enable Work Hours Billing</span>
+                                <span className="text-sm text-slate-700">{t("monitoring.enableWorkHoursBilling")}</span>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -844,7 +850,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             {String(rules.work_hour_billing?.is_enabled) === "1" && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Billing Based On</label>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.billingBasedOn")}</label>
                                         <CustomSelect
                                             placeholder="Select"
                                             items={BILLING_BASED_ON}
@@ -854,7 +860,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Amount per Hour</label>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.amountPerHour")}</label>
                                         <Input
                                             type="number"
                                             placeholder="Enter amount"
@@ -864,7 +870,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Currency</label>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.currency")}</label>
                                         <CustomSelect
                                             placeholder="Select Currency"
                                             items={CURRENCY_OPTIONS}
@@ -874,7 +880,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Invoice Duration</label>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.invoiceDuration")}</label>
                                         <CustomSelect
                                             placeholder="Select Duration"
                                             items={INVOICE_DURATIONS}
@@ -905,7 +911,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             onClick={handleSave}
                             disabled={saving}
                         >
-                            {saving ? "Saving..." : "Save Settings"}
+                            {saving ? t("common.saving") : t("monitoring.saveSettings")}
                         </Button>
                     </div>
                 </div>

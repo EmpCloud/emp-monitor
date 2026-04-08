@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
     Download,
     ChevronDown,
@@ -68,6 +69,7 @@ const ExportDropdown = () => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const EmpLocalization = () => {
+    const { t } = useTranslation()
     const {
         timezone,
         language,
@@ -136,10 +138,10 @@ const EmpLocalization = () => {
                     </div>
                     <div className="border-l-2 border-blue-500 pl-4">
                         <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-                            <span className="font-semibold">Localization</span>
+                            <span className="font-semibold">{t("localization")}</span>
                         </h2>
                         <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-                            Configure language, timezone and regional format settings for your organization.
+                            {t("localizationDescription")}
                         </p>
                     </div>
                 </div>
@@ -157,12 +159,12 @@ const EmpLocalization = () => {
                         <div className="flex items-center gap-2 sm:min-w-[180px]">
                             <span className="w-1 h-5 rounded-full bg-blue-500" />
                             <span className="text-sm font-semibold text-slate-700">
-                                Select Timezone
+                                {t("select")} {t("timezone")}
                             </span>
                         </div>
                         <div className="flex-1">
                             <CustomSelect
-                                placeholder="Select Timezone"
+                                placeholder={`${t("select")} ${t("timezone")}`}
                                 items={timezoneItems}
                                 selected={timezone}
                                 onChange={setTimezone}
@@ -176,12 +178,12 @@ const EmpLocalization = () => {
                         <div className="flex items-center gap-2 sm:min-w-[180px]">
                             <span className="w-1 h-5 rounded-full bg-blue-500" />
                             <span className="text-sm font-semibold text-slate-700">
-                                Select Language
+                                {t("select")} {t("language")}
                             </span>
                         </div>
                         <div className="flex-1">
                             <CustomSelect
-                                placeholder="Select Language"
+                                placeholder={`${t("select")} ${t("language")}`}
                                 items={languageItems}
                                 selected={language}
                                 onChange={setLanguage}
@@ -201,10 +203,10 @@ const EmpLocalization = () => {
                             {saving ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Saving...
+                                    {t("save")}...
                                 </>
                             ) : (
-                                "Save"
+                                t("save")
                             )}
                         </Button>
                     </div>

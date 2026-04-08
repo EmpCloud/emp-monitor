@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ReactApexChart from "react-apexcharts";
 import {
   Info,
@@ -42,15 +43,18 @@ import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
-const STATUS_MAP = {
-  0: { label: "Neutral", color: "text-amber-500" },
-  1: { label: "Productive", color: "text-green-500" },
-  2: { label: "Unproductive", color: "text-red-500" },
-  4: { label: "Customization", color: "text-blue-500" },
-};
+function getStatusMap(t) {
+  return {
+    0: { label: t("prodReport.neutral"), color: "text-amber-500" },
+    1: { label: t("productive"), color: "text-green-500" },
+    2: { label: t("prodReport.unproductive"), color: "text-red-500" },
+    4: { label: t("customization"), color: "text-blue-500" },
+  };
+}
 
-function getStatusInfo(status) {
-  return STATUS_MAP[status] || { label: "Unknown", color: "text-gray-400" };
+function getStatusInfo(status, t) {
+  const map = getStatusMap(t);
+  return map[status] || { label: "Unknown", color: "text-gray-400" };
 }
 
 // ── Date Range (shared calendar, same as TimesheetFilters) ──────────────────
@@ -70,17 +74,20 @@ function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
 
 // ── TAB CONFIG ──────────────────────────────────────────────────────────────
 
-const TABS = [
-  { id: 0, label: "Both", Icon: Monitor },
-  { id: 2, label: "Website", Icon: Globe },
-  { id: 1, label: "Application", Icon: LayoutGrid },
-];
+function getTabOptions(t) {
+  return [
+    { id: 0, label: t("webApp.both"), Icon: Monitor },
+    { id: 2, label: t("webApp.website"), Icon: Globe },
+    { id: 1, label: t("webApp.application"), Icon: LayoutGrid },
+  ];
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LEFT PANEL — Web/App list with tabs, search, and ranking table
 // ═════════════════════════════════════════════════════════════════════════════
 
 function LeftPanel() {
+  const { t } = useTranslation();
   const {
     filters,
     listData,
@@ -121,7 +128,7 @@ function LeftPanel() {
       {/* Tab bar */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex items-center gap-2 overflow-auto">
-          {TABS.map(({ id, label, Icon }) => {
+          {getTabOptions(t).map(({ id, label, Icon }) => {
             const active = filters.tab === id;
             return (
               <button
@@ -148,14 +155,14 @@ function LeftPanel() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          placeholder="Search"
+          placeholder={t("search")}
           className="border-none outline-none text-sm text-gray-500 bg-transparent w-40"
         />
         <button
           onClick={handleSearchSubmit}
           className="text-blue-600 text-xs font-medium hover:underline"
         >
-          Go
+          {t("webApp.go")}
         </button>
       </div>
 
@@ -169,17 +176,17 @@ function LeftPanel() {
         {/* Column headers */}
         <div className="flex items-center py-3 border-b border-dashed border-gray-300 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-2 flex-[2.2]">
-            <span className="text-sm font-bold text-gray-900">Web / App</span>
+            <span className="text-sm font-bold text-gray-900">{t("webApp.webApp")}</span>
           </div>
           <div className="flex-[1.3]">
-            <span className="text-sm font-bold text-gray-900">Ranking</span>
+            <span className="text-sm font-bold text-gray-900">{t("webApp.ranking")}</span>
           </div>
           <div className="flex items-center justify-end gap-1 flex-[1.5]">
             <button
               onClick={() => setSorting("total_duration")}
               className="text-sm font-bold text-gray-900 flex items-center gap-1 hover:text-blue-600"
             >
-              Duration (hr)
+              {t("webApp.durationHr")}
               <ArrowDownUp className="w-3 h-3" />
             </button>
           </div>
@@ -188,12 +195,12 @@ function LeftPanel() {
         {/* Data rows */}
         {listData.length === 0 && !listLoading && (
           <div className="py-10 text-center text-gray-400 text-sm">
-            No data found
+            {t("Nodata")}
           </div>
         )}
 
         {listData.map((row, i) => {
-          const statusInfo = getStatusInfo(row.status);
+          const statusInfo = getStatusInfo(row.status, t);
           const isWeb = row.type == 2 || row.type === "2";
           const isCustomizable = row.status == 4 || row.status === "4";
 
@@ -241,7 +248,7 @@ function LeftPanel() {
                     className="text-sm font-semibold text-blue-500 hover:underline"
                     onClick={() => openModal(row._id, row.name, row.type)}
                   >
-                    Customization
+                    {t("customization")}
                   </button>
                 ) : (
                   <span className={`text-sm font-semibold ${statusInfo.color}`}>
@@ -267,7 +274,7 @@ function LeftPanel() {
         {/* Footer info */}
         <div className="border-t border-dashed border-gray-300 pt-3 mt-1">
           <span className="text-xs text-gray-500">
-            Showing {Math.min(listSkip, listTotal)} of {listTotal}
+            {t("timeclaim.showing")} {Math.min(listSkip, listTotal)} {t("of")} {listTotal}
           </span>
           <div className="text-xs mt-2">
             <span className="text-red-500 font-bold">Note : </span>
@@ -287,6 +294,7 @@ function LeftPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function UsageChart() {
+  const { t } = useTranslation();
   const { chartData, listLoading } = useWebAppUsageStore();
 
   // Generate per-bar gradient colors from blue → purple
@@ -361,7 +369,7 @@ function UsageChart() {
       yaxis: {
         min: 0,
         title: {
-          text: "Hours",
+          text: t("webApp.hours"),
           style: {
             color: "#94a3b8",
             fontSize: "11px",
@@ -389,7 +397,7 @@ function UsageChart() {
           if (!d) return "";
           return `<div style="padding:8px 12px;border-radius:8px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1);font-size:12px">
             <div style="font-weight:700;color:#334155;margin-bottom:2px">${d.fullName}</div>
-            <div style="color:#64748b">Duration: ${d.durationDisplay}</div>
+            <div style="color:#64748b">${t("webApp.duration")}: ${d.durationDisplay}</div>
           </div>`;
         },
       },
@@ -443,6 +451,7 @@ function UsageChart() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function CustomizeModal() {
+  const { t } = useTranslation();
   const {
     modalOpen,
     modalAppName,
@@ -484,7 +493,7 @@ function CustomizeModal() {
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Show</span>
+            <span className="text-sm text-gray-500">{t("show")}</span>
             <Select
               value={String(modalPageSize)}
               onValueChange={(v) => setModalPageSize(parseInt(v, 10))}
@@ -500,7 +509,7 @@ function CustomizeModal() {
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-sm text-gray-500">entries</span>
+            <span className="text-sm text-gray-500">{t("entries")}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -523,13 +532,13 @@ function CustomizeModal() {
             <TableHeader>
               <TableRow className="bg-blue-50/80">
                 <TableHead className="text-xs font-semibold text-slate-700 w-[300px]">
-                  Department
+                  {t("department")}
                 </TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700 w-[200px]">
-                  Ranking
+                  {t("webApp.ranking")}
                 </TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700 w-[200px]">
-                  Duration (hr)
+                  {t("webApp.durationHr")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -549,12 +558,12 @@ function CustomizeModal() {
                     colSpan={3}
                     className="text-center py-10 text-gray-400 text-sm"
                   >
-                    No data found
+                    {t("Nodata")}
                   </TableCell>
                 </TableRow>
               ) : (
                 modalData.map((row, i) => {
-                  const s = getStatusInfo(row.status);
+                  const s = getStatusInfo(row.status, t);
                   return (
                     <TableRow key={i} className="text-sm">
                       <TableCell>{row.name}</TableCell>
@@ -571,8 +580,8 @@ function CustomizeModal() {
         {/* Pagination */}
         <div className="flex items-center justify-between gap-3 mt-3">
           <span className="text-xs text-gray-500">
-            Showing {modalTotal === 0 ? 0 : (modalPage - 1) * modalPageSize + 1}{" "}
-            to {Math.min(modalPage * modalPageSize, modalTotal)} of {modalTotal}
+            {t("timeclaim.showing")} {modalTotal === 0 ? 0 : (modalPage - 1) * modalPageSize + 1}{" "}
+            {t("to")} {Math.min(modalPage * modalPageSize, modalTotal)} {t("of")} {modalTotal}
           </span>
           <PaginationComponent
             currentPage={modalPage}
@@ -590,6 +599,7 @@ function CustomizeModal() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export default function EmpWebAppUsage() {
+  const { t } = useTranslation();
   const {
     // dropdowns
     locations,
@@ -640,13 +650,13 @@ export default function EmpWebAppUsage() {
       {/* ══ HEADER ══ */}
       <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-4">
-          <img alt="Web App Usage" className="w-24 h-24" src={EmpWebAppUsageLogo} />
+          <img alt={t("webApp.title")} className="w-24 h-24" src={EmpWebAppUsageLogo} />
           <div className="border-l-2 border-blue-500 pl-4">
             <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-              <span className="font-semibold">Web App </span> Usage
+              <span className="font-semibold">{t("webApp.title")} </span> {t("webApp.usage")}
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-              Detailed breakdown of web and application usage by employees.
+              {t("webApp.description")}
             </p>
           </div>
         </div>
@@ -669,21 +679,21 @@ export default function EmpWebAppUsage() {
       {/* ══ FILTER ROW ══ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <CustomSelect
-          placeholder="All Location"
+          placeholder={t("allLocation")}
           items={locations}
           selected={filters.location}
           onChange={handleLocationChange}
           width="full"
         />
         <CustomSelect
-          placeholder="All Departments"
+          placeholder={t("allDept")}
           items={departments}
           selected={filters.department}
           onChange={handleDepartmentChange}
           width="full"
         />
         <CustomSelect
-          placeholder="All Employees"
+          placeholder={t("allEmployee")}
           items={employees}
           selected={filters.employee}
           onChange={handleEmployeeChange}
@@ -695,13 +705,13 @@ export default function EmpWebAppUsage() {
           className="rounded-lg bg-[#2563eb] hover:bg-[#2563eb]/90 px-5 text-sm font-bold shadow-md"
           onClick={handleExportExcel}
         >
-          <Download className="w-4 h-4 mr-1" /> Export Excel
+          <Download className="w-4 h-4 mr-1" /> {t("exportExcel")}
         </Button>
         <Button
           className="rounded-lg bg-[#ede9fe] hover:bg-[#ede9fe]/80 text-[#6d28d9] px-5 text-sm font-bold shadow-sm"
           onClick={handleExportPDF}
         >
-          <Download className="w-4 h-4 mr-1" /> PDF
+          <Download className="w-4 h-4 mr-1" /> {t("pdf")}
         </Button>
       </div>
 
@@ -717,7 +727,7 @@ export default function EmpWebAppUsage() {
       {/* ══ BOTTOM TABLE — Cumulative Employee Report ══ */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
+          <span className="text-[13px] text-gray-500 font-medium">{t("show")}</span>
           <Select
             value={String(cTablePageSize)}
             onValueChange={(v) => setCTablePageSize(parseInt(v, 10))}
@@ -733,7 +743,7 @@ export default function EmpWebAppUsage() {
               ))}
             </SelectContent>
           </Select>
-          <span className="text-[13px] text-gray-500 font-medium">Entries</span>
+          <span className="text-[13px] text-gray-500 font-medium">{t("entries")}</span>
         </div>
 
         <Button
@@ -741,7 +751,7 @@ export default function EmpWebAppUsage() {
           className="rounded-lg bg-green-600 hover:bg-green-700 px-5 text-xs font-semibold shadow-sm"
           onClick={handleExportCumulativeExcel}
         >
-          <Download className="w-4 h-4 mr-1" /> Export Excel
+          <Download className="w-4 h-4 mr-1" /> {t("exportExcel")}
         </Button>
       </div>
 
@@ -750,34 +760,34 @@ export default function EmpWebAppUsage() {
           <TableHeader>
             <TableRow className="bg-blue-50/80">
               <TableHead className="text-xs font-semibold text-slate-700">
-                Name
+                {t("name")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Email
+                {t("email")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Location
+                {t("location")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Department
+                {t("department")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Computer Name
+                {t("computerName")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-slate-700">
-                Web App
+                {t("webApp.webApp")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-green-600">
-                Productive
+                {t("productive")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-red-500">
-                Unproductive
+                {t("prodReport.unproductive")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-gray-500">
-                Neutral
+                {t("prodReport.neutral")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-amber-500">
-                Idle
+                {t("idle")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -797,7 +807,7 @@ export default function EmpWebAppUsage() {
                   colSpan={10}
                   className="text-center text-sm text-gray-400 py-10"
                 >
-                  No records found
+                  {t("Nodata")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -838,15 +848,15 @@ export default function EmpWebAppUsage() {
       {/* ══ PAGINATION ══ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
+          {t("timeclaim.showing")}{" "}
           <span className="font-bold text-gray-700">
             {cumulativeData.length === 0 ? 0 : (cTablePage - 1) * cTablePageSize + 1}
           </span>{" "}
-          to{" "}
+          {t("to")}{" "}
           <span className="font-bold text-gray-700">
             {Math.min(cTablePage * cTablePageSize, cumulativeData.length)}
           </span>{" "}
-          of{" "}
+          {t("of")}{" "}
           <span className="font-bold text-blue-600">
             {cumulativeData.length}
           </span>

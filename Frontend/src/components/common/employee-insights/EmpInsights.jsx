@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { MapPin, Pencil } from "lucide-react"
 import InsightsFilter from "./InsightsFilter"
 import InsightsGraphs from "./InsightsGraphs"
@@ -60,6 +61,7 @@ const DATE_RANGES = [
 ];
 
 const EmpInsights = () => {
+  const { t } = useTranslation()
   const session = getSessionCookie()
   const managerId = session?.is_admin ? null : session?.user_id ?? session?.id ?? null
   const today = new Date().toISOString().split("T")[0]
@@ -152,9 +154,10 @@ const EmpInsights = () => {
         <div className="flex relative items-start justify-between gap-4 mb-7">
           <div className="border-l-2 border-blue-500 pl-4">
             <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-              <span className="font-semibold">Employee</span> Insights
+              <span className="font-semibold">{t("employee")}</span> {t("insights_title")}
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-5">
+
 
             </p>
           </div>
@@ -212,7 +215,7 @@ const EmpInsights = () => {
         <div className="flex items-center gap-6 w-full mt-8  border-t border-[#6B6B6B]/20 pt-4">
           <div className="flex items-center gap-2 min-w-fit">
             <span className="text-sm text-[#424242]">
-              Employee&apos;s Current Location :{" "}
+              {t("insights_current_location")} :{" "}
             </span>
             <FaLocationDot className="h-4 w-4 text-red-500 fill-red-500" />
           </div>
@@ -235,7 +238,7 @@ const EmpInsights = () => {
       </div>
 
       <InsightsGraphs insightStats={insightStats} />
-      {loading ? <p className="text-xs text-slate-400 mt-3">Loading insights...</p> : null}
+      {loading ? <p className="text-xs text-slate-400 mt-3">{t("insights_loading")}</p> : null}
 
     </div>
 

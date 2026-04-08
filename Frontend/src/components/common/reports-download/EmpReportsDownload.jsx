@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
+import { useTranslation } from "react-i18next";
 import {
   Search, Info, FileText, Printer, Download, ChevronUp, ChevronDown,
   Loader2, ArrowUpDown, X
@@ -14,9 +15,7 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"
+import ShowEntries from "@/components/common/elements/ShowEntries"
 import EmpReportsDownloadLogo from "@/assets/reports/reports_download.svg"
 import { useReportsDownloadStore } from "@/page/protected/admin/reports-download/reportsDownloadStore"
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
@@ -55,6 +54,7 @@ function DateRangePicker({ startDate, endDate, onDateRangeChange }) {
 // ─── CSV Column Selector Dropdown ──────────────────────────────────
 
 function CSVColumnDropdown({ downloadOption, onSubmit, disabled, noOptionSelected, onNoOption }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState(() =>
     CSV_COLUMN_OPTIONS.filter((c) => c.default).map((c) => c.value)
@@ -111,7 +111,7 @@ function CSVColumnDropdown({ downloadOption, onSubmit, disabled, noOptionSelecte
         {disabled ? (
           <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating CSV...</>
         ) : (
-          "Generate CSV"
+          t("reportsDownload.generateCsv")
         )}
       </Button>
 
@@ -125,7 +125,7 @@ function CSVColumnDropdown({ downloadOption, onSubmit, disabled, noOptionSelecte
               onChange={toggleAll}
               className="accent-blue-500"
             />
-            Select All
+            {t("rd_select_all")}
           </label>
           <hr className="my-1 border-slate-100" />
           {allColumns.map((col) => (
@@ -153,7 +153,7 @@ function CSVColumnDropdown({ downloadOption, onSubmit, disabled, noOptionSelecte
               }}
               className="rounded-lg bg-blue-500 hover:bg-blue-600 text-xs px-6"
             >
-              Submit
+              {t("rd_submit")}
             </Button>
           </div>
         </div>
@@ -219,6 +219,7 @@ function SortableHeader({ label, sortKey, currentSort, currentOrder, onSort }) {
 // ─── Main Component ────────────────────────────────────────────────
 
 const EmpReportsDownload = ({ useStore = _defaultStore }) => {
+  const { t } = useTranslation();
   const {
     employees, totalCount, loading,
     roles, locations, departments, downloadOptions,
@@ -361,7 +362,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
             <p className="text-sm text-slate-600 font-medium">
-              Generating report, please wait...
+              {t("reportsDownload.generatingReport")}
             </p>
           </div>
         </div>
@@ -371,7 +372,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
           <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
-            <span className="font-semibold">Reports</span>
+            <span className="font-semibold">{t("reportsDownload.title")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
             Download detailed employee reports including application usage,
@@ -387,7 +388,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Role
+            {t("rd_role")}
           </label>
           <CustomSelect
             placeholder="See All"
@@ -399,7 +400,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Location
+            {t("location")}
           </label>
           <CustomSelect
             placeholder="See All"
@@ -411,7 +412,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Department
+            {t("department")}
           </label>
           <CustomSelect
             placeholder="See All"
@@ -429,7 +430,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
                 <Info className="w-3.5 h-3.5 text-blue-500 cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={4}>
-                Maximum 30 days range allowed from the start date
+                {t("reportsDownload.maxDaysRange")}
               </TooltipContent>
             </Tooltip>
           </label>
@@ -441,13 +442,13 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         </div>
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-            Download Option :
+            {t("rd_download_option")}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="w-3.5 h-3.5 text-blue-500 cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={4}>
-                Select the type of data to download. Choose Application Used, Browser History, or Download All.
+                {t("reportsDownload.downloadOptionTooltip")}
               </TooltipContent>
             </Tooltip>
           </label>
@@ -465,18 +466,18 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       <div className="flex flex-wrap items-end justify-between gap-4 mb-5">
         <div className="w-full sm:w-auto sm:min-w-[280px]">
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-            Search Visited Web/App:
+            {t("rd_search_web_app")}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="w-3.5 h-3.5 text-blue-500 cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={4}>
-                Search keyword will only apply to CSV downloads
+                {t("reportsDownload.searchWebAppTooltip")}
               </TooltipContent>
             </Tooltip>
           </label>
           <Input
-            placeholder="Search Visited Website or Application"
+            placeholder={t("reportsDownload.searchVisitedPlaceholder")}
             value={filters.searchWebApp}
             onChange={(e) => setFilter("searchWebApp", e.target.value)}
             className="h-10 rounded-lg border-slate-200 text-sm"
@@ -487,7 +488,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
           {/* PDF Note & PDF Download Button */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-              PDF NOTE :
+              {t("rd_pdf_note")}
               <FileText className="w-4 h-4 text-slate-600" />
             </span>
             {pdfEligible && filters.downloadOption !== "all" && filters.downloadOption !== "3" && (
@@ -521,31 +522,15 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
 
       {/* Show entries + Search */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-gray-500 font-medium">Show</span>
-          <Select
-            value={String(filters.limit)}
-            onValueChange={(v) => {
+        <ShowEntries value={filters.limit} onChange={(v) => {
               const num = parseInt(v, 10)
               setPageSize(Number.isNaN(num) ? 10 : num)
-            }}
-          >
-            <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {["10", "25", "50", "100", "200"].map((n) => (
-                <SelectItem key={n} value={n}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-[13px] text-gray-500 font-medium">Entries</span>
-        </div>
+            }} />
 
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search"
+            placeholder={t("search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -566,45 +551,45 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
                 />
               </TableHead>
               <SortableHeader
-                label="Full Name"
+                label={t("rd_full_name")}
                 sortKey="Full Name"
                 currentSort={filters.sortName}
                 currentOrder={filters.sortOrder}
                 onSort={onSort}
               />
               <SortableHeader
-                label="Email"
+                label={t("rd_email")}
                 sortKey="Email"
                 currentSort={filters.sortName}
                 currentOrder={filters.sortOrder}
                 onSort={onSort}
               />
               <SortableHeader
-                label="Location"
+                label={t("location")}
                 sortKey="Location"
                 currentSort={filters.sortName}
                 currentOrder={filters.sortOrder}
                 onSort={onSort}
               />
               <SortableHeader
-                label="Department"
+                label={t("department")}
                 sortKey="Department"
                 currentSort={filters.sortName}
                 currentOrder={filters.sortOrder}
                 onSort={onSort}
               />
               <SortableHeader
-                label="Designation"
+                label={t("rd_designation")}
                 sortKey="Role"
                 currentSort={filters.sortName}
                 currentOrder={filters.sortOrder}
                 onSort={onSort}
               />
               <TableHead className="text-xs font-semibold text-slate-700">
-                Computer Name
+                {t("rd_computer_name")}
               </TableHead>
               <TableHead className="text-xs font-semibold text-white bg-blue-500 text-center">
-                View Reports
+                {t("rd_view_reports")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -612,7 +597,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
             {employees.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-sm text-gray-400 py-10">
-                  {loading ? "Loading..." : "No records found"}
+                  {loading ? t("loadingText") : t("Nodata")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -658,7 +643,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
                       className="rounded-lg bg-blue-500 hover:bg-blue-600 text-[10px] font-semibold px-4 h-7 shadow-sm gap-1"
                     >
                       <Printer className="w-3 h-3" />
-                      Print
+                      {t("rd_print")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -671,9 +656,9 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5">
         <p className="text-[13px] text-gray-500 font-medium">
-          Showing{" "}
-          <span className="font-bold text-gray-700">{showStart}</span> to{" "}
-          <span className="font-bold text-gray-700">{showEnd}</span> of{" "}
+          {t("timeclaim.showing")}{" "}
+          <span className="font-bold text-gray-700">{showStart}</span> {t("to")}{" "}
+          <span className="font-bold text-gray-700">{showEnd}</span> {t("of")}{" "}
           <span className="font-bold text-blue-600">{totalCount}</span>
         </p>
         <PaginationComponent

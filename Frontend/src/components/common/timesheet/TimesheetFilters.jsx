@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
@@ -20,14 +21,15 @@ function TimesheetFilters({
     onShiftChange,
     onDateRangeChange,
 }) {
+    const { t } = useTranslation();
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-4 mb-9">
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Location
+                    {t("location")}
                 </label>
                 <CustomSelect
-                    placeholder="All Locations"
+                    placeholder={t("emp_all_locations")}
                     items={locations}
                     selected={locationValue}
                     onChange={onLocationChange}
@@ -35,10 +37,10 @@ function TimesheetFilters({
             </div>
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Department
+                    {t("department")}
                 </label>
                 <CustomSelect
-                    placeholder="All Departments"
+                    placeholder={t("emp_all_departments")}
                     items={departments}
                     selected={departmentValue}
                     onChange={onDepartmentChange}
@@ -46,10 +48,10 @@ function TimesheetFilters({
             </div>
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Employee
+                    {t("employee")}
                 </label>
                 <CustomSelect
-                    placeholder="All Employees"
+                    placeholder={t("emp_all_employees")}
                     items={employees}
                     selected={employeeValue}
                     onChange={onEmployeeChange}
@@ -57,10 +59,10 @@ function TimesheetFilters({
             </div>
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Shift
+                    {t("emp_shift")}
                 </label>
                 <CustomSelect
-                    placeholder="All Shifts"
+                    placeholder={t("emp_all_shifts")}
                     items={shifts}
                     selected={shiftValue}
                     onChange={onShiftChange}
@@ -68,11 +70,11 @@ function TimesheetFilters({
             </div>
             <div>
                 <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
-                    Select Date Ranges :
+                    {t("ts_select_date_ranges")} :
                     <span className="relative group">
                         <Info className="w-3.5 h-3.5 text-blue-500 cursor-pointer" />
                         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-3 py-1.5 text-[11px] text-white bg-slate-800 rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
-                            Click to select a start and end date for the timesheet range
+                            {t("ts_date_range_tooltip")}
                         </span>
                     </span>
                 </label>

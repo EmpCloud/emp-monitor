@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { Search } from "lucide-react"
 import moment from "moment-timezone"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import TimesheetTable from "./TimesheetTable"
 import { useTimesheetStore } from "@/page/protected/admin/timesheets/timesheetStore"
 
 const EmployeeTimesheet = () => {
+    const { t } = useTranslation()
     const rows = useTimesheetStore((s) => s.rows)
     const totalCount = useTimesheetStore((s) => s.totalCount)
     const locations = useTimesheetStore((s) => s.locations)
@@ -192,7 +194,7 @@ const EmployeeTimesheet = () => {
             {/* Show entries + Search */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
                 <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-[#424242] font-medium">Show</span>
+                    <span className="text-[13px] text-[#424242] font-medium">{t("show")}</span>
                     <Select
                         value={String(pagination.pageSize)}
                         onValueChange={handlePageSizeChange}
@@ -206,13 +208,13 @@ const EmployeeTimesheet = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <span className="text-[13px] text-[#424242] font-medium">Entries</span>
+                    <span className="text-[13px] text-[#424242] font-medium">{t("entries")}</span>
                 </div>
 
                 <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                        placeholder="Search"
+                        placeholder={t("search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs"
@@ -229,15 +231,15 @@ const EmployeeTimesheet = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-3.5 pt-10">
                 <p className="text-[13px] text-gray-500 font-medium">
-                    Showing{" "}
+                    {t("emp_showing")}{" "}
                     <span className="font-bold text-gray-700">
                         {totalCount === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1}
                     </span>{" "}
-                    to{" "}
+                    {t("to")}{" "}
                     <span className="font-bold text-gray-700">
                         {Math.min(pagination.page * pagination.pageSize, totalCount)}
                     </span>{" "}
-                    of{" "}
+                    {t("of")}{" "}
                     <span className="font-bold text-blue-600">{totalCount}</span>
                 </p>
                 <PaginationComponent

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useLocationDepartmentStore } from "@/page/protected/admin/location-department/locationDepartmentStore";
 
-const DeleteDepartmentsDialog = ({ open, onOpenChange }) => {
+const DeleteDepartmentsDialog = ({ open, onOpenChange }) => {  const { t } = useTranslation();
+
     const allDepartments = useLocationDepartmentStore((s) => s.allDepartments);
     const deleting = useLocationDepartmentStore((s) => s.deleting);
     const confirmDeleteDepartment = useLocationDepartmentStore((s) => s.confirmDeleteDepartment);
@@ -42,7 +44,7 @@ const DeleteDepartmentsDialog = ({ open, onOpenChange }) => {
                             Delete Departments
                         </DialogTitle>
                         <DialogDescription className="text-red-100 text-xs mt-1">
-                            Permanently delete departments from the system
+                            {t("locDept.permanentlyDeleteDepts")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -51,15 +53,15 @@ const DeleteDepartmentsDialog = ({ open, onOpenChange }) => {
                     {allDepartments.length === 0 ? (
                         <div className="text-center py-8 text-sm text-slate-400">
                             <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                            No departments found
+                            {t("locDept.noDepartmentsFound")}
                         </div>
                     ) : (
                         <div className="max-h-[50vh] overflow-y-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100">
-                                        <th className="text-left py-2 px-2 text-xs font-semibold text-slate-500">Department</th>
-                                        <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 w-24">Action</th>
+                                        <th className="text-left py-2 px-2 text-xs font-semibold text-slate-500">{t("department")}</th>
+                                        <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 w-24">{t("action")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -76,7 +78,7 @@ const DeleteDepartmentsDialog = ({ open, onOpenChange }) => {
                                                             onClick={() => handleDelete(dept.id)}
                                                             disabled={deleting}
                                                         >
-                                                            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Yes"}
+                                                            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : t("common.yes")}
                                                         </Button>
                                                         <Button
                                                             variant="outline"

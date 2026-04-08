@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -120,6 +121,7 @@ const ViewReportModal = ({
   staticData,
   by = "today",
 }) => {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -187,7 +189,7 @@ const ViewReportModal = ({
         <div className="bg-linear-to-r from-[#7E8CF6] to-[#713FF7] px-6 py-5 rounded-t-lg border-b border-[#C8CFFF]/55">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-white">
-              {title || "View Report"}
+              {title || t("report_view_report")}
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -196,7 +198,7 @@ const ViewReportModal = ({
           {/* Controls */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Show</span>
+              <span className="text-xs text-slate-500">{t("show")}</span>
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => {
@@ -213,13 +215,13 @@ const ViewReportModal = ({
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-xs text-slate-500">entries</span>
+              <span className="text-xs text-slate-500">{t("entries")}</span>
             </div>
 
             <div className="relative w-full max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
-                placeholder="Search..."
+                placeholder={t("search")}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9 h-9 rounded-lg text-xs"
@@ -243,13 +245,13 @@ const ViewReportModal = ({
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-slate-400">
-                      Loading...
+                      {t("emp_loading")}
                     </TableCell>
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-slate-400">
-                      No data found.
+                      {t("Nodata")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -273,17 +275,17 @@ const ViewReportModal = ({
           {/* Pagination */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-2">
             <p className="text-[13px] text-gray-500 font-medium">
-              Showing{" "}
+              {t("emp_showing")}{" "}
               <span className="font-bold text-gray-700">
                 {filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
               </span>{" "}
-              to{" "}
+              {t("to")}{" "}
               <span className="font-bold text-gray-700">
                 {Math.min(currentPage * pageSize, filtered.length)}
               </span>{" "}
-              of{" "}
+              {t("of")}{" "}
               <span className="font-bold text-blue-600">{filtered.length}</span>{" "}
-              entries
+              {t("entries")}
             </p>
             <PaginationComponent
               currentPage={currentPage}

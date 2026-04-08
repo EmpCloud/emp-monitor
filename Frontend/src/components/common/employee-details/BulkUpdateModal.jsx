@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -6,6 +7,7 @@ import * as XLSX from "xlsx";
 import { bulkUpdateEmployees, fetchEmployeeList } from "@/page/protected/admin/employee-details/service";
 
 export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
+  const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -30,7 +32,7 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
       });
       onSuccess?.();
     } else {
-      setResult({ type: "error", msg: res?.msg || "Bulk update failed." });
+      setResult({ type: "error", msg: res?.msg || t("emp_bulk_update_failed") });
     }
   };
 
@@ -44,7 +46,7 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
       <DialogContent className="max-w-[95vw] sm:max-w-[550px] rounded-3xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
         <div className="relative px-7 py-5 flex items-center justify-between"
           style={{ background: "linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #7c3aed 100%)" }}>
-          <h2 className="text-white text-xl font-bold tracking-tight">Bulk Update</h2>
+          <h2 className="text-white text-xl font-bold tracking-tight">{t("emp_bulk_update")}</h2>
           <DialogClose className="text-white hover:text-white/80 transition-colors rounded-sm focus:outline-none">
             <X className="h-5 w-5" />
           </DialogClose>
@@ -56,16 +58,16 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
               onChange={handleFileChange} className="hidden" />
             <div className="flex-1 px-5 py-3 text-gray-400 text-[15px] truncate cursor-default"
               onClick={() => fileInputRef.current?.click()}>
-              {file ? file.name : "Choose file\u2026"}
+              {file ? file.name : t("emp_choose_file")}
             </div>
             <button type="button" onClick={() => fileInputRef.current?.click()}
               className="px-6 py-3 bg-gray-200 text-gray-500 text-[15px] font-medium hover:bg-gray-300 transition-colors">
-              Browse
+              {t("emp_browse")}
             </button>
           </div>
 
           <p className="text-[14px] text-gray-600 leading-relaxed">
-            Note: Upload file only in <strong>.xlsx</strong> format.{" "}
+            {t("emp_upload_note_xlsx")}{" "}
             <button
               type="button"
               disabled={downloading}
@@ -95,13 +97,13 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
                   XLSX.utils.book_append_sheet(wb, ws, "Employees");
                   XLSX.writeFile(wb, "Employee list.xlsx");
                 } catch (err) {
-                  setResult({ type: "error", msg: "Failed to download employee list." });
+                  setResult({ type: "error", msg: t("emp_failed_download_list") });
                 }
                 setDownloading(false);
               }}
             >
-              {downloading ? "Downloading..." : "Download"}
-            </button>{" "}User List template.
+              {downloading ? t("emp_downloading") : t("emp_download")}
+            </button>{" "}{t("emp_user_list_template")}.
           </p>
 
           {result && (
@@ -109,10 +111,10 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
               {result.type === "success" ? (
                 <>
                   <p className="flex items-center gap-2 text-green-700 font-semibold">
-                    <CheckCircle2 size={15} /> {result.updated} employee(s) updated.
+                    <CheckCircle2 size={15} /> {t("emp_count_updated", { count: result.updated })}
                   </p>
-                  {result.notFound.length > 0 && <p className="text-amber-600">{result.notFound.length} employee(s) not found.</p>}
-                  {result.badRoles.length > 0 && <p className="text-amber-600">{result.badRoles.length} invalid role(s) skipped.</p>}
+                  {result.notFound.length > 0 && <p className="text-amber-600">{t("emp_count_not_found", { count: result.notFound.length })}</p>}
+                  {result.badRoles.length > 0 && <p className="text-amber-600">{t("emp_invalid_roles_skipped", { count: result.badRoles.length })}</p>}
                 </>
               ) : (
                 <p className="flex items-center gap-2 text-red-600 font-semibold">
@@ -127,12 +129,12 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
 
         <div className="px-7 py-5 flex items-center justify-end gap-3">
           <DialogClose asChild>
-            <Button className="h-11 px-8 rounded-full bg-purple-400 hover:bg-purple-500 text-white text-[15px] font-semibold">No</Button>
+            <Button className="h-11 px-8 rounded-full bg-purple-400 hover:bg-purple-500 text-white text-[15px] font-semibold">{t("no")}</Button>
           </DialogClose>
           <Button onClick={handleSubmit} disabled={!file || submitting}
             className="h-11 px-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[15px] font-semibold gap-2">
             {submitting && <Loader2 size={14} className="animate-spin" />}
-            Upload
+            {t("upload")}
           </Button>
         </div>
       </DialogContent>
