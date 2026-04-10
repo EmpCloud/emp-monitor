@@ -1020,7 +1020,7 @@ class AuthService {
         let setting = {};
         try { setting = JSON.parse(existingEmployee.custom_tracking_rule); } catch (e) { setting = JSON.parse(JSON.stringify(defaultSettings)); }
         const shift = existingEmployee.shift ? JSON.parse(existingEmployee.shift) : '';
-        const productive_setting = existingEmployee.productive_hours ? JSON.parse(existingEmployee.productive_hours) : null;
+        const productive_setting = existingEmployee.productive_hours ? (typeof existingEmployee.productive_hours === 'string' ? JSON.parse(existingEmployee.productive_hours) : existingEmployee.productive_hours) : null;
         const productive_hours = productive_setting ? (productive_setting.mode == 'unlimited' ? 28800 : Comman.hourToSeconds(productive_setting.hour)) : 28800;
 
         const adminJsonData = {
