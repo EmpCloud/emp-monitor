@@ -1,7 +1,7 @@
 'use strict';
 if (process.env.IS_DEBUGGING) console.log(__filename);
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const util = require('util');
 
 /**

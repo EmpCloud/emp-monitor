@@ -3,6 +3,7 @@ if (process.env.IS_DEBUGGING) console.log(__filename);
 // unhandledRejection catch
 require('express-async-errors');
 
+const cors = require('cors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
@@ -72,6 +73,7 @@ class App {
     }
 
     addRoutesAndMiddleWares(app) {
+        app.use(cors());
         // app.use((req, res, next) => {
         //     const end = res.end;
         //     const onceUnhandledRejection = reason => errorHandler(reason, req, res);
