@@ -32,8 +32,8 @@ async function syncUser(req, res) {
         if (existing) {
             // Update existing user
             await db.query(
-                'UPDATE users SET first_name = ?, last_name = ?, empcloud_user_id = ?, updated_at = NOW() WHERE id = ?',
-                [first_name || existing.first_name, last_name || existing.last_name, empcloud_user_id, existing.id]
+                'UPDATE users SET first_name = ?, last_name = ?, empcloud_user_id = ?, a_email = COALESCE(a_email, ?), updated_at = NOW() WHERE id = ?',
+                [first_name || existing.first_name, last_name || existing.last_name, empcloud_user_id, email, existing.id]
             );
 
             // Make sure employee record exists too
@@ -229,8 +229,8 @@ async function bulkSyncUsers(req, res) {
 
                 if (existing) {
                     await db.query(
-                        'UPDATE users SET empcloud_user_id = ?, first_name = ?, last_name = ?, updated_at = NOW() WHERE id = ?',
-                        [empcloud_user_id, first_name || '', last_name || '', existing.id]
+                        'UPDATE users SET empcloud_user_id = ?, first_name = ?, last_name = ?, a_email = COALESCE(a_email, ?), updated_at = NOW() WHERE id = ?',
+                        [empcloud_user_id, first_name || '', last_name || '', email, existing.id]
                     );
                     // Ensure employee exists
                     const [emp] = await db.query('SELECT id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]);
@@ -238,9 +238,9 @@ async function bulkSyncUsers(req, res) {
                     results.push({ empcloud_user_id, status: 'updated' });
                 } else {
                     const insertResult = await db.query(
-                        `INSERT INTO users (email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
-                         VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
-                        [email, first_name || '', last_name || '', empcloud_user_id]
+                        `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+                        [email, email, first_name || '', last_name || '', empcloud_user_id]
                     );
                     await createEmployeeRecord(insertResult.insertId, organization_id);
                     results.push({ empcloud_user_id, status: 'created' });
