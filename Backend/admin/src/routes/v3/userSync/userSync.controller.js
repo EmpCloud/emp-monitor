@@ -47,11 +47,11 @@ async function syncUser(req, res) {
             return res.json({ code: 200, message: 'User updated', data: { id: existing.id, email, empcloud_user_id } });
         }
 
-        // Create new user
+        // Create new user (a_email must match email — the dashboard reads a_email)
         const result = await db.query(
-            `INSERT INTO users (email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, 1, NOW(), NOW())`,
-            [email, first_name || '', last_name || '', empcloud_user_id]
+            `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+            [email, email, first_name || '', last_name || '', empcloud_user_id]
         );
         const newUserId = result.insertId;
 
