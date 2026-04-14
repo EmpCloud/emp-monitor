@@ -4,6 +4,17 @@ const MySqlConnection = require('../../../database/MySqlConnection');
 const db = MySqlConnection.getInstance();
 const authModel = require('../auth/auth.model');
 
+// Defensive caps for the legacy emp-monitor users table. The schema dump
+// shows varchar(64) for first_name/last_name, but production has historically
+// had tighter limits in some installs. Trim to 60 to leave breathing room
+// without silently dropping meaningful name characters.
+const NAME_MAX = 60;
+const trimName = (s) => {
+    if (s == null) return '';
+    const str = String(s).trim();
+    return str.length > NAME_MAX ? str.slice(0, NAME_MAX) : str;
+};
+
 /**
  * POST /api/v3/users/sync — Create/update user from EmpCloud
  * Creates user + employee + role so they appear on the dashboard immediately.
@@ -18,7 +29,9 @@ async function syncUser(req, res) {
             }
         }
 
-        const { empcloud_user_id, organization_id, email, first_name, last_name, emp_code, designation, role } = req.body;
+        const { empcloud_user_id, organization_id, email, emp_code, designation, role } = req.body;
+        const first_name = trimName(req.body.first_name);
+        const last_name = trimName(req.body.last_name);
 
         if (!empcloud_user_id || !organization_id || !email) {
             return res.status(400).json({ code: 400, message: 'empcloud_user_id, organization_id, and email are required' });
@@ -61,7 +74,7 @@ async function syncUser(req, res) {
         const result = await db.query(
             `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
-            [email, email, first_name || '', last_name || '', empcloud_user_id]
+            [email, email, first_name, last_name, empcloud_user_id]
         );
         const newUserId = result.insertId;
 
@@ -70,7 +83,13 @@ async function syncUser(req, res) {
 
         return res.json({ code: 201, message: 'User created', data: { id: newUserId, email, empcloud_user_id } });
     } catch (error) {
-        console.error('User sync error:', error);
+        console.error(
+            'User sync error:',
+            error && error.code,
+            error && error.sqlMessage ? error.sqlMessage : error.message,
+            'payload:',
+            { email: req.body && req.body.email, first_name: req.body && req.body.first_name, last_name: req.body && req.body.last_name }
+        );
         return res.status(500).json({ code: 500, message: 'Internal server error', error: error.message });
     }
 }
@@ -297,7 +316,9 @@ async function bulkSyncUsers(req, res) {
 
         for (const userData of users) {
             try {
-                const { empcloud_user_id, organization_id, email, first_name, last_name, role } = userData;
+                const { empcloud_user_id, organization_id, email, role } = userData;
+                const first_name = trimName(userData.first_name);
+                const last_name = trimName(userData.last_name);
                 if (!empcloud_user_id || !email) { results.push({ empcloud_user_id, status: 'skipped', error: 'Missing data' }); continue; }
 
                 const [existing] = await db.query(
