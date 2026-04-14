@@ -202,6 +202,8 @@ class AuthModel {
      */
     async getOrCreateMonitorOrgForEmpcloudOrg(empcloudOrgId, ownerEmail, opts = {}) {
         const defaultSettings = require('./default.settings.json');
+
+        // Fast path: org already exists
         const [existing] = await mySql.query(
             'SELECT id, user_id FROM organizations WHERE amember_id = ? LIMIT 1',
             [empcloudOrgId]
@@ -215,8 +217,7 @@ class AuthModel {
         const beginDate = opts.beginDate || new Date().toISOString().slice(0, 10);
         const expireDate = opts.expireDate || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
 
-        // Reuse an existing user row for the owner if one already exists
-        // (common when the sync endpoint runs before the owner has SSO'd).
+        // Reuse owner user row if one already exists (sync may run before SSO)
         let ownerUserId;
         const [existingOwner] = await mySql.query(
             'SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1',
@@ -225,15 +226,42 @@ class AuthModel {
         if (existingOwner) {
             ownerUserId = existingOwner.id;
         } else {
-            const ownerResult = await this.insertAdminDetails(
-                opts.ownerFirstName || 'Organization', opts.ownerLastName || 'Admin',
-                ownerEmail, null, beginDate, null
-            );
-            ownerUserId = ownerResult.insertId;
+            try {
+                const ownerResult = await this.insertAdminDetails(
+                    opts.ownerFirstName || 'Organization', opts.ownerLastName || 'Admin',
+                    ownerEmail, null, beginDate, null
+                );
+                ownerUserId = ownerResult.insertId;
+            } catch (err) {
+                // Concurrent insert — another SSO created the user first
+                if (err && (err.code === 'ER_DUP_ENTRY' || (err.message && err.message.includes('Duplicate entry')))) {
+                    const [racedOwner] = await mySql.query(
+                        'SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1',
+                        [ownerEmail, ownerEmail]
+                    );
+                    if (!racedOwner) throw err;
+                    ownerUserId = racedOwner.id;
+                } else { throw err; }
+            }
         }
 
-        const orgResult = await this.insertOrganisation(ownerUserId, timezone, empcloudOrgId, totalSeats, null);
-        const orgId = orgResult.insertId;
+        // Insert org row, handle the amember_id race (two SSOs arriving at the same ms)
+        let orgId;
+        try {
+            const orgResult = await this.insertOrganisation(ownerUserId, timezone, empcloudOrgId, totalSeats, null);
+            orgId = orgResult.insertId;
+        } catch (err) {
+            if (err && (err.code === 'ER_DUP_ENTRY' || (err.message && err.message.includes('Duplicate entry')))) {
+                // Another request won the race — re-read and return that row.
+                const [raced] = await mySql.query(
+                    'SELECT id, user_id FROM organizations WHERE amember_id = ? LIMIT 1',
+                    [empcloudOrgId]
+                );
+                if (!raced) throw err;
+                return { orgId: raced.id, created: false, ownerUserId: raced.user_id };
+            }
+            throw err;
+        }
 
         const settings = JSON.parse(JSON.stringify(defaultSettings));
         settings.pack.expiry = expireDate;
