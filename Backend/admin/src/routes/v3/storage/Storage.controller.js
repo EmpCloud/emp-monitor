@@ -710,7 +710,12 @@ class StorageController {
                 return sendResponse(res, 400, null, storageMessages.find(x => x.id === "3")[language] || storageMessages.find(x => x.id === "3")["en"], null);
             }
         } catch (err) {
-            return sendResponse(res, 400, null, storageMessages.find(x => x.id === "14")[language] || storageMessages.find(x => x.id === "14")["en"], null);
+            // Previously this catch swallowed the real error and returned a
+            // generic "Failed Get Storage Data" with no server log, making
+            // storage config crashes invisible. Log the stack so pm2 logs
+            // tell us exactly which row / parse / access blew up.
+            console.error('[getStorageTypeWithData]', err && err.stack ? err.stack : err);
+            return sendResponse(res, 400, null, storageMessages.find(x => x.id === "14")[language] || storageMessages.find(x => x.id === "14")["en"], err && err.message ? err.message : null);
         }
     }
 
