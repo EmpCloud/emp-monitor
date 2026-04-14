@@ -3,8 +3,20 @@
 -- committed for it, so fresh installs (and installs that never manually ran
 -- the ALTER) crash with "Unknown column 'opc.note' in 'field list'".
 --
--- Safe to re-run: uses IF NOT EXISTS so an install that already has the column
--- won't error out.
+-- Idempotent via information_schema check — MySQL < 8.0.29 does not support
+-- `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, and this codebase still runs
+-- against MariaDB-flavored MySQL on several installs, so use a prepared
+-- statement guarded by a column-existence query instead.
 
-ALTER TABLE `organization_provider_credentials`
-  ADD COLUMN IF NOT EXISTS `note` VARCHAR(255) DEFAULT NULL AFTER `is_expired`;
+SET @exists := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'organization_provider_credentials'
+    AND COLUMN_NAME = 'note'
+);
+SET @sql := IF(@exists = 0,
+  'ALTER TABLE `organization_provider_credentials` ADD COLUMN `note` VARCHAR(255) DEFAULT NULL AFTER `is_expired`',
+  'SELECT ''note already exists'' AS status');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
