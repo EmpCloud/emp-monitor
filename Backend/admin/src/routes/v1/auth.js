@@ -201,6 +201,7 @@ router.post('/admin', async (req, res) => {
 
     return res.status(200).json({
       code: 200,
+      success: true,
       data: accessToken,
       user_name: admin.first_name,
       full_name: `${admin.first_name || ''} ${admin.last_name || ''}`.trim(),
