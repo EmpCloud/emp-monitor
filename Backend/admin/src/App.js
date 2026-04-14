@@ -23,6 +23,7 @@ const fs = require('fs');
 const fileStreamRotator = require('file-stream-rotator')
 const logDir = __dirname + '/logger/responseLog';
 const RoutesV3 = require('./routes/v3/modules');
+const v1AuthRouter = require('./routes/v1/auth');
 const errorHandler = require('./middleware/error');
 const ReportDeleteController = require('./routes/v3/reports/report-delete.controller');
 
@@ -162,6 +163,12 @@ class App {
         app.use('/api/v3/docs', swaggerUi.serve, (...args) => swaggerUi.setup(swaggerDocumentV3Client)(...args));
 
         app.use('/api/v3', new RoutesV3().getRouters());
+
+        // /api/v1 — fresh password-based admin login that authenticates
+        // against EmpCloud. Intentionally narrow scope: only the admin
+        // login endpoint lives here, the rest of the API stays on v3 to
+        // avoid coupling to the legacy aMember flow.
+        app.use('/api/v1/auth', v1AuthRouter);
 
         app.use('/api/custom/on-premise-admin', (req, res) => {
             try {
