@@ -2,6 +2,7 @@
 
 const MySqlConnection = require('../../../database/MySqlConnection');
 const db = MySqlConnection.getInstance();
+const authModel = require('../auth/auth.model');
 
 /**
  * POST /api/v3/users/sync — Create/update user from EmpCloud
@@ -36,12 +37,18 @@ async function syncUser(req, res) {
                 [first_name || existing.first_name, last_name || existing.last_name, empcloud_user_id, email, existing.id]
             );
 
-            // Make sure employee record exists too
+            // Make sure employee record exists in the CORRECT monitor org
+            // for this empcloud tenant. If the user was previously stranded
+            // in a different org (legacy bug), re-point their employee row.
             const [existingEmp] = await db.query(
-                'SELECT id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]
+                'SELECT id, organization_id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]
             );
+            const { orgId: targetOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(organization_id, email);
             if (!existingEmp) {
-                await createEmployeeRecord(existing.id, organization_id);
+                await createEmployeeRecord(existing.id, organization_id, email);
+            } else if (existingEmp.organization_id !== targetOrgId) {
+                await db.query('UPDATE employees SET organization_id = ?, updated_at = NOW() WHERE id = ?', [targetOrgId, existingEmp.id]);
+                console.log('Sync: repointed employee', existingEmp.id, 'to org', targetOrgId);
             }
 
             return res.json({ code: 200, message: 'User updated', data: { id: existing.id, email, empcloud_user_id } });
@@ -56,7 +63,7 @@ async function syncUser(req, res) {
         const newUserId = result.insertId;
 
         // Create employee + role so user shows on dashboard
-        await createEmployeeRecord(newUserId, organization_id);
+        await createEmployeeRecord(newUserId, organization_id, email);
 
         return res.json({ code: 201, message: 'User created', data: { id: newUserId, email, empcloud_user_id } });
     } catch (error) {
@@ -66,18 +73,19 @@ async function syncUser(req, res) {
 }
 
 /**
- * Creates employee + user_role records for a user in a given org.
- * Uses the org's default department, location, and shift.
+ * Creates employee + user_role records for a user in the monitor org that
+ * mirrors the caller's empcloud org. Auto-provisions the monitor org on
+ * first use so every empcloud tenant gets its own isolated dashboard.
  */
-async function createEmployeeRecord(userId, empcloudOrgId) {
-    // Find the monitor organization — match by user_id or just pick the first one
-    let monitorOrgId;
-    const [org] = await db.query('SELECT id FROM organizations LIMIT 1');
-    if (!org) {
-        console.error('Sync: no organization exists in monitor DB');
+async function createEmployeeRecord(userId, empcloudOrgId, ownerEmail) {
+    if (!empcloudOrgId) {
+        console.error('Sync: empcloudOrgId missing, cannot route employee to correct org');
         return;
     }
-    monitorOrgId = org.id;
+
+    const { orgId: monitorOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(
+        empcloudOrgId, ownerEmail || `org-${empcloudOrgId}@empcloud.local`
+    );
 
     // Get default department
     const [dept] = await db.query(
@@ -234,7 +242,7 @@ async function bulkSyncUsers(req, res) {
                     );
                     // Ensure employee exists
                     const [emp] = await db.query('SELECT id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]);
-                    if (!emp) await createEmployeeRecord(existing.id, organization_id);
+                    if (!emp) await createEmployeeRecord(existing.id, organization_id, email);
                     results.push({ empcloud_user_id, status: 'updated' });
                 } else {
                     const insertResult = await db.query(
@@ -242,7 +250,7 @@ async function bulkSyncUsers(req, res) {
                          VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
                         [email, email, first_name || '', last_name || '', empcloud_user_id]
                     );
-                    await createEmployeeRecord(insertResult.insertId, organization_id);
+                    await createEmployeeRecord(insertResult.insertId, organization_id, email);
                     results.push({ empcloud_user_id, status: 'created' });
                 }
             } catch (err) {

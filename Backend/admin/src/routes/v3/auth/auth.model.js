@@ -192,6 +192,61 @@ class AuthModel {
         });
     }
 
+    /**
+     * Resolve (or auto-create) the monitor organization that mirrors a given
+     * empcloud org_id. Uses organizations.amember_id as the tenant bridge —
+     * one monitor org per empcloud org, so every user from the same empcloud
+     * tenant lands in the same monitor dashboard.
+     *
+     * Returns { orgId, created, ownerUserId }.
+     */
+    async getOrCreateMonitorOrgForEmpcloudOrg(empcloudOrgId, ownerEmail, opts = {}) {
+        const defaultSettings = require('./default.settings.json');
+        const [existing] = await mySql.query(
+            'SELECT id, user_id FROM organizations WHERE amember_id = ? LIMIT 1',
+            [empcloudOrgId]
+        );
+        if (existing) {
+            return { orgId: existing.id, created: false, ownerUserId: existing.user_id };
+        }
+
+        const timezone = opts.timezone || 'Asia/Kolkata';
+        const totalSeats = opts.totalSeats || 100;
+        const beginDate = opts.beginDate || new Date().toISOString().slice(0, 10);
+        const expireDate = opts.expireDate || new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+        // Reuse an existing user row for the owner if one already exists
+        // (common when the sync endpoint runs before the owner has SSO'd).
+        let ownerUserId;
+        const [existingOwner] = await mySql.query(
+            'SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1',
+            [ownerEmail, ownerEmail]
+        );
+        if (existingOwner) {
+            ownerUserId = existingOwner.id;
+        } else {
+            const ownerResult = await this.insertAdminDetails(
+                opts.ownerFirstName || 'Organization', opts.ownerLastName || 'Admin',
+                ownerEmail, null, beginDate, null
+            );
+            ownerUserId = ownerResult.insertId;
+        }
+
+        const orgResult = await this.insertOrganisation(ownerUserId, timezone, empcloudOrgId, totalSeats, null);
+        const orgId = orgResult.insertId;
+
+        const settings = JSON.parse(JSON.stringify(defaultSettings));
+        settings.pack.expiry = expireDate;
+        settings.pack.begin_date = beginDate;
+
+        await new Promise((resolve) => {
+            this.insertLocationAndDepartment_ROLE(orgId, timezone, settings.tracking.fixed, ownerUserId, (err, data) => resolve(data));
+        });
+        await this.insertOrganizationSetting(orgId, settings);
+
+        return { orgId, created: true, ownerUserId };
+    }
+
     async addDefaultStorageToFreePlan(organization_id, admin_email, plan_id) {
         if (parseInt(plan_id) === parseInt(process.env.FREE_PLAN_ID)) {
 

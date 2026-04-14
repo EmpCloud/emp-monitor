@@ -971,6 +971,36 @@ class AuthService {
         // ─── USER EXISTS — login normally like userAuth ───
         console.log('SSO: user found in emp-monitor DB, employee_id:', existingEmployee.employee_id);
 
+        // ─── Tenant guard: verify the employee's monitor org actually
+        //     mirrors this empcloud tenant. If it doesn't (legacy "LIMIT 1"
+        //     routing), resolve/create the correct one and repoint.
+        try {
+          const { orgId: correctMonitorOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(
+            org_id, email,
+            {
+              timezone: decoded.timezone || 'Asia/Kolkata',
+              totalSeats: licenseData.total_seats || 100,
+              beginDate: licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : undefined,
+              expireDate: licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : undefined,
+            }
+          );
+          if (correctMonitorOrgId && correctMonitorOrgId !== existingEmployee.organization_id) {
+            console.log('SSO: employee stranded in wrong org', existingEmployee.organization_id, '→ repointing to', correctMonitorOrgId);
+            const [newDept] = await mySql.query('SELECT id, name FROM organization_departments WHERE organization_id = ? LIMIT 1', [correctMonitorOrgId]);
+            const [newLoc] = await mySql.query('SELECT id, name FROM organization_locations WHERE organization_id = ? LIMIT 1', [correctMonitorOrgId]);
+            const [newShift] = await mySql.query('SELECT id FROM organization_shifts WHERE organization_id = ? LIMIT 1', [correctMonitorOrgId]).catch(() => [null]);
+            await mySql.query(
+              'UPDATE employees SET organization_id = ?, department_id = ?, location_id = ?, shift_id = ? WHERE id = ?',
+              [correctMonitorOrgId, newDept ? newDept.id : null, newLoc ? newLoc.id : null, newShift ? newShift.id : 0, existingEmployee.employee_id]
+            );
+            existingEmployee.organization_id = correctMonitorOrgId;
+            if (newDept) { existingEmployee.department_id = newDept.id; existingEmployee.department = newDept.name; }
+            if (newLoc) { existingEmployee.location_id = newLoc.id; existingEmployee.location = newLoc.name; }
+          }
+        } catch (e) {
+          console.log('SSO: tenant guard skipped:', e.message);
+        }
+
         // ─── Sync license from empcloud → emp-monitor org ───
         try {
           const monitorOrgId = existingEmployee.organization_id;
@@ -1087,13 +1117,23 @@ class AuthService {
         });
       }
 
-      // ─── Check if user exists as admin ───
-      // NOTE: pass amember_id=-1 (impossible value) to avoid matching orgs with amember_id=0
+      // ─── Check if user exists as admin in THIS empcloud tenant ───
+      // Prefer match by empcloud org tenant (amember_id = empcloud org_id),
+      // then by email. This keeps admins of different empcloud orgs isolated
+      // even if they happened to share an email alias.
       let existingAdmin = null;
       try {
-        const adminResults = await authModel.getAdmin(email, -1);
+        const adminResults = await authModel.getAdmin(email, org_id);
         if (Array.isArray(adminResults) && adminResults.length > 0) {
-          existingAdmin = adminResults[0];
+          // Prefer the admin whose monitor org actually mirrors this empcloud tenant
+          existingAdmin = adminResults.find(a => Number(a.amember_id) === Number(org_id)) || null;
+          // Fall back to an email match only if that admin's monitor org is ALSO for this tenant
+          if (!existingAdmin) {
+            const emailMatch = adminResults.find(a => a.email === email || a.a_email === email);
+            if (emailMatch && Number(emailMatch.amember_id) === Number(org_id)) {
+              existingAdmin = emailMatch;
+            }
+          }
         }
       } catch (e) {
         console.log('SSO: admin lookup failed:', e && e.message ? e.message : e);
@@ -1182,8 +1222,9 @@ class AuthService {
       const ssoSettings = JSON.parse(JSON.stringify(defaultSettings));
 
       if (isAdminRole) {
-        // ─── Create as Admin (owner of new org in emp-monitor) ───
-        // Use empcloud license dates if available, else default 1 year
+        // ─── Create (or reuse) the monitor org for this empcloud tenant ───
+        // amember_id = empcloud org_id → one monitor org per empcloud tenant,
+        // so every admin/employee from the same empcloud org shares one dashboard.
         const beginDate = licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
         const expireDate = licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : moment().add(1, 'year').format('YYYY-MM-DD');
         const totalSeats = licenseData.total_seats || 100;
@@ -1191,41 +1232,13 @@ class AuthService {
         ssoSettings.pack.expiry = expireDate;
         ssoSettings.pack.begin_date = beginDate;
 
-        // Insert user (or reuse existing orphan row from a prior half-failed SSO run)
-        let adminNewData;
-        try {
-          adminNewData = await authModel.insertAdminDetails(
-            first_name || 'User', last_name || '', email, null, beginDate, null
-          );
-          console.log('SSO: created admin user, id:', adminNewData.insertId);
-        } catch (insertErr) {
-          if (insertErr.code === 'ER_DUP_ENTRY' || (insertErr.message && insertErr.message.includes('Duplicate entry'))) {
-            const [existingUser] = await mySql.query('SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1', [email, email]);
-            if (!existingUser) {
-              return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'Duplicate admin user but lookup failed', data: null });
-            }
-            adminNewData = { insertId: existingUser.id };
-            console.log('SSO: admin user already exists, reusing id:', existingUser.id);
-          } else {
-            throw insertErr;
-          }
-        }
-
-        // Insert organization with license seats from empcloud
-        // amember_id = empcloud user id (unique per SSO-provisioned org, avoids dup-key on 0)
-        const orgData = await authModel.insertOrganisation(adminNewData.insertId, timezone, cloudUserId, totalSeats, null);
-        console.log('SSO: created organization, id:', orgData.insertId);
-
-        // Insert defaults (department, location, roles, shift)
-        await new Promise((resolve) => {
-          authModel.insertLocationAndDepartment_ROLE(orgData.insertId, timezone, ssoSettings.tracking.fixed, adminNewData.insertId, (err, data) => {
-            resolve(data);
-          });
+        const bootstrap = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(org_id, email, {
+          timezone, totalSeats, beginDate, expireDate,
+          ownerFirstName: first_name || 'User', ownerLastName: last_name || '',
         });
-
-        // Insert org settings
-        await authModel.insertOrganizationSetting(orgData.insertId, ssoSettings);
-        console.log('SSO: created org settings, defaults provisioned');
+        const adminNewData = { insertId: bootstrap.ownerUserId };
+        const orgData = { insertId: bootstrap.orgId };
+        console.log('SSO: monitor org for empcloud org', org_id, '→', orgData.insertId, bootstrap.created ? '(created)' : '(reused)');
 
         // Sync used_seats=1 back to empcloud (new org, 1 admin user)
         await empcloudDb.query(
@@ -1283,44 +1296,22 @@ class AuthService {
           error: null,
         });
       } else {
-        // ─── Create as Employee/Manager under existing org ───
-        // First find if org already exists in emp-monitor (another admin from same org may have logged in)
-        let monitorOrgId = null;
-        const [orgRow] = await mySql.query('SELECT id FROM organizations LIMIT 1').catch(() => [null]);
-        if (orgRow) {
-          monitorOrgId = orgRow.id;
-        } else {
-          // No org exists yet — create a default one with empcloud license data
-          const empBegin = licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
-          const empExpire = licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : moment().add(1, 'year').format('YYYY-MM-DD');
-          const empSeats = licenseData.total_seats || 100;
-          ssoSettings.pack.expiry = empExpire;
-          ssoSettings.pack.begin_date = empBegin;
+        // ─── Create as Employee/Manager under the monitor org for this empcloud tenant ───
+        const empBegin = licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+        const empExpire = licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : moment().add(1, 'year').format('YYYY-MM-DD');
+        const empSeats = licenseData.total_seats || 100;
+        ssoSettings.pack.expiry = empExpire;
+        ssoSettings.pack.begin_date = empBegin;
 
-          let tempAdmin;
-          try {
-            tempAdmin = await authModel.insertAdminDetails(
-              'Organization', 'Admin', email, null, empBegin, null
-            );
-          } catch (insertErr) {
-            if (insertErr.code === 'ER_DUP_ENTRY' || (insertErr.message && insertErr.message.includes('Duplicate entry'))) {
-              const [existingUser] = await mySql.query('SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1', [email, email]);
-              if (!existingUser) {
-                return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'Duplicate org admin but lookup failed', data: null });
-              }
-              tempAdmin = { insertId: existingUser.id };
-            } else {
-              throw insertErr;
-            }
-          }
-          const orgData = await authModel.insertOrganisation(tempAdmin.insertId, timezone, cloudUserId, empSeats, null);
-          await new Promise((resolve) => {
-            authModel.insertLocationAndDepartment_ROLE(orgData.insertId, timezone, ssoSettings.tracking.fixed, tempAdmin.insertId, (err, data) => resolve(data));
-          });
-          await authModel.insertOrganizationSetting(orgData.insertId, ssoSettings);
-          monitorOrgId = orgData.insertId;
-          console.log('SSO: created default org for employee, orgId:', monitorOrgId);
-        }
+        // Route to (or auto-create) the monitor org that mirrors this empcloud tenant.
+        // The owner of a bootstrapped org is a synthetic "Organization Admin" so the
+        // first admin SSO login will be picked up by the admin branch above.
+        const bootstrap = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(org_id, `org-${org_id}@empcloud.local`, {
+          timezone, totalSeats: empSeats, beginDate: empBegin, expireDate: empExpire,
+          ownerFirstName: 'Organization', ownerLastName: 'Admin',
+        });
+        const monitorOrgId = bootstrap.orgId;
+        console.log('SSO: employee routing to monitor org', monitorOrgId, bootstrap.created ? '(created)' : '(reused)');
 
         // Get default department, location, role for this org
         const [dept] = await mySql.query('SELECT id FROM organization_departments WHERE organization_id = ? LIMIT 1', [monitorOrgId]);
@@ -1363,10 +1354,16 @@ class AuthService {
 
         // Insert employee (skip if already exists for this user)
         let newEmpId;
-        const [existingEmp] = await mySql.query('SELECT id FROM employees WHERE user_id = ? LIMIT 1', [newUserId]).catch(() => [null]);
+        const [existingEmp] = await mySql.query('SELECT id, organization_id FROM employees WHERE user_id = ? LIMIT 1', [newUserId]).catch(() => [null]);
         if (existingEmp) {
           newEmpId = existingEmp.id;
-          console.log('SSO: employee already exists, reusing id:', newEmpId);
+          // Repoint stranded employees (legacy "LIMIT 1" routing) to correct monitor org
+          if (existingEmp.organization_id !== monitorOrgId) {
+            await mySql.query('UPDATE employees SET organization_id = ? WHERE id = ?', [monitorOrgId, existingEmp.id]);
+            console.log('SSO: repointed stranded employee', existingEmp.id, '→ org', monitorOrgId);
+          } else {
+            console.log('SSO: employee already exists, reusing id:', newEmpId);
+          }
         } else {
           const empResult = await mySql.query(
             'INSERT INTO employees (user_id, organization_id, department_id, location_id, timezone, shift_id, custom_tracking_rule, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
