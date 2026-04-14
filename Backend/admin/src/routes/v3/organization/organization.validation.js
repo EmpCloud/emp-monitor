@@ -182,6 +182,16 @@ class OrganizationValidator {
         const int = () => num().integer();
         const num = () => joi.number();
         const zeroOne = () => Joi.number().integer().valid([0, 1]);
+        // Forgiving zero/one for feature-flag toggles: the UI sometimes
+        // sends true/false (JS booleans), "0"/"1" (strings) or skips the
+        // field entirely. We accept all of those and default missing to 0
+        // so a single stray toggle doesn't nuke the whole settings save.
+        const zeroOneFlex = () => joi.alternatives().try([
+            Joi.number().integer().valid([0, 1]),
+            joi.boolean(),
+            joi.string().valid('0', '1', 'true', 'false', ''),
+            joi.any().valid(null),
+        ]);
         const mac = () => joi.mac();
 
         const bool = () => joi.boolean();
@@ -312,12 +322,12 @@ class OrganizationValidator {
                     employeeCanCreateTask: bool().error(_ => 'Inavlid Input For employeeCanCreateTask'),
                 }),
                 features: obj().keys({
-                    application_usage: zeroOne().required().error(_ => 'Invalid Input for application_usage.'),
-                    keystrokes: zeroOne().error(_ => 'Invalid Input for keystrokes'),
-                    web_usage: zeroOne().required().error(_ => 'Invalid Input for web_usage'),
-                    block_websites: zeroOne().required().error(_ => 'Invalid Input for block_websites'),
-                    screenshots: zeroOne().required().error(_ => 'Invalid Input for screenshots'),
-                    screen_record: zeroOne().optional().default(0).error(_ => 'Invalid Input for screen record'),
+                    application_usage: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for application_usage.'),
+                    keystrokes: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for keystrokes'),
+                    web_usage: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for web_usage'),
+                    block_websites: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for block_websites'),
+                    screenshots: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for screenshots'),
+                    screen_record: zeroOneFlex().optional().default(0).error(_ => 'Invalid Input for screen record'),
                 }),
                 pack: obj().keys({
                     id: int(),
