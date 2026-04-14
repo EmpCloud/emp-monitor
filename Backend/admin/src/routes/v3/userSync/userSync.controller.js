@@ -227,8 +227,16 @@ async function unsyncUser(req, res) {
             return res.status(404).json({ code: 404, message: 'User not found' });
         }
 
-        // Deactivate user
-        await db.query('UPDATE users SET status = 0, updated_at = NOW() WHERE id = ?', [user.id]);
+        // Fully unsync: remove the user from every table the dashboard joins
+        // through. Previously this only flipped users.status = 0, which left
+        // the employees + user_role rows behind — so the user vanished from
+        // status-filtered queries but still appeared everywhere joined via
+        // employees (org chart, attendance, productivity, etc.).
+        //
+        // Order matters: child rows first to avoid FK violations.
+        await db.query('DELETE FROM user_role WHERE user_id = ?', [user.id]);
+        await db.query('DELETE FROM employees WHERE user_id = ?', [user.id]);
+        await db.query('DELETE FROM users WHERE id = ?', [user.id]);
 
         // Decrement org user count
         if (user.organization_id) {
@@ -238,7 +246,7 @@ async function unsyncUser(req, res) {
             );
         }
 
-        return res.json({ code: 200, message: 'User deactivated', data: { id: user.id, email: user.email } });
+        return res.json({ code: 200, message: 'User removed', data: { id: user.id, email: user.email } });
     } catch (error) {
         console.error('User unsync error:', error);
         return res.status(500).json({ code: 500, message: 'Internal server error', error: error.message });
