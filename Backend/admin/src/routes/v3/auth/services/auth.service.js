@@ -1191,14 +1191,29 @@ class AuthService {
         ssoSettings.pack.expiry = expireDate;
         ssoSettings.pack.begin_date = beginDate;
 
-        // Insert user
-        const adminNewData = await authModel.insertAdminDetails(
-          first_name || 'User', last_name || '', email, null, beginDate, null
-        );
-        console.log('SSO: created admin user, id:', adminNewData.insertId);
+        // Insert user (or reuse existing orphan row from a prior half-failed SSO run)
+        let adminNewData;
+        try {
+          adminNewData = await authModel.insertAdminDetails(
+            first_name || 'User', last_name || '', email, null, beginDate, null
+          );
+          console.log('SSO: created admin user, id:', adminNewData.insertId);
+        } catch (insertErr) {
+          if (insertErr.code === 'ER_DUP_ENTRY' || (insertErr.message && insertErr.message.includes('Duplicate entry'))) {
+            const [existingUser] = await mySql.query('SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1', [email, email]);
+            if (!existingUser) {
+              return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'Duplicate admin user but lookup failed', data: null });
+            }
+            adminNewData = { insertId: existingUser.id };
+            console.log('SSO: admin user already exists, reusing id:', existingUser.id);
+          } else {
+            throw insertErr;
+          }
+        }
 
         // Insert organization with license seats from empcloud
-        const orgData = await authModel.insertOrganisation(adminNewData.insertId, timezone, 0, totalSeats, null);
+        // amember_id = empcloud user id (unique per SSO-provisioned org, avoids dup-key on 0)
+        const orgData = await authModel.insertOrganisation(adminNewData.insertId, timezone, cloudUserId, totalSeats, null);
         console.log('SSO: created organization, id:', orgData.insertId);
 
         // Insert defaults (department, location, roles, shift)
@@ -1282,10 +1297,23 @@ class AuthService {
           ssoSettings.pack.expiry = empExpire;
           ssoSettings.pack.begin_date = empBegin;
 
-          const tempAdmin = await authModel.insertAdminDetails(
-            'Organization', 'Admin', email, null, empBegin, null
-          );
-          const orgData = await authModel.insertOrganisation(tempAdmin.insertId, timezone, 0, empSeats, null);
+          let tempAdmin;
+          try {
+            tempAdmin = await authModel.insertAdminDetails(
+              'Organization', 'Admin', email, null, empBegin, null
+            );
+          } catch (insertErr) {
+            if (insertErr.code === 'ER_DUP_ENTRY' || (insertErr.message && insertErr.message.includes('Duplicate entry'))) {
+              const [existingUser] = await mySql.query('SELECT id FROM users WHERE email = ? OR a_email = ? LIMIT 1', [email, email]);
+              if (!existingUser) {
+                return res.status(500).json({ code: 500, error: 'Provisioning Error', message: 'Duplicate org admin but lookup failed', data: null });
+              }
+              tempAdmin = { insertId: existingUser.id };
+            } else {
+              throw insertErr;
+            }
+          }
+          const orgData = await authModel.insertOrganisation(tempAdmin.insertId, timezone, cloudUserId, empSeats, null);
           await new Promise((resolve) => {
             authModel.insertLocationAndDepartment_ROLE(orgData.insertId, timezone, ssoSettings.tracking.fixed, tempAdmin.insertId, (err, data) => resolve(data));
           });
