@@ -56,7 +56,7 @@ class DashboardController {
             const {
                 date
             } = await DashboardValidator.getAbsentEmployee().validateAsync(req.query);
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             let [registeredEmp, suspendedEmp, absentEmp, onlineEmp, offlineEmp, idealEmp] = await Promise.all([
                 DashboardModel.getRegisteredEmp(organization_id, manager_id, to_assigned_role),
@@ -149,7 +149,7 @@ class DashboardController {
             const {
                 date
             } = await DashboardValidator.getAbsentEmployee().validateAsync(req.query);
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             let [registeredEmp, absentEmp, onlineEmp, offlineEmp, idealEmp] = await Promise.all([
                 DashboardModel.getRegisteredEmp(organization_id, manager_id, to_assigned_role),
@@ -223,7 +223,7 @@ class DashboardController {
             const {
                 date
             } = await DashboardValidator.getAbsentEmployee().validateAsync(req.query);
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             const empData = await Promise.all([
                 DashboardModel.getRegisteredEmp(organization_id, manager_id, to_assigned_role),
@@ -266,7 +266,7 @@ class DashboardController {
                 to_date
             } = await DashboardValidator.getEmployeeProductivity().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             let search_type, search_data;
             if (department_id) {
@@ -337,7 +337,7 @@ class DashboardController {
                 to_date
             } = await DashboardValidator.getLocationProductivity().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_type, search_data;
@@ -404,7 +404,7 @@ class DashboardController {
                 to_date
             } = await DashboardValidator.getDepartmentProductivity().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_type, search_data;
@@ -469,7 +469,7 @@ class DashboardController {
                 date
             } = await DashboardValidator.getOrganizationProductivity().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_data = organization_id,
@@ -534,7 +534,7 @@ class DashboardController {
                 to_date
             } = await DashboardValidator.getActiveDays().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_type, search_data;
@@ -584,7 +584,7 @@ class DashboardController {
                 end_date
             } = await DashboardValidator.getTopAppWeb().validateAsync(req.query);
             const organization_id = req.decoded.organization_id;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_data = [organization_id];
@@ -684,7 +684,7 @@ class DashboardController {
                 language,
                 productive_hours
             } = req.decoded;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
 
             let search_data = [organization_id];
@@ -766,7 +766,7 @@ class DashboardController {
                 language,
                 productive_hours
             } = req.decoded;
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             let employee_ids = null;
             if (location_id === 'null') {
@@ -874,7 +874,7 @@ class DashboardController {
                 type
             } = await DashboardValidator.activityBeakdown().validateAsync(req.query);
 
-            const manager_id = req.decoded.is_admin ? null : (req.decoded.employee_id || null);
+            const manager_id = req.decoded.employee_id || null;
             const to_assigned_role = req.decoded.role_id || null;
             let employee_ids = null;
             const {

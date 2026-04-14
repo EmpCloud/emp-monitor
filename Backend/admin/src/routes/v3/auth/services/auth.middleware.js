@@ -32,6 +32,7 @@ class AuthMiddlewareService {
                     let userMetaData = await redis.getUserMetaData(userData.user_id);
                     if (userMetaData.code = 200 && userMetaData.data) {
                         req.decoded = userMetaData.data;
+                        if (req.decoded.is_admin) req.decoded.employee_id = null;
                         next();
                     } else {
                         next(new errorHandler('Invalid token', 401));
