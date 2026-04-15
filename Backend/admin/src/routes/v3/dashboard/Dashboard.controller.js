@@ -737,9 +737,6 @@ class DashboardController {
                     return data;
                 });
             }
-            performance = performance.filter(item => item.duration !== 0);
-
-
             return res.json({
                 code: 200,
                 data: performance,
