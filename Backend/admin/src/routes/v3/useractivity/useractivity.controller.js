@@ -33,6 +33,7 @@ const redis = require('../auth/services/redis.service');
 const axios = require('axios')
 
 const ConfigData = require("../../../../../config/config");
+const { syncEmpCloudSeats } = require(`${utilsFolder}/helpers/EmpCloudSeatSync`);
 
 const upload = multer({
     dest: __dirname.split('src')[0] + 'public',
@@ -136,6 +137,7 @@ class UserActivity {
 
             const userToRole = await UserActivityModel.addMultiRoleToUser(user.insertId, _.unique(role_ids), req.decoded.user_id);
             await UserActivityModel.updateadminProperties({ organization_id, current_user_count: orgSetting.current_count + 1 });
+            syncEmpCloudSeats(organization_id);
 
             const roles = await UserActivityModel.getRoles(organization_id);
             let roleMessage = '';
@@ -805,6 +807,7 @@ class UserActivity {
                 const deleted = await UserActivityModel.deleteUsers(user_id);
                 if (deleted.affectedRows !== 0) {
                     const ogCount = await UserActivityModel.updatePlan(organization_id);
+                    syncEmpCloudSeats(organization_id);
                     eventEmitter.emit('delete_employees_data', { organization_id, employee_id: employee_id, attendanceIds, email });
                     const ip = req.connection ? req.connection.remoteAddress : null;
                     await UserActivityModel.addRemovedUsers({ organization_id, first_name, last_name, computer_name, email, loggedInEmail, ip: ip });
@@ -1030,6 +1033,7 @@ class UserActivity {
                         }
                         count = count + 1;
                         await UserActivityModel.updateadminProperties({ organization_id, current_user_count: count });
+                        syncEmpCloudSeats(organization_id);
                         if(ConfigData.AUTO_ASSIGN_USER.includes(+organization_id)) eventEmitter.emit('register', { employee_id: emp.insertId, organization_id, role_ids, department_id, location_id });
                         final_user.push(user);
 
@@ -1158,6 +1162,7 @@ class UserActivity {
                     if (deleted.affectedRows !== 0) {
                         success_email.push(user?.Email);
                         const ogCount = await UserActivityModel.updatePlan(organization_id);
+                        syncEmpCloudSeats(organization_id);
                         eventEmitter.emit('delete_employees_data', { organization_id, employee_id: employee_id, attendanceIds, email: user?.Email });
                         const ip = req.connection ? req.connection.remoteAddress : null;
                         await UserActivityModel.addRemovedUsers({ organization_id, first_name, last_name, computer_name, email: user?.Email, loggedInEmail, ip: ip });

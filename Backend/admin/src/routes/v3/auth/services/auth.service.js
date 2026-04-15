@@ -18,6 +18,7 @@ const activityLogsSchema = require('./activitylogs.schema');
 const crypto = require('crypto');
 const { Mailer } = require('../../../../messages/Mailer');
 const { getMailTemplate2FA } = require('../../../../utils/helpers/MailTemplate');
+const { syncEmpCloudSeats } = require('../../../../utils/helpers/EmpCloudSeatSync');
 const speakeasy = require('speakeasy');
 /**
  * User Authentication routes
@@ -1018,19 +1019,9 @@ class AuthService {
               await mySql.query('UPDATE organization_settings SET rules = ? WHERE organization_id = ?', [JSON.stringify(rules), monitorOrgId]);
             }
           }
-          // Sync current_user_count FROM emp-monitor → empcloud
-          const [countRow] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [monitorOrgId]);
-          if (countRow) {
-            const monitorUserCount = countRow.current_user_count || 0;
-            await empcloudDb.query(
-              `UPDATE org_subscriptions s
-               JOIN modules m ON m.id = s.module_id
-               SET s.used_seats = ?
-               WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
-              [monitorUserCount, org_id]
-            ).catch(() => {});
-            console.log('SSO: synced license — empcloud seats:', licenseData.total_seats, ', monitor users:', monitorUserCount);
-          }
+          // Recount real employees and push used_seats to empcloud
+          const monitorUserCount = await syncEmpCloudSeats(monitorOrgId);
+          console.log('SSO: synced license — empcloud seats:', licenseData.total_seats, ', monitor users:', monitorUserCount);
         } catch (syncErr) {
           console.log('SSO: license sync warning (non-fatal):', syncErr.message);
         }
@@ -1148,16 +1139,9 @@ class AuthService {
           if (licenseData.total_seats) {
             await mySql.query('UPDATE organizations SET total_allowed_user_count = ? WHERE id = ?', [licenseData.total_seats, adminOrgId]);
           }
-          // Sync current_user_count FROM emp-monitor → empcloud used_seats
-          const [countRow] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [adminOrgId]);
-          if (countRow) {
-            await empcloudDb.query(
-              `UPDATE org_subscriptions s JOIN modules m ON m.id = s.module_id
-               SET s.used_seats = ? WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
-              [countRow.current_user_count || 0, org_id]
-            ).catch(() => {});
-            console.log('SSO: admin sync — empcloud total:', licenseData.total_seats, ', monitor used:', countRow.current_user_count);
-          }
+          // Recount real employees and push used_seats to empcloud
+          const adminMonitorCount = await syncEmpCloudSeats(adminOrgId);
+          console.log('SSO: admin sync — empcloud total:', licenseData.total_seats, ', monitor used:', adminMonitorCount);
         } catch (syncErr) {
           console.log('SSO: admin license sync warning:', syncErr.message);
         }
@@ -1384,18 +1368,9 @@ class AuthService {
           console.log('SSO: role mapping already exists for user:', newUserId);
         }
 
-        // Sync updated user count back to empcloud used_seats
-        try {
-          const [updatedCount] = await mySql.query('SELECT current_user_count FROM organizations WHERE id = ?', [monitorOrgId]);
-          if (updatedCount) {
-            await empcloudDb.query(
-              `UPDATE org_subscriptions s JOIN modules m ON m.id = s.module_id
-               SET s.used_seats = ? WHERE s.organization_id = ? AND m.slug = 'emp-monitor' AND s.status = 'active'`,
-              [updatedCount.current_user_count, org_id]
-            ).catch(() => {});
-            console.log('SSO: synced new employee count to empcloud:', updatedCount.current_user_count);
-          }
-        } catch (e) { console.log('SSO: empcloud seat sync skipped:', e.message); }
+        // Recount real employees and push used_seats to empcloud
+        const newEmployeeCount = await syncEmpCloudSeats(monitorOrgId);
+        console.log('SSO: synced new employee count to empcloud:', newEmployeeCount);
 
         // Now login the newly created employee
         const [newEmployee] = await authModel.userWithAdminAndRole(email).catch(() => [null]);

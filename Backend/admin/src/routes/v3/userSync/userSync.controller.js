@@ -3,6 +3,7 @@
 const MySqlConnection = require('../../../database/MySqlConnection');
 const db = MySqlConnection.getInstance();
 const authModel = require('../auth/auth.model');
+const { syncEmpCloudSeats } = require('../../../utils/helpers/EmpCloudSeatSync');
 
 // Defensive caps for the legacy emp-monitor users table. The schema dump
 // shows varchar(64) for first_name/last_name, but production has historically
@@ -210,11 +211,8 @@ async function createEmployeeRecord(userId, empcloudOrgId, ownerEmail, empcloudR
     // role row, which was the bug that flagged every synced user as Team Lead.
     await upsertUserRole(userId, monitorOrgId, empcloudRole);
 
-    // Update org user count
-    await db.query(
-        'UPDATE organizations SET current_user_count = current_user_count + 1 WHERE id = ?',
-        [monitorOrgId]
-    );
+    // Recount and push used_seats to empcloud
+    await syncEmpCloudSeats(monitorOrgId);
 
     console.log('Sync: created employee for user', userId, 'in org', monitorOrgId);
 }
@@ -257,12 +255,9 @@ async function unsyncUser(req, res) {
         await db.query('DELETE FROM employees WHERE user_id = ?', [user.id]);
         await db.query('DELETE FROM users WHERE id = ?', [user.id]);
 
-        // Decrement org user count
+        // Recount and push used_seats to empcloud
         if (user.organization_id) {
-            await db.query(
-                'UPDATE organizations SET current_user_count = GREATEST(current_user_count - 1, 0) WHERE id = ?',
-                [user.organization_id]
-            );
+            await syncEmpCloudSeats(user.organization_id);
         }
 
         return res.json({ code: 200, message: 'User removed', data: { id: user.id, email: user.email } });
