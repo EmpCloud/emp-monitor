@@ -782,13 +782,11 @@ class DashboardController {
 
             let data = await DashboardModel.getProAndNonProductive(organization_id, location_id, department_id, from_date, to_date, manager_id, employee_ids, type);
 
-            data = data.filter(item => item.duration !== 0);
-
             let ids = _.pluck(data, '_id');
             if (data.length === 0) return res.json({
-                code: 404,
-                data: null,
-                message: dashboardMessages.find(x => x.id === "1")[language] || dashboardMessages.find(x => x.id === "1")["en"],
+                code: 200,
+                data: [],
+                message: 'data',
                 error: null
             });
 
@@ -843,7 +841,7 @@ class DashboardController {
             });
 
             return res.json({
-                code: result.length === 0 ? 404 : 200,
+                code: 200,
                 data: result,
                 message: 'data',
                 error: null
