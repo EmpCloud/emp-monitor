@@ -56,13 +56,9 @@ class PwdRecoverController {
             supportText = supportText || "Support";
             let user_id = data[0].id.toString();
             let ecrypt_data = await Password.encrypt(user_id, process.env.CRYPTO_PASSWORD);
-            let link = process.env.WEB_DEV + `/reset?token=${ecrypt_data}&email=${email} `;
-            if (process.env.NODE_ENV === 'development') {
-                link = process.env.WEB_DEV + `/reset?token=${ecrypt_data}&email=${email} `;
-            } else if (process.env.NODE_ENV === 'production') {
-                link = process.env.WEB_PRODUCTION + `/reset?token=${ecrypt_data}&email=${email} `;
-            }
-            link = reseller ? reseller.domain + `/reset?token=${ecrypt_data}&email=${email}` : link;
+            const base = process.env.NODE_ENV === 'production' ? process.env.WEB_PRODUCTION : process.env.WEB_DEV;
+            let link = `${base}/reset?token=${encodeURIComponent(ecrypt_data)}&email=${encodeURIComponent(email)}`;
+            link = reseller ? `${reseller.domain}/reset?token=${encodeURIComponent(ecrypt_data)}&email=${encodeURIComponent(email)}` : link;
             
             if(isClient) {
                 link = `${link}&isClient=${isClient}`;
