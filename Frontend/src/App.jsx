@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AdminLogin }    from './page/auth/admin-login'
 import { Login }         from './page/auth/nonadmin-login'
 import { EmployeeLogin } from './page/auth/employee-login'
+import { ResetPassword } from './page/auth/reset-password'
 
 // Admin pages
 import Dashboard               from './page/protected/admin/dashboard'
@@ -88,6 +89,7 @@ function App() {
         <Route path="/admin-login"    element={<AdminLogin />} />
         <Route path="/login"          element={<Login />} />
         <Route path="/employee-login" element={<EmployeeLogin />} />
+        <Route path="/reset"          element={<ResetPassword />} />
 
         {/* ── Admin routes ── */}
         <Route path="/admin/dashboard"                   element={<AdminProtectedRoute><Dashboard /></AdminProtectedRoute>} />
