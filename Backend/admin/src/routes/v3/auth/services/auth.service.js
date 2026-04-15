@@ -54,7 +54,9 @@ class AuthService {
       const {decoded} = await passwordService.decrypt(userData.password, process.env.CRYPTO_PASSWORD);
       if (decoded != password) return res.status(400).json({code: 400, error: 'Invalid', message: 'Password is invalid.', data: null});
 
-      let setting = JSON.parse(userData.custom_tracking_rule);
+      let setting;
+      try { setting = JSON.parse(userData.custom_tracking_rule); } catch (e) { setting = null; }
+      if (!setting) setting = JSON.parse(JSON.stringify(defaultSettings));
       const shift = userData.shift ? JSON.parse(userData.shift) : '';
 
       let expire_date = moment(JSON.parse(userData.expire_date)).format('YYYY-MM-DD');
@@ -63,7 +65,7 @@ class AuthService {
       const productive_setting = userData.productive_hours ? JSON.parse(userData.productive_hours) : null;
       const productive_hours = productive_setting ? (productive_setting.mode == 'unlimited' ? 28800 : Comman.hourToSeconds(productive_setting.hour)) : 28800;
 
-      if (setting.system.visibility) {
+      if (setting?.system?.visibility) {
         setting.announcemnts = await authModel.getAnnouncement({organizationId: userData.organization_id, userId: userData.id});
       }
       setting.roomId = userData.room_id;
