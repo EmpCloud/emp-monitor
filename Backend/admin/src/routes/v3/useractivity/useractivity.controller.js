@@ -480,7 +480,7 @@ class UserActivity {
             if (encriptedpassword) {
                 password = encriptedpassword;
             } else if (req.body.password) {
-                const encripted = await PasswordEncodeDecoder.encryptText(password, process.env.CRYPTO_PASSWORD);
+                const encripted = await PasswordEncodeDecoder.encryptText(req.body.password, process.env.CRYPTO_PASSWORD);
                 password = encripted
             } else {
                 password = user_details[0].password;
