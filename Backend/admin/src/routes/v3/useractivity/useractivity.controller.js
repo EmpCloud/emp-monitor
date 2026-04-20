@@ -718,8 +718,7 @@ class UserActivity {
 
             let decriptedPassword = null;
             if (data[0].password && data[0].password !== '' && data[0].password !== 'null') {
-                const { decoded } = PasswordEncodeDecoder.decrypt(data[0].password, process.env.CRYPTO_PASSWORD);
-                decriptedPassword = decoded;
+                decriptedPassword = PasswordEncodeDecoder.decryptText(data[0].password, process.env.CRYPTO_PASSWORD);
             }
 
             data[0].encriptedpassword = data[0].password;
