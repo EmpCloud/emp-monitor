@@ -718,12 +718,12 @@ class UserActivity {
 
             let decriptedPassword = null;
             if (data[0].password && data[0].password !== '' && data[0].password !== 'null') {
-                decriptedPassword = PasswordEncodeDecoder.decryptText(data[0].password, process.env.CRYPTO_PASSWORD);
+                const { decoded } = PasswordEncodeDecoder.decrypt(data[0].password, process.env.CRYPTO_PASSWORD);
+                decriptedPassword = decoded;
             }
 
             data[0].encriptedpassword = data[0].password;
-            // data[0].password = decriptedPassword;
-            data[0].password = decriptedPassword ? PasswordEncodeDecoder.passwordEncrypt(decriptedPassword) : decriptedPassword;
+            data[0].password = decriptedPassword;  // ✅ Return plain text password to frontend
 
             delete data[0].custom_tracking_rule;
 
