@@ -74,6 +74,9 @@ class App {
     }
 
     addRoutesAndMiddleWares(app) {
+        // Trust Nginx proxy headers (required for rate-limit and X-Forwarded-For)
+        app.set('trust proxy', 1);
+
         app.use(cors());
         // app.use((req, res, next) => {
         //     const end = res.end;

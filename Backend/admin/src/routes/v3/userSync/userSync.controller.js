@@ -35,6 +35,14 @@ async function syncUser(req, res) {
         const first_name = trimName(req.body.first_name);
         const last_name = trimName(req.body.last_name);
 
+        // Debug logging
+        console.log('=== USER SYNC DEBUG ===');
+        console.log('empcloud_user_id:', empcloud_user_id, 'type:', typeof empcloud_user_id);
+        console.log('organization_id:', organization_id, 'type:', typeof organization_id);
+        console.log('email:', email);
+        console.log('Full payload:', JSON.stringify(req.body, null, 2));
+        console.log('=====================');
+
         // Encrypt password if provided
         let encryptedPassword = null;
         if (password) {
@@ -46,8 +54,24 @@ async function syncUser(req, res) {
             }
         }
 
-        if (!empcloud_user_id || !organization_id || !email) {
-            return res.status(400).json({ code: 400, message: 'empcloud_user_id, organization_id, and email are required' });
+        // Strict validation - reject if any required field is missing or invalid
+        if (!empcloud_user_id || empcloud_user_id <= 0) {
+            return res.status(400).json({
+                code: 400,
+                message: 'empcloud_user_id is required and must be a positive number'
+            });
+        }
+        if (!organization_id || organization_id <= 0) {
+            return res.status(400).json({
+                code: 400,
+                message: 'organization_id is required and must be a positive number'
+            });
+        }
+        if (!email) {
+            return res.status(400).json({
+                code: 400,
+                message: 'email is required'
+            });
         }
 
         // Check if user already exists by email
