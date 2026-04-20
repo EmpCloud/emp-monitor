@@ -228,7 +228,7 @@ class UserActivity {
 
         const { organization_id, language } = req.decoded;
         let skip = parseInt(req.body.skip) || 0;
-        let limit = parseInt(req.body.limit) || 10;
+        let limit = parseInt(req.body.limit) || 10000;
         const department_id = req.body.department_id;
         const location_id = req.body.location_id;
         const role_id = req.body.role_id;

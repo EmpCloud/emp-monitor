@@ -6,7 +6,7 @@ export const fetchEmployees = async ({
   roleId = "",
   shiftId = -1,
   activeStatus = "",
-  showEntries = 100,
+  showEntries = 10000,
   skipValue = 0,
   searchText = "",
 } = {}) => {
