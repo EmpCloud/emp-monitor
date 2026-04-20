@@ -95,7 +95,9 @@ class UserActivity {
             // let manager_role_id = req.body.manager_role_id;
             // let assigned_manager = req.body.assigned_manager;
 
-            password = password ? PasswordEncodeDecoder.passwordDecrypt(password) : password;
+            if (password && typeof password === 'string' && password.includes(':')) {
+                try { password = PasswordEncodeDecoder.passwordDecrypt(password); } catch (e) { password = null; }
+            } else { password = null; }
             let findMoreLink = {
                 development: process.env.WEB_DEV, production: process.env.WEB_PRODUCTION
             }[process.env.NODE_ENV] || process.env.WEB_LOCAL;
@@ -460,7 +462,9 @@ class UserActivity {
         }[process.env.NODE_ENV] || process.env.WEB_LOCAL;
 
         try {
-            password = password ? PasswordEncodeDecoder.passwordDecrypt(password) : password;
+            if (password && typeof password === 'string' && password.includes(':')) {
+                try { password = PasswordEncodeDecoder.passwordDecrypt(password); } catch (e) { password = null; }
+            } else { password = null; }
             let validate = UserValidation.validateUserUpdate(user_id, first_name, last_name, email, password, emp_code, location_id, department_id, role_ids, joinDate, address, status, phone, timezone, timezone_offset, shift_id);
             if (validate.error) return sendResponse(res, 404, null, userMessages.find(x => x.id === "2")[language] || userMessages.find(x => x.id === "2")["en"], validate.error.details[0].message);
 
