@@ -1224,7 +1224,7 @@ class UserActivity {
                     UserActivityModel.getRoles(organization_id),
                     // UserActivityModel.getLocations(organization_id),
                     // UserActivityModel.getDepartments(organization_id),
-                    UserActivityModel.getMultipleEmployees(organization_id, _.pluck(user_data, 'EmployeeUniqueId').map(x => `"${x}"`)),
+                    UserActivityModel.getMultipleEmployees(organization_id, _.pluck(user_data, 'EmployeeUniqueId')),
                 ]);
 
                 // const nonExistingRoles = user_data.map(x => x.Role).filter(item => item && !roles.find(x => x.name === item));
