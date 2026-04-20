@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { fetchDepartmentsByLocation } from "@/page/protected/admin/employee-details/service";
-import { encryptPassword } from "@/utils/crypto";
 
 export const TIMEZONES = [
   { value: "Asia/Kolkata|+05:30",       label: "IST (UTC+5:30) – Asia/Kolkata" },
@@ -130,18 +129,17 @@ export function useEmployeeForm(locations = []) {
    *
    * The v3 API expects JSON (or x-www-form-urlencoded), NOT multipart FormData.
    */
-  const buildFormData = async (extraFields = {}) => {
+  const buildFormData = (extraFields = {}) => {
     const [tzName, tzOffset] = (form.timezone || "|").split("|");
     const locationLabel = locations.find((l) => l.value === form.locationId)?.label ?? "";
     const deptLabel = departments.find((d) => d.value === form.departmentId)?.label ?? "";
-
-    const encryptedPwd = form.password ? await encryptPassword(form.password) : "";
 
     const payload = {
       name:            form.firstName,
       first_name:      form.firstName,
       last_name:       form.lastName,
       email:           form.email.toLowerCase(),
+      password:        form.password,
       phone:           form.mobile ? `${form.countryCode}-${form.mobile}` : "",
       emp_code:        form.employeeCode,
       location_id:     form.locationId,
@@ -165,8 +163,6 @@ export function useEmployeeForm(locations = []) {
       limit:           "100",
       ...extraFields,
     };
-
-    if (encryptedPwd) payload.password = encryptedPwd;
 
     return payload;
   };

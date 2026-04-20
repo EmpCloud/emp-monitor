@@ -62,7 +62,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
     if (!validate(true)) return;
     setSubmitting(true);
     setStatus(null);
-    const fd = await buildFormData({ userId: employeeId, uid: originalUid });
+    const fd = buildFormData({ userId: employeeId, uid: originalUid });
     const res = await editEmployee(fd);
     setSubmitting(false);
     if (res?.code === 200) {

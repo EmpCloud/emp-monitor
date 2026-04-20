@@ -23,7 +23,7 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
     if (!validate()) return;
     setSubmitting(true);
     setStatus(null);
-    const res = await registerEmployee(await buildFormData());
+    const res = await registerEmployee(buildFormData());
     setSubmitting(false);
     if (res?.code === 200) {
       setStatus({ type: "success", msg: t("emp_registered_successfully") });
