@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useEmployeeForm, TIMEZONES } from "./useEmployeeForm";
 import EmployeeFormBody from "./EmployeeFormBody";
 import { getEmployeeDetails, editEmployee } from "@/page/protected/admin/employee-details/service";
+import { decryptPassword } from "@/utils/crypto";
 
 export default function EditEmployeeModal({ open, onOpenChange, employeeId, locations = [], roles = [], shifts = [], onSuccess }) {
   const { t } = useTranslation();
@@ -25,7 +26,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
   useEffect(() => {
     if (!open || !employeeId) return;
     setLoadingDetails(true);
-    getEmployeeDetails(employeeId).then((res) => {
+    getEmployeeDetails(employeeId).then(async (res) => {
       setLoadingDetails(false);
       // /user/get-user returns { code, data: { id, name, last_name, ... } }
       const d = res?.data;
@@ -54,6 +55,12 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
       set("shift",         d.shift_id ? String(d.shift_id) : "");
       set("dateOfJoining", d.date_join ? d.date_join.slice(0, 10) : "");
       set("address",       d.address ?? "");
+
+      // Decrypt and populate password if available
+      if (d.encriptedpassword) {
+        const decrypted = await decryptPassword(d.encriptedpassword);
+        set("password", decrypted);
+      }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, employeeId]);
