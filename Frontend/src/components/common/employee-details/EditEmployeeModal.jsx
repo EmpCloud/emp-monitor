@@ -37,6 +37,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
       set("firstName",     d.name ?? d.first_name ?? "");
       set("lastName",      d.last_name ?? "");
       set("email",         d.email ?? "");
+      set("password",      d.password ?? "");
       // phone may be stored as "countryCode-number" (e.g. "91-9876543210")
       const rawPhone = d.phone ?? "";
       const dashIdx = rawPhone.indexOf("-");
