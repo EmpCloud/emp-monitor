@@ -4,6 +4,7 @@ const MySqlConnection = require('../../../database/MySqlConnection');
 const db = MySqlConnection.getInstance();
 const authModel = require('../auth/auth.model');
 const { syncEmpCloudSeats } = require('../../../utils/helpers/EmpCloudSeatSync');
+const passwordService = require('../auth/services/password.service');
 
 // Defensive caps for the legacy emp-monitor users table. The schema dump
 // shows varchar(64) for first_name/last_name, but production has historically
@@ -30,9 +31,20 @@ async function syncUser(req, res) {
             }
         }
 
-        const { empcloud_user_id, organization_id, email, emp_code, designation, role } = req.body;
+        const { empcloud_user_id, organization_id, email, emp_code, designation, role, password } = req.body;
         const first_name = trimName(req.body.first_name);
         const last_name = trimName(req.body.last_name);
+
+        // Encrypt password if provided
+        let encryptedPassword = null;
+        if (password) {
+            const { error, encoded } = passwordService.encrypt(password, process.env.CRYPTO_PASSWORD);
+            if (!error) {
+                encryptedPassword = encoded;
+            } else {
+                console.error('Sync: password encryption failed', error);
+            }
+        }
 
         if (!empcloud_user_id || !organization_id || !email) {
             return res.status(400).json({ code: 400, message: 'empcloud_user_id, organization_id, and email are required' });
@@ -46,10 +58,15 @@ async function syncUser(req, res) {
 
         if (existing) {
             // Update existing user
-            await db.query(
-                'UPDATE users SET first_name = ?, last_name = ?, empcloud_user_id = ?, a_email = COALESCE(a_email, ?), updated_at = NOW() WHERE id = ?',
-                [first_name || existing.first_name, last_name || existing.last_name, empcloud_user_id, email, existing.id]
-            );
+            const updateParams = [first_name || existing.first_name, last_name || existing.last_name, empcloud_user_id, email];
+            let updateQuery = 'UPDATE users SET first_name = ?, last_name = ?, empcloud_user_id = ?, a_email = COALESCE(a_email, ?)';
+            if (encryptedPassword) {
+                updateQuery += ', password = ?';
+                updateParams.push(encryptedPassword);
+            }
+            updateQuery += ', updated_at = NOW() WHERE id = ?';
+            updateParams.push(existing.id);
+            await db.query(updateQuery, updateParams);
 
             // Make sure employee record exists in the CORRECT monitor org
             // for this empcloud tenant. If the user was previously stranded
@@ -75,11 +92,17 @@ async function syncUser(req, res) {
         }
 
         // Create new user (a_email must match email — the dashboard reads a_email)
-        const result = await db.query(
-            `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
-            [email, email, first_name, last_name, empcloud_user_id]
-        );
+        const createParams = [email, email, first_name, last_name, empcloud_user_id];
+        let createQuery = `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id`;
+        if (encryptedPassword) {
+            createQuery += ', password';
+            createParams.splice(4, 0, encryptedPassword);
+        }
+        createQuery += `, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?`;
+        if (encryptedPassword) createQuery += ', ?';
+        createQuery += `, 1, NOW(), NOW())`;
+
+        const result = await db.query(createQuery, createParams);
         const newUserId = result.insertId;
 
         // Create employee + role so user shows on dashboard
@@ -314,20 +337,35 @@ async function bulkSyncUsers(req, res) {
 
         for (const userData of users) {
             try {
-                const { empcloud_user_id, organization_id, email, role, emp_code } = userData;
+                const { empcloud_user_id, organization_id, email, role, emp_code, password } = userData;
                 const first_name = trimName(userData.first_name);
                 const last_name = trimName(userData.last_name);
                 if (!empcloud_user_id || !email) { results.push({ empcloud_user_id, status: 'skipped', error: 'Missing data' }); continue; }
+
+                // Encrypt password if provided
+                let encryptedPassword = null;
+                if (password) {
+                    const { error, encoded } = passwordService.encrypt(password, process.env.CRYPTO_PASSWORD);
+                    if (!error) {
+                        encryptedPassword = encoded;
+                    }
+                }
 
                 const [existing] = await db.query(
                     'SELECT id FROM users WHERE email = ? LIMIT 1', [email]
                 );
 
                 if (existing) {
-                    await db.query(
-                        'UPDATE users SET empcloud_user_id = ?, first_name = ?, last_name = ?, a_email = COALESCE(a_email, ?), updated_at = NOW() WHERE id = ?',
-                        [empcloud_user_id, first_name || '', last_name || '', email, existing.id]
-                    );
+                    const updateParams = [empcloud_user_id, first_name || '', last_name || '', email];
+                    let updateQuery = 'UPDATE users SET empcloud_user_id = ?, first_name = ?, last_name = ?, a_email = COALESCE(a_email, ?)';
+                    if (encryptedPassword) {
+                        updateQuery += ', password = ?';
+                        updateParams.push(encryptedPassword);
+                    }
+                    updateQuery += ', updated_at = NOW() WHERE id = ?';
+                    updateParams.push(existing.id);
+                    await db.query(updateQuery, updateParams);
+
                     // Ensure employee exists
                     const [emp] = await db.query('SELECT id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]);
                     if (!emp) {
@@ -341,11 +379,17 @@ async function bulkSyncUsers(req, res) {
                     await upsertUserRole(existing.id, targetOrgId, role);
                     results.push({ empcloud_user_id, status: 'updated' });
                 } else {
-                    const insertResult = await db.query(
-                        `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id, status, created_at, updated_at)
-                         VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
-                        [email, email, first_name || '', last_name || '', empcloud_user_id]
-                    );
+                    const createParams = [email, email, first_name || '', last_name || '', empcloud_user_id];
+                    let createQuery = `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id`;
+                    if (encryptedPassword) {
+                        createQuery += ', password';
+                        createParams.splice(4, 0, encryptedPassword);
+                    }
+                    createQuery += `, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?`;
+                    if (encryptedPassword) createQuery += ', ?';
+                    createQuery += `, 1, NOW(), NOW())`;
+
+                    const insertResult = await db.query(createQuery, createParams);
                     await createEmployeeRecord(insertResult.insertId, organization_id, email, role, emp_code);
                     results.push({ empcloud_user_id, status: 'created' });
                 }
