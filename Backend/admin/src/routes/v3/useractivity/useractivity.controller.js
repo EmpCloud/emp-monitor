@@ -462,9 +462,6 @@ class UserActivity {
         }[process.env.NODE_ENV] || process.env.WEB_LOCAL;
 
         try {
-            if (password && typeof password === 'string' && password.includes(':')) {
-                try { password = PasswordEncodeDecoder.passwordDecrypt(password); } catch (e) { password = null; }
-            } else { password = null; }
             let validate = UserValidation.validateUserUpdate(user_id, first_name, last_name, email, password, emp_code, location_id, department_id, role_ids, joinDate, address, status, phone, timezone, timezone_offset, shift_id);
             if (validate.error) return sendResponse(res, 404, null, userMessages.find(x => x.id === "2")[language] || userMessages.find(x => x.id === "2")["en"], validate.error.details[0].message);
 
