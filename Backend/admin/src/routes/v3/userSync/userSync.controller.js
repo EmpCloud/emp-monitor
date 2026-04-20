@@ -59,10 +59,13 @@ async function syncUser(req, res) {
             );
             const { orgId: targetOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(organization_id, email);
             if (!existingEmp) {
-                await createEmployeeRecord(existing.id, organization_id, email, role);
+                await createEmployeeRecord(existing.id, organization_id, email, role, emp_code);
             } else if (existingEmp.organization_id !== targetOrgId) {
-                await db.query('UPDATE employees SET organization_id = ?, updated_at = NOW() WHERE id = ?', [targetOrgId, existingEmp.id]);
+                await db.query('UPDATE employees SET organization_id = ?, emp_code = ?, updated_at = NOW() WHERE id = ?', [targetOrgId, emp_code || '', existingEmp.id]);
                 console.log('Sync: repointed employee', existingEmp.id, 'to org', targetOrgId);
+            } else {
+                // Update emp_code on sync
+                await db.query('UPDATE employees SET emp_code = ?, updated_at = NOW() WHERE id = ?', [emp_code || '', existingEmp.id]);
             }
 
             // Also reconcile the role on update — the EmpCloud role may have changed
@@ -80,7 +83,7 @@ async function syncUser(req, res) {
         const newUserId = result.insertId;
 
         // Create employee + role so user shows on dashboard
-        await createEmployeeRecord(newUserId, organization_id, email, role);
+        await createEmployeeRecord(newUserId, organization_id, email, role, emp_code);
 
         return res.json({ code: 201, message: 'User created', data: { id: newUserId, email, empcloud_user_id } });
     } catch (error) {
@@ -170,7 +173,7 @@ async function upsertUserRole(userId, monitorOrgId, empcloudRole) {
  * mirrors the caller's empcloud org. Auto-provisions the monitor org on
  * first use so every empcloud tenant gets its own isolated dashboard.
  */
-async function createEmployeeRecord(userId, empcloudOrgId, ownerEmail, empcloudRole) {
+async function createEmployeeRecord(userId, empcloudOrgId, ownerEmail, empcloudRole, empCode = '') {
     if (!empcloudOrgId) {
         console.error('Sync: empcloudOrgId missing, cannot route employee to correct org');
         return;
@@ -201,9 +204,9 @@ async function createEmployeeRecord(userId, empcloudOrgId, ownerEmail, empcloudR
     // Create employee
     await db.query(
         `INSERT INTO employees
-            (user_id, organization_id, department_id, location_id, shift_id, timezone, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 'Asia/Kolkata', NOW(), NOW())`,
-        [userId, monitorOrgId, dept ? dept.id : null, loc ? loc.id : null, shift ? shift.id : 0]
+            (user_id, organization_id, department_id, location_id, shift_id, emp_code, timezone, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'Asia/Kolkata', NOW(), NOW())`,
+        [userId, monitorOrgId, dept ? dept.id : null, loc ? loc.id : null, shift ? shift.id : 0, empCode || '']
     );
 
     // Map the EmpCloud role to the matching emp-monitor role (Employee/
@@ -311,7 +314,7 @@ async function bulkSyncUsers(req, res) {
 
         for (const userData of users) {
             try {
-                const { empcloud_user_id, organization_id, email, role } = userData;
+                const { empcloud_user_id, organization_id, email, role, emp_code } = userData;
                 const first_name = trimName(userData.first_name);
                 const last_name = trimName(userData.last_name);
                 if (!empcloud_user_id || !email) { results.push({ empcloud_user_id, status: 'skipped', error: 'Missing data' }); continue; }
@@ -327,7 +330,12 @@ async function bulkSyncUsers(req, res) {
                     );
                     // Ensure employee exists
                     const [emp] = await db.query('SELECT id FROM employees WHERE user_id = ? LIMIT 1', [existing.id]);
-                    if (!emp) await createEmployeeRecord(existing.id, organization_id, email, role);
+                    if (!emp) {
+                        await createEmployeeRecord(existing.id, organization_id, email, role, emp_code);
+                    } else {
+                        // Update emp_code on sync
+                        await db.query('UPDATE employees SET emp_code = ?, updated_at = NOW() WHERE id = ?', [emp_code || '', emp.id]);
+                    }
                     // Reconcile role on every sync (handles role changes in EmpCloud)
                     const { orgId: targetOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(organization_id, email);
                     await upsertUserRole(existing.id, targetOrgId, role);
@@ -338,7 +346,7 @@ async function bulkSyncUsers(req, res) {
                          VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())`,
                         [email, email, first_name || '', last_name || '', empcloud_user_id]
                     );
-                    await createEmployeeRecord(insertResult.insertId, organization_id, email, role);
+                    await createEmployeeRecord(insertResult.insertId, organization_id, email, role, emp_code);
                     results.push({ empcloud_user_id, status: 'created' });
                 }
             } catch (err) {
