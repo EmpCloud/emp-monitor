@@ -120,7 +120,7 @@ async function syncUser(req, res) {
         let createQuery = `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id`;
         if (encryptedPassword) {
             createQuery += ', password';
-            createParams.splice(4, 0, encryptedPassword);
+            createParams.push(encryptedPassword);  // ✅ Append at the end, not splice
         }
         createQuery += `, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?`;
         if (encryptedPassword) createQuery += ', ?';
@@ -407,7 +407,7 @@ async function bulkSyncUsers(req, res) {
                     let createQuery = `INSERT INTO users (email, a_email, first_name, last_name, empcloud_user_id`;
                     if (encryptedPassword) {
                         createQuery += ', password';
-                        createParams.splice(4, 0, encryptedPassword);
+                        createParams.push(encryptedPassword);  // ✅ Append at the end, not splice
                     }
                     createQuery += `, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?`;
                     if (encryptedPassword) createQuery += ', ?';
