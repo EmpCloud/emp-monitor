@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Settings, ChevronDown, Plus, Trash2, CheckCircle } from "lucide-react";
+import { Settings, ChevronDown, Plus, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,18 +46,26 @@ export default function StorageType() {
   const [deleteItem, setDeleteItem] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
 
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3000);
-  };
+  const showSuccess = (msg) =>
+    Swal.fire({
+      icon: "success",
+      title: t("success") || "Success",
+      text: msg,
+      timer: 2500,
+      showConfirmButton: false,
+      toast: true,
+      position: "top-end",
+    });
 
-  const showError = (msg) => {
-    setErrorMsg(msg);
-    setTimeout(() => setErrorMsg(""), 4000);
-  };
+  const showError = (msg) =>
+    Swal.fire({
+      icon: "error",
+      title: t("error") || "Error",
+      text: msg,
+      showConfirmButton: true,
+      confirmButtonColor: "#ef4444",
+    });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -81,8 +90,8 @@ export default function StorageType() {
     if (!isOpen) setEditItem(null);
   };
 
-  const handleSaveSuccess = () => {
-    showSuccess(editItem ? t("storage_updated_success") : t("storage_added_success"));
+  const handleSaveSuccess = (backendMsg) => {
+    showSuccess(backendMsg || (editItem ? t("storage_updated_success") : t("storage_added_success")));
     loadData();
   };
 
@@ -98,11 +107,11 @@ export default function StorageType() {
     setActionLoading(false);
     setDeleteConfirmOpen(false);
     setDeleteItem(null);
-    if (result) {
-      showSuccess(t("storage_deleted_success"));
+    if (result.ok) {
+      showSuccess(result.message || t("storage_deleted_success"));
       loadData();
     } else {
-      showError(t("storage_delete_failed"));
+      showError(result.message || t("storage_delete_failed"));
     }
   };
 
@@ -110,11 +119,11 @@ export default function StorageType() {
     setActionLoading(true);
     const result = await updateStorageOption(item.storage_data_id);
     setActionLoading(false);
-    if (result) {
-      showSuccess(t("storage_activated_success"));
+    if (result.ok) {
+      showSuccess(result.message || t("storage_activated_success"));
       loadData();
     } else {
-      showError(t("storage_activate_failed"));
+      showError(result.message || t("storage_activate_failed"));
     }
   };
 
@@ -130,19 +139,6 @@ export default function StorageType() {
 
   return (
     <div className="space-y-4">
-      {/* Success / Error banners */}
-      {successMsg && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
-          <CheckCircle size={15} />
-          {successMsg}
-        </div>
-      )}
-      {errorMsg && (
-        <div className="px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-          {errorMsg}
-        </div>
-      )}
-
       {/* Header Card */}
       <div className="emp-card p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">

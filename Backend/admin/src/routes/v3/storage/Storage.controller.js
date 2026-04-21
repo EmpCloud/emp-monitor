@@ -1409,13 +1409,19 @@ class StorageController {
             let insertId = await StorageModel.addStorageData("7", organization_id, user_id)
             await StorageModel.addStorageCreds(insertId.insertId, storage_creds, organization_id, user_id, auto_delete_period, null, note);
             
-            if(req?.file?.path) fs.unlinkSync(req?.file?.path);
-            await SFTPUTILS.deleteCreds(`{organization_id}`);
+            if (req?.file?.path) {
+                try { fs.unlinkSync(req.file.path); } catch (_) { /* already gone */ }
+            }
+            try { await SFTPUTILS.deleteCreds(`${organization_id}`); } catch (_) {}
 
             return sendResponse(res, 200, null, storageMessages.find(x => x.id === "13")[language] || storageMessages.find(x => x.id === "13")["en"], null);
         } catch (error) {
-            fs.unlinkSync(req?.file?.path);
-            await SFTPUTILS.deleteCreds(`{organization_id}`);
+            // Cleanup must not throw — otherwise it masks the real error with a
+            // misleading TypeError ("path argument must be of type string...").
+            if (req?.file?.path) {
+                try { fs.unlinkSync(req.file.path); } catch (_) {}
+            }
+            try { await SFTPUTILS.deleteCreds(`${organization_id}`); } catch (_) {}
             if (error.message === "connect: getConnection: All configured authentication methods failed") {
                 return sendResponse(res, 400, null, storageMessages.find(x => x.id === "32")[language] || storageMessages.find(x => x.id === "32")["en"], error?.message);
             }
