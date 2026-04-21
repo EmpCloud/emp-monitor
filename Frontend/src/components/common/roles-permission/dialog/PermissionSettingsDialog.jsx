@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Settings, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import Swal from "sweetalert2";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -38,48 +39,34 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
 
     const rolePermission = permissionRoleData?.permission || {};
 
-    // Mirrors PHP roleCommonScript.permissionSetting() filter for EMP module only.
-    // For the "Employee" role, PHP only surfaces the "My Productivity" card.
-    // Category headers render whenever the category has any source perms — even
-    // if every checkbox inside is filtered out by the role's RWD — so the user
-    // still sees what's available and understands why it's empty.
+    // This dialog is the "assign permissions to role" editor, not a gated
+    // view — admins should be able to check/uncheck any permission regardless
+    // of the role's RWD. PHP's roleCommonScript.permissionSetting does filter
+    // by RWD, but that leaves admins unable to add new perms until they flip
+    // RWD on elsewhere, which is confusing. We show every permission in the
+    // relevant categories; the RWD toggles in the table remain a separate,
+    // independent concept.
     //
-    // PHP precedence quirk we must preserve:
-    //   if (status === 1 && read === true || read === undefined) allowed = 1
-    // reads as  (status===1 && read===true) || read===undefined  — meaning when
-    // the role's permission object has no read/write/delete keys at all (only
-    // send_mail, etc.), every permission is allowed. Default roles frequently
-    // hit this path, so treating missing RWD keys as "deny" would leave the
-    // dialog looking empty even though the role is logically unrestricted.
+    // We still respect PHP's module/role restriction: for the "Employee" role
+    // in the EMP module, only the "My Productivity" card is shown. That
+    // restriction is relaxed when another category contains an already-saved
+    // permission, so an admin can always manage what's persisted.
     const visibleCategories = useMemo(() => {
-        const readDef = rolePermission.read !== undefined;
-        const writeDef = rolePermission.write !== undefined;
-        const deleteDef = rolePermission.delete !== undefined;
-
         const result = {};
         Object.entries(categorizedPermissions).forEach(([category, perms]) => {
+            if (!perms?.length) return;
             const categoryKeyNoSpace = category.replace(/\s+/g, "");
-            if (permissionRoleData?.name === "Employee" && categoryKeyNoSpace !== "MyProductivity") {
+
+            const isEmployeeRestricted =
+                permissionRoleData?.name === "Employee" && categoryKeyNoSpace !== "MyProductivity";
+            if (isEmployeeRestricted && !perms.some((p) => checkedIds.has(p.id))) {
                 return;
             }
-            if (!perms?.length) return;
 
-            const allowedPerms = perms.filter((p) => {
-                // Missing RWD key → PHP allows regardless of status.
-                if (p.status === 1 && (!readDef || rolePermission.read === true)) return true;
-                if (p.status === 2 && (!writeDef || rolePermission.write === true)) return true;
-                if (p.status === 3 && (!deleteDef || rolePermission.delete === true)) return true;
-                return false;
-            });
-            result[category] = allowedPerms;
+            result[category] = perms;
         });
         return result;
-    }, [categorizedPermissions, rolePermission, permissionRoleData]);
-
-    const hasAnyVisibleCheckbox = useMemo(
-        () => Object.values(visibleCategories).some((arr) => arr.length > 0),
-        [visibleCategories]
-    );
+    }, [categorizedPermissions, permissionRoleData, checkedIds]);
 
     const toggleCategory = (category) => {
         setExpandedCategories((prev) => {
@@ -121,7 +108,7 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
             else removed.push(p);
         });
 
-        await saveFeaturePermissions({
+        const result = await saveFeaturePermissions({
             roleId: permissionRoleData.id,
             name: permissionRoleData.name,
             permissionIds,
@@ -129,6 +116,25 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
             removed,
             mailStatus: sendEmail,
         });
+
+        if (result?.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Permissions saved",
+                text: result.message || `Permissions updated for ${permissionRoleData.name}.`,
+                toast: true,
+                position: "top-end",
+                timer: 2500,
+                showConfirmButton: false,
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Failed to save permissions",
+                text: result?.message || "Please try again.",
+                confirmButtonColor: "#ef4444",
+            });
+        }
     };
 
     if (!permissionRoleData) return null;
@@ -184,7 +190,7 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                                         <div className="px-4 py-3 flex flex-wrap gap-4">
                                             {perms.length === 0 ? (
                                                 <p className="text-xs text-slate-400 italic">
-                                                    Enable Read / Write / Delete on this role to access these permissions.
+                                                    No permissions defined in this category.
                                                 </p>
                                             ) : perms.map((perm) => {
                                                 const isChecked = checkedIds.has(perm.id);
@@ -223,13 +229,6 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                             </div>
                         )}
 
-                        {Object.keys(visibleCategories).length > 0 && !hasAnyVisibleCheckbox && (
-                            <div className="text-center py-3">
-                                <p className="text-xs text-slate-400 italic">
-                                    Tip: enable Read / Write / Delete on the role (in the table) to populate these categories.
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
 
