@@ -8,17 +8,22 @@ import { fetchTimesheets } from "./service";
 import { secToHMS, fmtDateTime } from "@/lib/dateTimeUtils";
 
 const columnDefs = [
-  { key: "clockIn",            labelKey: "clockin",         className: "text-gray-800" },
-  { key: "clockOut",           labelKey: "clockout",        className: "text-gray-800" },
-  { key: "totalHours",         labelKey: "totalHours",      className: "text-gray-800" },
-  { key: "officeHours",        labelKey: "officeHours",     className: "text-gray-800" },
-  { key: "activeHours",        labelKey: "activeHours",     className: "text-gray-800" },
-  { key: "productiveHours",    labelKey: "prodHour",        className: "text-green-600", hasInfo: true },
-  { key: "unproductiveHours",  labelKey: "unProdHour",      className: "text-red-500",   hasInfo: true },
+  { key: "clockIn",            labelKey: "clockin",            className: "text-gray-800" },
+  { key: "clockOut",           labelKey: "clockout",           className: "text-gray-800" },
+  { key: "totalHours",         labelKey: "totalHours",         className: "text-gray-800" },
+  { key: "officeHours",        labelKey: "officeHours",        className: "text-gray-800" },
+  { key: "activeHours",        labelKey: "activeHours",        className: "text-gray-800" },
+  { key: "productiveHours",    labelKey: "prodHour",           className: "text-green-600", hasInfo: true },
+  { key: "unproductiveHours",  labelKey: "unProdHour",         className: "text-red-500",   hasInfo: true },
+  { key: "neutralHours",       labelKey: "ts_neutral",         className: "text-gray-800" },
+  { key: "idleHours",          labelKey: "ts_idle",            className: "text-gray-800" },
+  { key: "offlineHours",       labelKey: "ts_offline",         className: "text-gray-800" },
+  { key: "productivity",       labelKey: "ts_productivity_pct",className: "text-blue-600" },
 ];
 
 // API: { code, data: { user_data: [{start_time, end_time, total_time, office_time,
-//   computer_activities_time, productive_duration, non_productive_duration}] } }
+//   computer_activities_time, productive_duration, non_productive_duration,
+//   neutral_duration, idle_duration, offline, productivity}] } }
 const mapRow = (d) => ({
   clockIn:           fmtDateTime(d.start_time),
   clockOut:          fmtDateTime(d.end_time),
@@ -27,6 +32,10 @@ const mapRow = (d) => ({
   activeHours:       secToHMS(d.computer_activities_time),
   productiveHours:   secToHMS(d.productive_duration),
   unproductiveHours: secToHMS(d.non_productive_duration),
+  neutralHours:      secToHMS(d.neutral_duration),
+  idleHours:         secToHMS(d.idle_duration),
+  offlineHours:      secToHMS(d.offline),
+  productivity:      d.productivity != null ? `${Number(d.productivity).toFixed(2)}%` : "0.00%",
 });
 
 export default function TimesheetsTab({ employee, startDate, endDate }) {
@@ -101,7 +110,8 @@ export default function TimesheetsTab({ employee, startDate, endDate }) {
                     key={col.key}
                     className={`px-4 py-4 text-[13px] text-center whitespace-nowrap ${
                       col.key === "productiveHours"   ? "text-green-600 font-semibold" :
-                      col.key === "unproductiveHours" ? "text-red-500 font-semibold"  : "text-gray-600"
+                      col.key === "unproductiveHours" ? "text-red-500 font-semibold"  :
+                      col.key === "productivity"      ? "text-blue-600 font-semibold" : "text-gray-600"
                     } ${i < columns.length - 1 ? "border-r border-gray-200" : ""}`}
                   >
                     {row[col.key]}

@@ -14,6 +14,8 @@ import {
   getStorageTypeValueFromName,
   getStorageTypes,
   addStorageData,
+  addSftpIntegration,
+  addWebdavIntegration,
   updateStorageData,
 } from "./service";
 
@@ -114,7 +116,9 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
       return;
     }
     for (const field of fields) {
-      if (!formValues[field.key]?.trim()) {
+      if (field.optional) continue;
+      if (field.type === "file") continue;
+      if (!String(formValues[field.key] ?? "").trim()) {
         setError(`${field.label} ${t("storage_field_required")}`);
         return;
       }
@@ -123,23 +127,47 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
     setSaving(true);
     setError("");
 
-    const payload = { storage_type_id: providerId, ...formValues, note };
-
     let result;
     if (isEdit) {
-      payload.storage_data_id = editItem.storage_data_id;
+      const payload = { storage_type_id: providerId, ...formValues, note, storage_data_id: editItem.storage_data_id };
+      // File field can't be edited in-place via JSON update endpoint; strip it.
+      delete payload.pemFile;
       result = await updateStorageData(payload);
+    } else if (storageType === "sftp") {
+      result = await addSftpIntegration({
+        host: formValues.host,
+        username: formValues.username,
+        password: formValues.password,
+        port: formValues.port,
+        ftp_path: formValues.ftp_path,
+        auto_delete_period: formValues.auto_delete_period,
+        pemFile: formValues.pemFile,
+        note,
+      });
+    } else if (storageType === "webdav") {
+      result = await addWebdavIntegration({
+        storage_type_id: providerId,
+        baseUrl: formValues.baseUrl,
+        webdav_path: formValues.webdav_path,
+        username: formValues.username,
+        password: formValues.password,
+        auto_delete_period: formValues.auto_delete_period,
+        note,
+      });
     } else {
+      const payload = { storage_type_id: providerId, ...formValues, note };
       result = await addStorageData(payload);
     }
 
     setSaving(false);
 
-    if (result) {
-      onSuccess?.();
+    if (result?.ok) {
+      onSuccess?.(result.message);
       handleClose();
     } else {
-      setError(t("storage_save_failed"));
+      // Show the backend's message inside the modal so the user can correct
+      // the input without losing what they typed.
+      setError(result?.message || t("storage_save_failed"));
     }
   };
 
@@ -187,39 +215,49 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
           {fields.map((field) => (
             <div key={field.key}>
               <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                {field.label} <span className="text-red-500">*</span>
+                {field.label}{!field.optional && <span className="text-red-500"> *</span>}
               </label>
-              <div className="relative">
+              {field.type === "file" ? (
                 <Input
-                  type={
-                    field.type === "password" && !showPassword[field.key]
-                      ? "password"
-                      : "text"
-                  }
-                  value={formValues[field.key] ?? ""}
-                  onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  placeholder={`${t("storage_enter_prefix")} ${field.label}`}
-                  className="h-10 text-[13px] pr-10"
+                  type="file"
+                  accept={field.accept}
+                  onChange={(e) => handleFieldChange(field.key, e.target.files?.[0] ?? null)}
+                  disabled={isEdit}
+                  className="h-10 text-[13px] file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-blue-700"
                 />
-                {field.type === "password" && (
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() =>
-                      setShowPassword((prev) => ({
-                        ...prev,
-                        [field.key]: !prev[field.key],
-                      }))
+              ) : (
+                <div className="relative">
+                  <Input
+                    type={
+                      field.type === "password" && !showPassword[field.key]
+                        ? "password"
+                        : "text"
                     }
-                  >
-                    {showPassword[field.key] ? (
-                      <EyeOff size={15} />
-                    ) : (
-                      <Eye size={15} />
-                    )}
-                  </button>
-                )}
-              </div>
+                    value={formValues[field.key] ?? ""}
+                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                    placeholder={`${t("storage_enter_prefix")} ${field.label}`}
+                    className="h-10 text-[13px] pr-10"
+                  />
+                  {field.type === "password" && (
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() =>
+                        setShowPassword((prev) => ({
+                          ...prev,
+                          [field.key]: !prev[field.key],
+                        }))
+                      }
+                    >
+                      {showPassword[field.key] ? (
+                        <EyeOff size={15} />
+                      ) : (
+                        <Eye size={15} />
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
 

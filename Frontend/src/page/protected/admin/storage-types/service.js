@@ -1,5 +1,24 @@
 import apiService from "@/services/api.service";
 
+// ─── Result shape helper ─────────────────────────────────────────────────────
+// All write/mutation services return { ok, message, data } so the caller can
+// always show a Swal with the backend-provided text (success or error).
+// Backend response shape: { code, data, message, error }
+const ok = (resp) => ({
+  ok: true,
+  message: resp?.message || "Success",
+  data: resp?.data ?? null,
+});
+const fail = (error, fallback = "Something went wrong") => ({
+  ok: false,
+  message:
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    fallback,
+  data: null,
+});
+
 // ─── Storage field definitions per type ──────────────────────────────────────
 // Keys match the flat field names returned by the API response.
 
@@ -69,18 +88,21 @@ export const STORAGE_FIELD_CONFIG = {
     { key: "ftp_path",           label: "FTP Path",                     type: "text" },
     { key: "auto_delete_period", label: "Delete Data Older Than (Days)", type: "text" },
   ],
-  // SFTP shares same fields as FTP
+  // SFTP: PHP posts multipart to /storage/add-sftp-integration. PEM file is optional
+  // (backend allows password-only auth). password is also optional in the controller.
   sftp: [
     { key: "host",               label: "Host",                         type: "text" },
     { key: "username",           label: "Username",                     type: "text" },
-    { key: "password",           label: "Password",                     type: "password" },
+    { key: "password",           label: "Password",                     type: "password",  optional: true },
     { key: "port",               label: "Port",                         type: "text" },
     { key: "ftp_path",           label: "FTP Path",                     type: "text" },
+    { key: "pemFile",            label: "PEM Key (optional)",           type: "file",      optional: true, accept: ".pem" },
     { key: "auto_delete_period", label: "Delete Data Older Than (Days)", type: "text" },
   ],
   // editForm: baseUrl→base_url, webdavPath→webdav_path, username, password
+  // Backend /add-webdav-integration reads: baseUrl (camelCase), webdav_path, username, password.
   webdav: [
-    { key: "base_url",           label: "Base URL",                     type: "text" },
+    { key: "baseUrl",            label: "Base URL",                     type: "text" },
     { key: "webdav_path",        label: "WebDAV Path",                  type: "text" },
     { key: "username",           label: "Username",                     type: "text" },
     { key: "password",           label: "Password",                     type: "password" },
@@ -136,20 +158,57 @@ export const getStorageTypes = async () => {
 export const addStorageData = async (payload) => {
   try {
     const { data } = await apiService.apiInstance.post("/storage/add-storage-data", payload);
-    return data ?? null;
+    return ok(data);
   } catch (error) {
     console.error("Storage: addStorageData error", error);
-    return null;
+    return fail(error, "Failed to add storage");
+  }
+};
+
+// SFTP requires multipart/form-data because the backend route is wrapped in
+// multer().single("file"). PEM file is optional — backend falls back to password auth.
+// Mirrors PHP SettingsController::addStorageSFTP — same endpoint, same field names,
+// same multipart parts (no storage_type_id; backend hardcodes "7").
+export const addSftpIntegration = async ({ host, username, password, port, ftp_path, auto_delete_period, note, pemFile }) => {
+  try {
+    const fd = new FormData();
+    fd.append("host", host ?? "");
+    fd.append("username", username ?? "");
+    fd.append("password", password ?? "");
+    fd.append("port", port || "22");
+    fd.append("ftp_path", ftp_path ?? "");
+    fd.append("auto_delete_period", auto_delete_period ?? "");
+    fd.append("note", note ?? "");
+    if (pemFile instanceof File) fd.append("file", pemFile);
+    const { data } = await apiService.apiInstance.post(
+      "/storage/add-sftp-integration",
+      fd,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    return ok(data);
+  } catch (error) {
+    console.error("Storage: addSftpIntegration error", error);
+    return fail(error, "Failed to add SFTP integration");
+  }
+};
+
+export const addWebdavIntegration = async (payload) => {
+  try {
+    const { data } = await apiService.apiInstance.post("/storage/add-webdav-integration", payload);
+    return ok(data);
+  } catch (error) {
+    console.error("Storage: addWebdavIntegration error", error);
+    return fail(error, "Failed to add WebDAV integration");
   }
 };
 
 export const updateStorageData = async (payload) => {
   try {
     const { data } = await apiService.apiInstance.put("/storage/update-storage-data", payload);
-    return data ?? null;
+    return ok(data);
   } catch (error) {
     console.error("Storage: updateStorageData error", error);
-    return null;
+    return fail(error, "Failed to update storage");
   }
 };
 
@@ -158,10 +217,10 @@ export const deleteStorageData = async (storageDataId) => {
     const { data } = await apiService.apiInstance.delete("/storage/delete-storage-data", {
       data: { storage_data_id: storageDataId },
     });
-    return data ?? null;
+    return ok(data);
   } catch (error) {
     console.error("Storage: deleteStorageData error", error);
-    return null;
+    return fail(error, "Failed to delete storage");
   }
 };
 
@@ -171,9 +230,9 @@ export const updateStorageOption = async (storageDataId) => {
       storage_data_id: storageDataId,
       status: "1",
     });
-    return data ?? null;
+    return ok(data);
   } catch (error) {
     console.error("Storage: updateStorageOption error", error);
-    return null;
+    return fail(error, "Failed to activate storage");
   }
 };
