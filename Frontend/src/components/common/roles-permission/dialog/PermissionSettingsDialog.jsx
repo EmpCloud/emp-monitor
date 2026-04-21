@@ -43,7 +43,19 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
     // Category headers render whenever the category has any source perms — even
     // if every checkbox inside is filtered out by the role's RWD — so the user
     // still sees what's available and understands why it's empty.
+    //
+    // PHP precedence quirk we must preserve:
+    //   if (status === 1 && read === true || read === undefined) allowed = 1
+    // reads as  (status===1 && read===true) || read===undefined  — meaning when
+    // the role's permission object has no read/write/delete keys at all (only
+    // send_mail, etc.), every permission is allowed. Default roles frequently
+    // hit this path, so treating missing RWD keys as "deny" would leave the
+    // dialog looking empty even though the role is logically unrestricted.
     const visibleCategories = useMemo(() => {
+        const readDef = rolePermission.read !== undefined;
+        const writeDef = rolePermission.write !== undefined;
+        const deleteDef = rolePermission.delete !== undefined;
+
         const result = {};
         Object.entries(categorizedPermissions).forEach(([category, perms]) => {
             const categoryKeyNoSpace = category.replace(/\s+/g, "");
@@ -53,9 +65,10 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
             if (!perms?.length) return;
 
             const allowedPerms = perms.filter((p) => {
-                if (p.status === 1 && rolePermission.read === true) return true;
-                if (p.status === 2 && rolePermission.write === true) return true;
-                if (p.status === 3 && rolePermission.delete === true) return true;
+                // Missing RWD key → PHP allows regardless of status.
+                if (p.status === 1 && (!readDef || rolePermission.read === true)) return true;
+                if (p.status === 2 && (!writeDef || rolePermission.write === true)) return true;
+                if (p.status === 3 && (!deleteDef || rolePermission.delete === true)) return true;
                 return false;
             });
             result[category] = allowedPerms;

@@ -204,7 +204,13 @@ export const addWebdavIntegration = async (payload) => {
 
 export const updateStorageData = async (payload) => {
   try {
-    const { data } = await apiService.apiInstance.put("/storage/update-storage-data", payload);
+    // Backend Joi validator requires storage_data_id / storage_type_id as Numbers.
+    const normalized = {
+      ...payload,
+      ...(payload.storage_data_id !== undefined && { storage_data_id: Number(payload.storage_data_id) }),
+      ...(payload.storage_type_id !== undefined && { storage_type_id: Number(payload.storage_type_id) }),
+    };
+    const { data } = await apiService.apiInstance.put("/storage/update-storage-data", normalized);
     return ok(data);
   } catch (error) {
     console.error("Storage: updateStorageData error", error);
@@ -214,8 +220,12 @@ export const updateStorageData = async (payload) => {
 
 export const deleteStorageData = async (storageDataId) => {
   try {
+    // Backend inconsistency: the delete endpoint's ValidateId uses Joi.string()
+    // (whereas update/updateOption use Joi.number()). Send a string here — a
+    // number gets rejected by the validator and the controller returns a
+    // misleading hardcoded "storage_data_id Must Be Number" message.
     const { data } = await apiService.apiInstance.delete("/storage/delete-storage-data", {
-      data: { storage_data_id: storageDataId },
+      data: { storage_data_id: String(storageDataId) },
     });
     return ok(data);
   } catch (error) {
@@ -227,7 +237,7 @@ export const deleteStorageData = async (storageDataId) => {
 export const updateStorageOption = async (storageDataId) => {
   try {
     const { data } = await apiService.apiInstance.put("/storage/update-storage-option", {
-      storage_data_id: storageDataId,
+      storage_data_id: Number(storageDataId),
       status: "1",
     });
     return ok(data);
