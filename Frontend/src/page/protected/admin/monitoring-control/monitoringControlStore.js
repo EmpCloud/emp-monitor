@@ -57,15 +57,8 @@ const DEFAULT_RULES = {
         geoLocation: [],
         projectBased: [],
     },
-    work_hour_billing: {
-        is_enabled: "0",
-        billing_based_on: "",
-        hours_per_day: "",
-        currency: "",
-        invoice_duration: "",
-    },
-    productiveHours: { hour: "08:00" },
-    productivityCategory: "0",
+    productiveHours: { hour: "08:00", mode: "fixed" },
+    productivityCategory: 0,
 };
 
 const useMonitoringControlStore = create((set, get) => ({
@@ -120,31 +113,49 @@ const useMonitoringControlStore = create((set, get) => ({
     loadInitialData: async () => {
         try {
             set({ loading: true });
-            const [groupsRes, rolesRes, optionsRes] = await Promise.all([
+            // Fetch in parallel: groups list, roles for the create-group dropdown,
+            // settings options, and—critically—the organisation default rules so
+            // updates don't overwrite the saved settings with a stale constant.
+            const [groupsRes, rolesRes, optionsRes, orgFeatureRes] = await Promise.all([
                 getGroups({ limit: 10, skip: 0 }),
                 getRoles(),
                 getSettingsOptions(),
+                getMonitoringSettings(),
             ]);
+
+            // Backend response shape: { code, data: { ption, data: { screenshotFrequency, idleTime, ... } } }
+            // Map each {id, name, value} to {value, label} for CustomSelect.
+            const opts = optionsRes?.data?.data ?? null;
+            const mapOpts = (arr) =>
+                Array.isArray(arr) ? arr.map((o) => ({ value: String(o.value), label: o.name })) : [];
 
             const updates = {
                 roles: rolesRes || [],
-                settingsOptions: optionsRes,
+                settingsOptions: opts
+                    ? {
+                          screenshotFrequency: mapOpts(opts.screenshotFrequency),
+                          idleTime: mapOpts(opts.idleTime),
+                          breakTime: mapOpts(opts.beakTime), // backend typo: "beakTime"
+                          mobileGeoLocationFrequency: mapOpts(opts.mobileGeoLocationFrequency),
+                      }
+                    : null,
                 loading: false,
             };
 
             if (groupsRes?.code === 200) {
                 updates.groups = groupsRes.data || [];
                 updates.totalCount = (groupsRes.count || 0) + 1; // +1 for default row
-                if (groupsRes.data?.[0]?.rules) {
-                    try {
-                        const rules = typeof groupsRes.data[0].rules === "string"
-                            ? JSON.parse(groupsRes.data[0].rules)
-                            : groupsRes.data[0].rules;
-                        updates.defaultRules = { ...DEFAULT_RULES, ...rules };
-                        updates.productivityTime = rules?.productiveHours?.hour || "08:00";
-                        updates.productivityCategory = String(rules?.productivityCategory || "0");
-                    } catch { /* use defaults */ }
-                }
+            }
+
+            // Org default settings live behind /organization/admin-feature
+            // (NOT in the groups list — groups are user-created subsets).
+            // Backend wraps it as: { code, message, data: { data: { feature }, ack } }
+            // so we must drill in two .data hops to reach `feature`.
+            const feature = orgFeatureRes?.data?.data?.feature ?? null;
+            if (feature) {
+                updates.defaultRules = { ...DEFAULT_RULES, ...feature };
+                updates.productivityTime = feature?.productiveHours?.hour || "08:00";
+                updates.productivityCategory = String(feature?.productivityCategory ?? "0");
             }
 
             set(updates);
@@ -267,7 +278,22 @@ const useMonitoringControlStore = create((set, get) => ({
             const res = await updateMonitoringControl(payload);
             set({ saving: false });
             if (res?.code === 200) {
+                // Refresh the groups table.
                 get().fetchGroups();
+                // For the org default (group_id=0), also refetch the org feature
+                // so defaultRules isn't stale when the dialog reopens. Otherwise
+                // the dialog would render the old values until a page reload.
+                if (payload?.group_id == 0 || payload?.group_id === "0") {
+                    const fresh = await getMonitoringSettings();
+                    const feature = fresh?.data?.data?.feature ?? null;
+                    if (feature) {
+                        set({
+                            defaultRules: { ...get().defaultRules, ...feature },
+                            productivityTime: feature?.productiveHours?.hour || get().productivityTime,
+                            productivityCategory: String(feature?.productivityCategory ?? get().productivityCategory),
+                        });
+                    }
+                }
                 set({ monitoringDialogOpen: false, settingsGroupId: null, settingsGroupRules: null });
                 return { success: true, message: res.msg };
             }
@@ -281,22 +307,35 @@ const useMonitoringControlStore = create((set, get) => ({
     updateProductivitySettings: async (time, category) => {
         try {
             const { defaultRules } = get();
+            // Send the FULL current rules object plus the two changed fields.
+            // The backend overwrites org rules with whatever's in track_data
+            // (it doesn't merge), so any missing field would be lost.
+            // productivityCategory must be a number (Joi schema: valid(0,1,2)).
             const payload = {
                 track_data: {
                     ...defaultRules,
                     productiveHours: { mode: "fixed", hour: time },
-                    productivityCategory: category,
+                    productivityCategory: Number(category),
                 },
                 group_id: 0,
             };
             const res = await updateMonitoringControl(payload);
             if (res?.code === 200) {
-                set({ productivityTime: time, productivityCategory: category });
+                set((state) => ({
+                    productivityTime: time,
+                    productivityCategory: String(category),
+                    defaultRules: {
+                        ...state.defaultRules,
+                        productiveHours: { mode: "fixed", hour: time },
+                        productivityCategory: Number(category),
+                    },
+                }));
                 return { success: true };
             }
-            return { success: false, message: res?.msg };
+            return { success: false, message: res?.error || res?.msg || res?.message };
         } catch (error) {
-            return { success: false, message: "Failed to update productivity settings" };
+            console.error("updateProductivitySettings error", error);
+            return { success: false, message: error?.response?.data?.error || "Failed to update productivity settings" };
         }
     },
 

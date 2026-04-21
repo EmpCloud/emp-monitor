@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next";
 import { Search, Settings, Edit2, Trash2, ChevronDown } from "lucide-react"
+import Swal from "sweetalert2"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import CreateGroup from "@/components/common/monitoring-control/dialog/CreateGroup"
@@ -18,13 +19,13 @@ import {
 import EmpMonitoringControlLogo from "@/assets/settings/monitoring-control.svg"
 import useMonitoringControlStore from "@/page/protected/admin/monitoring-control/monitoringControlStore"
 
-const CUSTOM_PRODUCTIVITY_TIMES = [
-  { label: "06:00", value: "06:00" },
-  { label: "07:00", value: "07:00" },
-  { label: "08:00", value: "08:00" },
-  { label: "09:00", value: "09:00" },
-  { label: "10:00", value: "10:00" },
-]
+// Mirrors PHP groups.blade.php: 01:00–24:00, zero-padded for 1–9 (matches
+// @for($i=1;$i<=9;$i++) "0$i:00" then @for($i=10;$i<=24;$i++) "$i:00").
+const CUSTOM_PRODUCTIVITY_TIMES = Array.from({ length: 24 }, (_, i) => {
+  const hour = i + 1
+  const value = `${String(hour).padStart(2, "0")}:00`
+  return { label: value, value }
+})
 
 const getProductivityCategories = (t) => [
   { label: t("prodReport.neutral"), value: "0" },
@@ -76,18 +77,40 @@ const EmpMonitoringControl = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const currentPage = Math.min(page, totalPages)
 
+  const reportSaveResult = useCallback((res) => {
+    if (res?.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Settings saved",
+        toast: true,
+        position: "top-end",
+        timer: 2000,
+        showConfirmButton: false,
+      })
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save",
+        text: res?.message || "Please try again.",
+        confirmButtonColor: "#ef4444",
+      })
+    }
+  }, [])
+
   const handleProductivityTimeChange = useCallback(
-    (val) => {
-      updateProductivitySettings(val, productivityCategory)
+    async (val) => {
+      const res = await updateProductivitySettings(val, productivityCategory)
+      reportSaveResult(res)
     },
-    [productivityCategory]
+    [productivityCategory, updateProductivitySettings, reportSaveResult]
   )
 
   const handleProductivityCategoryChange = useCallback(
-    (val) => {
-      updateProductivitySettings(productivityTime, val)
+    async (val) => {
+      const res = await updateProductivitySettings(productivityTime, val)
+      reportSaveResult(res)
     },
-    [productivityTime]
+    [productivityTime, updateProductivitySettings, reportSaveResult]
   )
 
   const parseRules = (group) => {

@@ -196,14 +196,15 @@ export const updateRolePermission = async ({ roleId, name, added, removed, type 
 };
 
 // ─── API: Update Feature Permissions (permission settings modal) ────────────
+// EMP module only (type=1). HRMS was removed from the UI.
 
-export const updateFeaturePermissions = async ({ roleId, name, permissionIds, added, removed, mailStatus, moduleType = "1" }) => {
+export const updateFeaturePermissions = async ({ roleId, name, permissionIds, added, removed, mailStatus }) => {
     try {
         const payload = {
             role_id: parseInt(roleId, 10),
             name,
             permission_ids: permissionIds,
-            type: moduleType,
+            type: "1",
             permission: { send_mail: mailStatus },
         };
 
@@ -239,25 +240,6 @@ export const deleteRole = async (roleId) => {
     } catch (error) {
         console.error("Roles: Delete role error:", error);
         return { success: false, message: error.response?.data?.message || "Failed to delete role" };
-    }
-};
-
-// ─── API: Update HRMS Permission Toggle ─────────────────────────────────────
-
-export const updateHRMSPermission = async ({ roleId, permissionId = 203, status }) => {
-    try {
-        const { data } = await apiService.apiInstance.post("/settings/add-HRMS-Role", {
-            role_id: roleId,
-            permission_id: permissionId,
-            status,
-        });
-        if (data?.statusCode === 200 || data?.code === 200) {
-            return { success: true, message: data?.data?.message || data?.message || "HRMS permission updated" };
-        }
-        return { success: false, message: data?.data?.message || data?.message || "Failed to update HRMS permission" };
-    } catch (error) {
-        console.error("Roles: Update HRMS permission error:", error);
-        return { success: false, message: "Failed to update HRMS permission" };
     }
 };
 
@@ -385,6 +367,22 @@ const PERMISSION_MAP = {
     me_web_usage_view: { category: "My Productivity", name: "Web Usage" },
     me_keystrokes_view: { category: "My Productivity", name: "Keystrokes" },
     me_screenshots_view: { category: "My Productivity", name: "Screenshots" },
+    me_screen_record_view: { category: "My Productivity", name: "Screen Recording" },
+    locate_me_employe_read: { category: "My Productivity", name: "Locate Me" },
+    project_tasks_view: { category: "Project Tasks", name: "View" },
+    project_tasks_create: { category: "Project Tasks", name: "Create" },
+    project_tasks_modify: { category: "Project Tasks", name: "Modify" },
+    project_tasks_delete: { category: "Project Tasks", name: "Delete" },
+    project_tasks_download: { category: "Project Tasks", name: "Download" },
+    screen_record_view: { category: "Employee Screen Video Recorder", name: "View" },
+    non_admin_screen_casting: { category: "Screen Casting", name: "View" },
+    email_monitoring_view: { category: "Email Monitoring", name: "View" },
+    email_monitoring_download: { category: "Email Monitoring", name: "Download" },
+    report_system_logs_view: { category: "System Activity Logs", name: "View" },
+    report_system_logs_download: { category: "System Activity Logs", name: "Download" },
+    reseller_view_details: { category: "Reseller Access Settings", name: "View" },
+    reseller_edit_details: { category: "Reseller Access Settings", name: "Modify" },
+    reseller_delete_details: { category: "Reseller Access Settings", name: "Delete" },
     roles_browse: { category: "Roles", name: "View" },
     roles_create: { category: "Roles", name: "Create" },
     roles_modify: { category: "Roles", name: "Modify" },

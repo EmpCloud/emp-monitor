@@ -16,7 +16,6 @@ import {
     Loader2,
 } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
-import CustomSelect from "@/components/common/elements/CustomSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,13 +29,6 @@ import DeleteRoleDialog from "@/components/common/roles-permission/dialog/Delete
 import CloneRoleDialog from "@/components/common/roles-permission/dialog/CloneRoleDialog";
 import ViewRoleDialog from "@/components/common/roles-permission/dialog/ViewRoleDialog";
 import PermissionSettingsDialog from "@/components/common/roles-permission/dialog/PermissionSettingsDialog";
-
-// ─── Constants ──────────────────────────────────────────────────────────────
-
-const MODULE_OPTIONS = [
-    { label: "EMP Monitor", value: "1" },
-    { label: "HRMS", value: "2" },
-];
 
 // ─── Debounce Hook ──────────────────────────────────────────────────────────
 
@@ -237,11 +229,7 @@ const EmpRolesPermission = () => {
     const changePage = useRolesPermissionStore((s) => s.changePage);
     const changePageSize = useRolesPermissionStore((s) => s.changePageSize);
 
-    const selectedModule = useRolesPermissionStore((s) => s.selectedModule);
-    const setSelectedModule = useRolesPermissionStore((s) => s.setSelectedModule);
-
     const toggleRWDPermission = useRolesPermissionStore((s) => s.toggleRWDPermission);
-    const toggleHRMS = useRolesPermissionStore((s) => s.toggleHRMS);
 
     // Dialogs
     const addRoleDialogOpen = useRolesPermissionStore((s) => s.addRoleDialogOpen);
@@ -276,14 +264,12 @@ const EmpRolesPermission = () => {
         }
     }, [successMsg]);
 
-    const isHRMS = selectedModule === "2";
-
     const serverTotalPages = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
     const debouncedSearch = useDebounce((val) => setSearch(val), 300);
 
     const showingFrom = roles.length > 0 ? (pagination.page - 1) * pagination.pageSize + 1 : 0;
     const showingTo = Math.min(pagination.page * pagination.pageSize, totalCount);
-    const colSpanCount = isHRMS ? 8 : 7;
+    const colSpanCount = 7;
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full">
@@ -319,12 +305,6 @@ const EmpRolesPermission = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <CustomSelect
-                        placeholder="EMP Monitor"
-                        items={MODULE_OPTIONS}
-                        selected={selectedModule}
-                        onChange={setSelectedModule}
-                    />
                     <ExportDropdown />
                     <Button
                         size="sm"
@@ -375,9 +355,6 @@ const EmpRolesPermission = () => {
                                     <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("location")}</th>
                                     <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-left">{t("department")}</th>
                                     <th className="px-4 py-3 text-xs font-semibold text-white text-center bg-[#5C6BC0] min-w-[180px]">{t("action")}</th>
-                                    {isHRMS && (
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-700 text-center">{t("roles.enableHRMS")}</th>
-                                    )}
                                 </tr>
                             </thead>
                             <tbody className="bg-white">
@@ -436,18 +413,6 @@ const EmpRolesPermission = () => {
                                             <td className="px-4 py-4 bg-slate-50/50 text-center">
                                                 <ActionButtons role={role} />
                                             </td>
-
-                                            {isHRMS && (
-                                                <td className="px-4 py-4 text-center">
-                                                    <div className="flex justify-center">
-                                                        <Checkbox
-                                                            checked={role.permission?.hrms_permission === true || role.permission?.hrms_permission === "1"}
-                                                            onCheckedChange={(checked) => toggleHRMS(role.id, checked)}
-                                                            className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
-                                                        />
-                                                    </div>
-                                                </td>
-                                            )}
                                         </tr>
                                     ))
                                 )}

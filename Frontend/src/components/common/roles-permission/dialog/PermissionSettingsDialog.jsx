@@ -16,7 +16,6 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
     const permissionRoleData = useRolesPermissionStore((s) => s.permissionRoleData);
     const categorizedPermissions = useRolesPermissionStore((s) => s.categorizedPermissions);
     const saveFeaturePermissions = useRolesPermissionStore((s) => s.saveFeaturePermissions);
-    const selectedModule = useRolesPermissionStore((s) => s.selectedModule);
 
     const [checkedIds, setCheckedIds] = useState(new Set());
     const [expandedCategories, setExpandedCategories] = useState(new Set());
@@ -39,24 +38,35 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
 
     const rolePermission = permissionRoleData?.permission || {};
 
-    const filteredCategories = useMemo(() => {
-        const filtered = {};
+    // Mirrors PHP roleCommonScript.permissionSetting() filter for EMP module only.
+    // For the "Employee" role, PHP only surfaces the "My Productivity" card.
+    // Category headers render whenever the category has any source perms — even
+    // if every checkbox inside is filtered out by the role's RWD — so the user
+    // still sees what's available and understands why it's empty.
+    const visibleCategories = useMemo(() => {
+        const result = {};
         Object.entries(categorizedPermissions).forEach(([category, perms]) => {
-            if (permissionRoleData?.name === "Employee" && selectedModule !== "2" && category !== "My Productivity") {
+            const categoryKeyNoSpace = category.replace(/\s+/g, "");
+            if (permissionRoleData?.name === "Employee" && categoryKeyNoSpace !== "MyProductivity") {
                 return;
             }
+            if (!perms?.length) return;
+
             const allowedPerms = perms.filter((p) => {
-                if (p.status === 1 && (rolePermission.read === true || rolePermission.read === undefined)) return true;
+                if (p.status === 1 && rolePermission.read === true) return true;
                 if (p.status === 2 && rolePermission.write === true) return true;
                 if (p.status === 3 && rolePermission.delete === true) return true;
                 return false;
             });
-            if (allowedPerms.length > 0) {
-                filtered[category] = allowedPerms;
-            }
+            result[category] = allowedPerms;
         });
-        return filtered;
-    }, [categorizedPermissions, rolePermission, permissionRoleData, selectedModule]);
+        return result;
+    }, [categorizedPermissions, rolePermission, permissionRoleData]);
+
+    const hasAnyVisibleCheckbox = useMemo(
+        () => Object.values(visibleCategories).some((arr) => arr.length > 0),
+        [visibleCategories]
+    );
 
     const toggleCategory = (category) => {
         setExpandedCategories((prev) => {
@@ -76,8 +86,9 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                 next.add(permId);
             }
 
+            // PHP checkedChnage: any non-View toggle also forces the View checkbox on.
             if (status === 2 || status === 3) {
-                const viewPerm = filteredCategories[category]?.find((p) => p.status === 1);
+                const viewPerm = visibleCategories[category]?.find((p) => p.status === 1);
                 if (viewPerm) next.add(viewPerm.id);
             }
 
@@ -104,7 +115,6 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
             added,
             removed,
             mailStatus: sendEmail,
-            moduleType: selectedModule,
         });
     };
 
@@ -142,9 +152,8 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                     )}
 
                     <div className="space-y-1">
-                        {Object.entries(filteredCategories).map(([category, perms]) => {
+                        {Object.entries(visibleCategories).map(([category, perms]) => {
                             const isExpanded = expandedCategories.has(category);
-                            const categoryKey = category.replace(/\s+/g, "");
 
                             return (
                                 <div key={category} className="border border-slate-100 rounded-lg overflow-hidden">
@@ -160,7 +169,11 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                                     </button>
                                     {isExpanded && (
                                         <div className="px-4 py-3 flex flex-wrap gap-4">
-                                            {perms.map((perm) => {
+                                            {perms.length === 0 ? (
+                                                <p className="text-xs text-slate-400 italic">
+                                                    Enable Read / Write / Delete on this role to access these permissions.
+                                                </p>
+                                            ) : perms.map((perm) => {
                                                 const isChecked = checkedIds.has(perm.id);
                                                 const isViewLocked = perm.status === 1 && perms.some(
                                                     (p) => p.status !== 1 && checkedIds.has(p.id)
@@ -187,10 +200,20 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                             );
                         })}
 
-                        {Object.keys(filteredCategories).length === 0 && (
+                        {Object.keys(visibleCategories).length === 0 && (
                             <div className="text-center py-8">
                                 <p className="text-sm text-slate-400">
-                                    No permissions available. Enable Read/Write/Delete on the role first.
+                                    {Object.keys(categorizedPermissions).length === 0
+                                        ? "Loading permissions…"
+                                        : "No permissions defined for this role."}
+                                </p>
+                            </div>
+                        )}
+
+                        {Object.keys(visibleCategories).length > 0 && !hasAnyVisibleCheckbox && (
+                            <div className="text-center py-3">
+                                <p className="text-xs text-slate-400 italic">
+                                    Tip: enable Read / Write / Delete on the role (in the table) to populate these categories.
                                 </p>
                             </div>
                         )}
