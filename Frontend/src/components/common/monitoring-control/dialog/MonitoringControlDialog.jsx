@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next";
 import { Settings, ChevronDown, ChevronRight } from "lucide-react"
+import Swal from "sweetalert2"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -92,55 +93,13 @@ const TRACKING_MODES = [
     { value: "geoLocation", label: "Geo-Location" },
 ]
 
-const SCREENSHOT_FREQUENCIES = [
-    { value: "1", label: "1 per hour" },
-    { value: "2", label: "2 per hour" },
-    { value: "3", label: "3 per hour" },
-    { value: "4", label: "4 per hour" },
-    { value: "6", label: "6 per hour" },
-    { value: "10", label: "10 per hour" },
-    { value: "12", label: "12 per hour" },
-    { value: "20", label: "20 per hour" },
-    { value: "30", label: "30 per hour" },
-]
-
-const IDLE_TIMES = [
-    { value: "1", label: "1 min" },
-    { value: "2", label: "2 min" },
-    { value: "3", label: "3 min" },
-    { value: "5", label: "5 min" },
-    { value: "10", label: "10 min" },
-    { value: "15", label: "15 min" },
-    { value: "20", label: "20 min" },
-    { value: "30", label: "30 min" },
-]
-
+// SCREENSHOT_FREQUENCIES and IDLE_TIMES come from the /settings/options API
+// (mirrors PHP @foreach($options['data']['data']['screenshotFrequency'] as $opt)).
+// VIDEO_QUALITY stays hardcoded — PHP also hardcodes it in monitoringControls.blade.php.
 const VIDEO_QUALITY_OPTIONS = [
     { value: "1", label: "High Quality" },
     { value: "2", label: "Low Quality" },
     { value: "3", label: "Ultra Low" },
-]
-
-const BILLING_BASED_ON = [
-    { value: "", label: "Select" },
-    { value: "office_hours", label: "Office Hours" },
-    { value: "active_hours", label: "Active Hours" },
-    { value: "total_hours", label: "Total Hours" },
-    { value: "productive_hours", label: "Productive Hours" },
-]
-
-const CURRENCY_OPTIONS = [
-    { value: "", label: "Select Currency" },
-    { value: "INR", label: "INR ₹" },
-    { value: "USD", label: "USD $" },
-    { value: "EUR", label: "Euros €" },
-]
-
-const INVOICE_DURATIONS = [
-    { value: "", label: "Select Duration" },
-    { value: "weekly", label: "Weekly" },
-    { value: "biweekly", label: "Biweekly" },
-    { value: "monthly", label: "Monthly" },
 ]
 
 // ─── Main Dialog Component ───────────────────────────────────────────────────
@@ -152,7 +111,16 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
         settingsGroupRules,
         updateMonitoringControlAction,
         saving,
+        settingsOptions,
     } = useMonitoringControlStore()
+
+    // Fall back to a minimal hardcoded list only if API data hasn't loaded yet.
+    const SCREENSHOT_FREQUENCIES = settingsOptions?.screenshotFrequency?.length
+        ? settingsOptions.screenshotFrequency
+        : [{ value: "2", label: "2 per hour" }]
+    const IDLE_TIMES = settingsOptions?.idleTime?.length
+        ? settingsOptions.idleTime
+        : [{ value: "5", label: "5 min" }]
 
     const [rules, setRules] = useState(null)
     const [activeTrackingTab, setActiveTrackingTab] = useState("unlimited")
@@ -290,15 +258,6 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
             }
         }
 
-        // Work hour billing
-        trackData.work_hour_billing = {
-            is_enabled: updatedRules.work_hour_billing?.is_enabled === "1" ? 1 : 0,
-            currency: updatedRules.work_hour_billing?.currency || "",
-            hours_per_day: parseInt(updatedRules.work_hour_billing?.hours_per_day, 10) || 0,
-            billing_based_on: updatedRules.work_hour_billing?.billing_based_on || "",
-            invoice_duration: updatedRules.work_hour_billing?.invoice_duration || "",
-        }
-
         // Network-based tracking (PHP reformats these)
         if (activeTrackingTab === "networkBased" && networkData.length > 0) {
             trackData.tracking = {
@@ -317,7 +276,16 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
         }
 
         const res = await updateMonitoringControlAction(payload)
-        if (!res.success) {
+        if (res.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Settings saved",
+                toast: true,
+                position: "top-end",
+                timer: 2000,
+                showConfirmButton: false,
+            })
+        } else {
             if (res.code === 205) {
                 setErrors({ general: "Please select at least one day for Fixed tracking" })
             } else if (res.code === 207) {
@@ -825,72 +793,6 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </AccordionSection>
-
-                    {/* 6. Work Hours Billing */}
-                    <AccordionSection title={t("monitoring.workHoursBilling")}>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between py-2">
-                                <span className="text-sm text-slate-700">{t("monitoring.enableWorkHoursBilling")}</span>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={
-                                            String(rules.work_hour_billing?.is_enabled) === "1"
-                                        }
-                                        onChange={(e) =>
-                                            updateRule("work_hour_billing.is_enabled", e.target.checked ? "1" : "0")
-                                        }
-                                        className="w-4 h-4 accent-blue-500"
-                                    />
-                                </label>
-                            </div>
-
-                            {String(rules.work_hour_billing?.is_enabled) === "1" && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.billingBasedOn")}</label>
-                                        <CustomSelect
-                                            placeholder="Select"
-                                            items={BILLING_BASED_ON}
-                                            selected={rules.work_hour_billing?.billing_based_on || ""}
-                                            onChange={(v) => updateRule("work_hour_billing.billing_based_on", v)}
-                                            width="full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.amountPerHour")}</label>
-                                        <Input
-                                            type="number"
-                                            placeholder="Enter amount"
-                                            value={rules.work_hour_billing?.hours_per_day || ""}
-                                            onChange={(e) => updateRule("work_hour_billing.hours_per_day", e.target.value)}
-                                            className="h-9 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.currency")}</label>
-                                        <CustomSelect
-                                            placeholder="Select Currency"
-                                            items={CURRENCY_OPTIONS}
-                                            selected={rules.work_hour_billing?.currency || ""}
-                                            onChange={(v) => updateRule("work_hour_billing.currency", v)}
-                                            width="full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1 block">{t("monitoring.invoiceDuration")}</label>
-                                        <CustomSelect
-                                            placeholder="Select Duration"
-                                            items={INVOICE_DURATIONS}
-                                            selected={rules.work_hour_billing?.invoice_duration || ""}
-                                            onChange={(v) => updateRule("work_hour_billing.invoice_duration", v)}
-                                            width="full"
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </AccordionSection>
 

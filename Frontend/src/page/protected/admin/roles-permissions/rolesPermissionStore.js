@@ -12,7 +12,6 @@ import {
     getLocationsWithDept,
     getDepartmentsByLocation,
     categorizePermissions,
-    updateHRMSPermission,
     exportToExcel,
     exportToCSV,
     exportToPDF,
@@ -36,9 +35,6 @@ export const useRolesPermissionStore = create((set, get) => ({
     // ── Pagination ──────────────────────────────────────────────────────────
     pagination: { page: 1, pageSize: 10 },
     search: "",
-
-    // ── Module Selection ────────────────────────────────────────────────────
-    selectedModule: "1",
 
     // ── Dialog State ────────────────────────────────────────────────────────
     addRoleDialogOpen: false,
@@ -67,8 +63,6 @@ export const useRolesPermissionStore = create((set, get) => ({
     setPagination: (key, value) => {
         set((state) => ({ pagination: { ...state.pagination, [key]: value } }));
     },
-
-    setSelectedModule: (module) => set({ selectedModule: module }),
 
     clearError: () => set({ error: null }),
     clearSuccess: () => set({ successMsg: null }),
@@ -337,36 +331,6 @@ export const useRolesPermissionStore = create((set, get) => ({
             console.error("Save feature permissions error:", error);
             set({ saving: false, error: "Failed to update permissions" });
             return { success: false };
-        }
-    },
-
-    toggleHRMS: async (roleId, currentChecked) => {
-        const newStatus = currentChecked ? 1 : 2;
-
-        set((state) => ({
-            roles: state.roles.map((r) =>
-                r.id === roleId
-                    ? { ...r, permission: { ...r.permission, hrms_permission: currentChecked } }
-                    : r
-            ),
-        }));
-
-        const result = await updateHRMSPermission({
-            roleId,
-            status: newStatus,
-        });
-
-        if (result.success) {
-            set({ successMsg: result.message });
-        } else {
-            set((state) => ({
-                roles: state.roles.map((r) =>
-                    r.id === roleId
-                        ? { ...r, permission: { ...r.permission, hrms_permission: !currentChecked } }
-                        : r
-                ),
-                error: result.message,
-            }));
         }
     },
 
