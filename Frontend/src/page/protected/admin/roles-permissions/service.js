@@ -368,7 +368,6 @@ const PERMISSION_MAP = {
     me_keystrokes_view: { category: "My Productivity", name: "Keystrokes" },
     me_screenshots_view: { category: "My Productivity", name: "Screenshots" },
     me_screen_record_view: { category: "My Productivity", name: "Screen Recording" },
-    locate_me_employe_read: { category: "My Productivity", name: "Locate Me" },
     project_tasks_view: { category: "Project Tasks", name: "View" },
     project_tasks_create: { category: "Project Tasks", name: "Create" },
     project_tasks_modify: { category: "Project Tasks", name: "Modify" },
