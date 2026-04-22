@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Search,
@@ -8,11 +8,6 @@ import {
     Trash2,
     Eye,
     Copy,
-    Download,
-    ChevronDown,
-    FileText,
-    FileSpreadsheet,
-    FileDown,
     Loader2,
 } from "lucide-react";
 import PaginationComponent from "@/components/common/Pagination";
@@ -40,59 +35,6 @@ const useDebounce = (callback, delay) => {
             timer.current = setTimeout(() => callback(...args), delay);
         },
         [callback, delay]
-    );
-};
-
-// ─── Export Dropdown ────────────────────────────────────────────────────────
-
-const ExportDropdown = () => {
-    const { t } = useTranslation();
-    const [open, setOpen] = useState(false);
-    const exportExcel = useRolesPermissionStore((s) => s.exportExcel);
-    const exportCsv = useRolesPermissionStore((s) => s.exportCsv);
-    const exportPdf = useRolesPermissionStore((s) => s.exportPdf);
-
-    return (
-        <div className="relative">
-            <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg border-slate-200 text-xs gap-1.5"
-                onClick={() => setOpen(!open)}
-            >
-                <Download className="w-3.5 h-3.5" />
-                {t("common.export")}
-                <ChevronDown className="w-3 h-3" />
-            </Button>
-            {open && (
-                <>
-                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[170px]">
-                        <button
-                            onClick={() => { exportPdf(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-t-lg"
-                        >
-                            <FileText className="w-3.5 h-3.5 text-red-500" />
-                            {t("roles.exportAsPdf")}
-                        </button>
-                        <button
-                            onClick={() => { exportExcel(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                            <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
-                            {t("roles.exportAsExcel")}
-                        </button>
-                        <button
-                            onClick={() => { exportCsv(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-b-lg"
-                        >
-                            <FileDown className="w-3.5 h-3.5 text-blue-500" />
-                            {t("roles.exportAsCsv")}
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
     );
 };
 
@@ -305,7 +247,6 @@ const EmpRolesPermission = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <ExportDropdown />
                     <Button
                         size="sm"
                         className="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm gap-1.5"
