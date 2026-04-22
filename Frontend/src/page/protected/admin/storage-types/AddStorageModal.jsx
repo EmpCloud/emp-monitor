@@ -4,6 +4,8 @@ import {
   Dialog,
   DialogContent,
   DialogClose,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +176,12 @@ export default function AddStorageModal({ open, onOpenChange, editItem, onSucces
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[95vw] sm:max-w-[550px] rounded-xl p-0 border-0 shadow-2xl overflow-visible gap-0 [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">
+          {isEdit ? t("storage_edit_title") : t("storage_add_title")}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {isEdit ? "Edit storage configuration" : "Add a new storage configuration"}
+        </DialogDescription>
         {/* Header */}
         <div
           className="relative px-7 py-5 flex items-center justify-between rounded-t-lg"

@@ -16,7 +16,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogClose,
+  Dialog, DialogContent, DialogFooter, DialogClose, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import employee from "@/assets/employe.png";
@@ -57,8 +57,8 @@ function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel, c
           <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
             <AlertTriangle size={22} className="text-red-500" />
           </div>
-          <h3 className="text-[17px] font-bold text-gray-800">{title}</h3>
-          <p className="text-[13px] text-gray-500 leading-relaxed">{description}</p>
+          <DialogTitle className="text-[17px] font-bold text-gray-800">{title}</DialogTitle>
+          <DialogDescription className="text-[13px] text-gray-500 leading-relaxed">{description}</DialogDescription>
         </div>
         <DialogFooter className="mt-4 flex gap-3 justify-center">
           <DialogClose asChild>

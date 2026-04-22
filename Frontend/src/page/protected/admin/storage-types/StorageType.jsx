@@ -22,6 +22,8 @@ import {
   Dialog,
   DialogContent,
   DialogClose,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import "@/components/common/employee-details/emp.css";
 import storageTypeImg from "@/assets/storage.png";
@@ -314,6 +316,8 @@ export default function StorageType() {
       {/* Delete Confirm Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[420px] rounded-xl p-0 border-0 shadow-2xl gap-0 [&>button:last-child]:hidden">
+          <DialogTitle className="sr-only">{t("storage_delete_title")}</DialogTitle>
+          <DialogDescription className="sr-only">{t("storage_delete_confirm")}</DialogDescription>
           <div
             className="px-6 py-5 flex items-center justify-between rounded-t-lg"
             style={{ background: "linear-gradient(135deg,#f87171,#ef4444)" }}

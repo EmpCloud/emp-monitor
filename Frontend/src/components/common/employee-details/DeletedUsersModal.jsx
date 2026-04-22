@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -98,6 +98,8 @@ export default function DeletedUsersModal({ isOpen, onClose }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[1100px] w-[95vw] p-0 gap-0 bg-white rounded-3xl overflow-hidden border-none shadow-2xl [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">{t("emp_deleted_user_history")}</DialogTitle>
+        <DialogDescription className="sr-only">{t("emp_view_removed_history")}</DialogDescription>
         <div className="flex flex-col w-full max-h-[90vh] p-6 md:p-8 overflow-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">

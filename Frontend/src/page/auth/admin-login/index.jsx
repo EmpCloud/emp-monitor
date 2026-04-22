@@ -17,6 +17,8 @@ import {
   Dialog,
   DialogContent,
   DialogClose,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 // ── Lucide React icons ────────────────────────────────────────────────────
@@ -294,6 +296,8 @@ export const AdminLogin = () => {
       {/* ── Forgot Password Modal ── */}
       <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[500px] rounded-2xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
+          <DialogTitle className="sr-only">{t("auth_forgot_password_title")}</DialogTitle>
+          <DialogDescription className="sr-only">Enter your email to reset your password</DialogDescription>
           {/* Header */}
           <div
             className="px-6 py-4 flex items-center justify-between"
