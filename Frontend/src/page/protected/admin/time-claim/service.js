@@ -141,24 +141,36 @@ export const fetchTimeClaims = async (filters) => {
 // ─── CRUD Operations ────────────────────────────────────────────────────────
 
 // v3 API: POST /settings/activity-request/create
-export const createIdleRequest = async (payload) => {
+// Body (all required): date, start_time, end_time, reason, activity_ids[], attendance_id
+// Optional: employee_id (defaults to logged-in user's employee_id on backend).
+export const createIdleRequest = async ({
+    date, start_time, end_time, reason, activity_ids, attendance_id, employee_id,
+}) => {
     try {
-        const { data } = await apiService.apiInstance.post("/settings/activity-request/create", payload);
+        const body = { date, start_time, end_time, reason, activity_ids, attendance_id };
+        if (employee_id !== undefined && employee_id !== null && employee_id !== "") {
+            body.employee_id = Number(employee_id);
+        }
+        const { data } = await apiService.apiInstance.post("/settings/activity-request/create", body);
         return data;
     } catch (error) {
         console.error("Create Idle Request Error:", error);
-        return { code: 500, msg: "Failed to create request" };
+        return error?.response?.data ?? { code: 500, msg: "Failed to create request" };
     }
 };
 
 // v3 API: POST /settings/offline-activity/create-request
-export const createOfflineRequest = async (payload) => {
+// Body: { offline_data: [{ date, start_time, end_time, reason, offline_time }] }
+export const createOfflineRequest = async (rows) => {
     try {
-        const { data } = await apiService.apiInstance.post("/settings/offline-activity/create-request", payload);
+        const { data } = await apiService.apiInstance.post(
+            "/settings/offline-activity/create-request",
+            { offline_data: rows },
+        );
         return data;
     } catch (error) {
         console.error("Create Offline Request Error:", error);
-        return { code: 500, msg: "Failed to create request" };
+        return error?.response?.data ?? { code: 500, msg: "Failed to create request" };
     }
 };
 
@@ -294,13 +306,14 @@ export const fetchAutoApproveStatus = async () => {
 
 export const toggleAutoApprove = async (isEnable) => {
     try {
+        // Backend validator expects is_enable as the literal string "true" or "false".
         const { data } = await apiService.apiInstance.put("/settings/update-auto-time-claim-status", {
-            is_enable: isEnable,
+            is_enable: isEnable ? "true" : "false",
         });
         return data;
     } catch (error) {
         console.error("Auto Approve Toggle Error:", error);
-        return { code: 500, msg: "Failed to toggle auto approve" };
+        return error?.response?.data ?? { code: 500, msg: "Failed to toggle auto approve" };
     }
 };
 
@@ -326,13 +339,48 @@ export const bulkApproveDecline = async (ids, status, requestType) => {
 //         PUT  /settings/attendance-request/update
 //         DELETE /settings/attendance-request/delete
 
-export const createAttendanceRequest = async (payload) => {
+// v3 API: POST /settings/attendance-request/create
+// Body (required): date, start_time, end_time, reason. Optional: task_id.
+// Note: backend scopes this to req.decoded.employee_id — only works for employee login.
+// For admin-initiated create on behalf of an employee, use createAttendanceRequestByManager instead.
+export const createAttendanceRequest = async ({
+    date, start_time, end_time, reason, task_id,
+}) => {
     try {
-        const { data } = await apiService.apiInstance.post("/settings/attendance-request/create", payload);
+        const body = { date, start_time, end_time, reason };
+        if (task_id) body.task_id = task_id;
+        const { data } = await apiService.apiInstance.post("/settings/attendance-request/create", body);
         return data;
     } catch (error) {
         console.error("Create Attendance Request Error:", error);
-        return { code: 500, msg: "Failed to create attendance request" };
+        return error?.response?.data ?? { code: 500, msg: "Failed to create attendance request" };
+    }
+};
+
+// v3 API: POST /settings/attendance-request/create-by-manager
+// Body (required): start_time, end_time, from_date, to_date, reason, employee_ids[]. Optional: task_id.
+// Response: { code: 200, data: { successResponse: [...], errorResponse: [...] } } — partial-success possible.
+export const createAttendanceRequestByManager = async ({
+    date, start_time, end_time, reason, employee_ids, task_id,
+}) => {
+    try {
+        const body = {
+            from_date: date,
+            to_date: date,
+            start_time,
+            end_time,
+            reason,
+            employee_ids,
+        };
+        if (task_id) body.task_id = task_id;
+        const { data } = await apiService.apiInstance.post(
+            "/settings/attendance-request/create-by-manager",
+            body,
+        );
+        return data;
+    } catch (error) {
+        console.error("Create Attendance Request (by manager) Error:", error);
+        return error?.response?.data ?? { code: 500, msg: "Failed to create attendance request" };
     }
 };
 
