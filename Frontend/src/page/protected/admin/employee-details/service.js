@@ -93,6 +93,87 @@ export const activateMultipleEmployees = async (userIds) => {
   }
 };
 
+export const assignShiftToMultiple = async (userIds, shiftId) => {
+  try {
+    const { data } = await apiService.apiInstance.put("/user/assign-shift-bulk-employees", {
+      employees_id: userIds,
+      shift_id: Number(shiftId),
+    });
+    return data ?? null;
+  } catch (error) {
+    console.error("Employee Details: assignShiftToMultiple error", error);
+    return error?.response?.data ?? { code: 500, message: error?.message || "Failed to assign shift." };
+  }
+};
+
+export const fetchNonAdminList = async () => {
+  try {
+    const { data } = await apiService.apiInstance.get("/external/get-non-admin-list");
+    const list = Array.isArray(data?.data) ? data.data : [];
+    return list.map((m) => ({
+      managerId: m.emp_id,
+      userId: m.user_id,
+      name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || m.emp_code || `#${m.emp_id}`,
+      empCode: m.emp_code,
+      roleId: String(m.role_id),
+      roleName: m.role_name,
+    }));
+  } catch (error) {
+    console.error("Employee Details: fetchNonAdminList error", error);
+    return [];
+  }
+};
+
+export const assignManagerToMultiple = async ({ userIds, managerId, roleId }) => {
+  try {
+    const results = await Promise.all(
+      userIds.map((employeeId) =>
+        apiService.apiInstance
+          .post("/external/assigned-to-employee", {
+            employee_id: Number(employeeId),
+            manager_id: Number(managerId),
+            role_id: Number(roleId),
+          })
+          .then((r) => r.data)
+          .catch((err) => err?.response?.data ?? { code: 500, message: err?.message })
+      )
+    );
+    const failed = results.filter((r) => r?.code !== 200);
+    if (failed.length === 0) {
+      return { code: 200, message: "Manager assigned successfully." };
+    }
+    return {
+      code: 207,
+      message: `${results.length - failed.length}/${results.length} assigned. ${failed.length} failed.`,
+    };
+  } catch (error) {
+    console.error("Employee Details: assignManagerToMultiple error", error);
+    return { code: 500, message: error?.message || "Failed to assign manager." };
+  }
+};
+
+export const fetchAssignedManagersForEmployee = async (employeeId) => {
+  try {
+    // Omit role_id entirely — backend defaults it to null, which triggers the
+    // group-by-role query. Sending "" makes Joi's `number().positive()` reject.
+    const { data } = await apiService.apiInstance.post("/user/employee-assigned-to", {
+      user_id: Number(employeeId),
+    });
+    // Success shape: data.data = [{ role_id, role_name, employees: [{ name, email, user_id }, ...] }]
+    // Backend returns code: 400 with "Not found" when the employee has no assignments — treat as empty.
+    if (data?.code === 200 && Array.isArray(data.data)) {
+      return { code: 200, groups: data.data };
+    }
+    if (data?.code === 400) {
+      return { code: 200, groups: [] };
+    }
+    return { code: data?.code ?? 500, groups: [], message: data?.message };
+  } catch (error) {
+    console.error("Employee Details: fetchAssignedManagersForEmployee error", error);
+    return { code: 500, groups: [], message: error?.message || "Failed to fetch assigned managers." };
+  }
+};
+
 export const bulkRegisterEmployees = async (file) => {
   try {
     const fd = new FormData();
