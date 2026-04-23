@@ -1020,6 +1020,7 @@
   "ts_track_desc": "Track employee working hours, clock-in and clock-out times",
   "ts_select_date_ranges": "Select Date Ranges",
   "ts_date_range_tooltip": "Click to select a start and end date for the timesheet range",
+  "dateRangeTooltip": "Click to select a start and end date range.",
   "ts_exporting": "Exporting…",
   "ts_columns": "Columns",
   "ts_select_all": "Select All",

@@ -1027,6 +1027,7 @@
   "ts_track_desc": "تتبع ساعات العمل وأوقات الدخول والخروج",
   "ts_select_date_ranges": "اختيار نطاقات التاريخ",
   "ts_date_range_tooltip": "انقر لتحديد تاريخ البداية والنهاية",
+  "dateRangeTooltip": "انقر لتحديد نطاق تاريخ البداية والنهاية.",
   "ts_exporting": "جاري التصدير…",
   "ts_columns": "الأعمدة",
   "ts_select_all": "تحديد الكل",

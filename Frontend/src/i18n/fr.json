@@ -1022,6 +1022,7 @@
   "ts_track_desc": "Suivez les heures de travail, les heures d'arrivée et de départ",
   "ts_select_date_ranges": "Sélectionner les plages de dates",
   "ts_date_range_tooltip": "Cliquez pour sélectionner une date de début et de fin",
+  "dateRangeTooltip": "Cliquez pour sélectionner une plage de dates de début et de fin.",
   "ts_exporting": "Exportation…",
   "ts_columns": "Colonnes",
   "ts_select_all": "Tout sélectionner",
