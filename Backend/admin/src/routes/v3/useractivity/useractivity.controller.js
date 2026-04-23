@@ -95,9 +95,11 @@ class UserActivity {
             // let manager_role_id = req.body.manager_role_id;
             // let assigned_manager = req.body.assigned_manager;
 
-            if (password && typeof password === 'string' && password.includes(':')) {
-                try { password = PasswordEncodeDecoder.passwordDecrypt(password); } catch (e) { password = null; }
-            } else { password = null; }
+            // Frontend sends plain-text password. The broken include(':') check
+            // that used to live here wiped every plain-text password to null
+            // and guaranteed the validator below rejected it. Same fix as
+            // updateProfile (commit cb1b720). Plain text flows to the
+            // validator, then to encryptText() on line ~131 before DB storage.
             let findMoreLink = {
                 development: process.env.WEB_DEV, production: process.env.WEB_PRODUCTION
             }[process.env.NODE_ENV] || process.env.WEB_LOCAL;
