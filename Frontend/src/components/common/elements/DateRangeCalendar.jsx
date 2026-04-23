@@ -194,15 +194,22 @@ export default function DateRangeCalendar({
   };
 
   return (
-    <div ref={ref} className="relative inline-block">
+    // #115 — was `inline-block` which forced the wrapper to its content's
+    // intrinsic width, plus a 220px min on the trigger. Inside narrow grid
+    // columns (e.g. GEO Location's lg:grid-cols-4) that overflowed and
+    // visually pushed neighbors out of view. `block w-full min-w-0` lets
+    // the wrapper participate in the grid's column sizing properly.
+    <div ref={ref} className="relative block w-full min-w-0">
       {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 h-10 text-xs text-slate-600 bg-white hover:border-slate-300 transition-colors min-w-[220px]"
+        className="flex w-full items-center gap-2 border border-slate-200 rounded-lg px-3 h-10 text-xs text-slate-600 bg-white hover:border-slate-300 transition-colors"
       >
         <Calendar size={14} className="text-slate-400 shrink-0" />
-        <span className={rangeStart ? "text-slate-700 font-medium" : "text-slate-400"}>{displayText}</span>
+        <span className={`truncate ${rangeStart ? "text-slate-700 font-medium" : "text-slate-400"}`}>
+          {displayText}
+        </span>
       </button>
 
       {/* Dropdown */}
