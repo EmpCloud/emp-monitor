@@ -234,13 +234,13 @@ export default function LocationPerformance({
             </div>
 
             {/* List */}
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full min-w-0">
               {/* Column headers */}
-              <div className="flex items-center justify-between px-1 mb-2">
-                <span className="text-slate-500 text-xs font-medium">
-                  {t("default")}
+              <div className="flex items-center justify-between gap-3 px-1 mb-2">
+                <span className="text-slate-500 text-xs font-medium whitespace-nowrap">
+                  {t("location")}
                 </span>
-                <span className="text-slate-500 text-xs font-medium">
+                <span className="text-slate-500 text-xs font-medium whitespace-nowrap">
                   {t("timePercentage")}
                 </span>
               </div>
@@ -258,19 +258,19 @@ export default function LocationPerformance({
                   {rows.map((item, i) => (
                     <div
                       key={`${item.name}-${i}`}
-                      className="flex items-center justify-between py-3.5 px-1 hover:bg-slate-50/60 rounded-lg transition-colors"
+                      className="flex items-center justify-between gap-3 py-3.5 px-1 hover:bg-slate-50/60 rounded-lg transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <MapPin size={16} className="text-blue-500 shrink-0" />
-                        <span className="text-slate-700 font-medium text-sm">
+                        <span className="text-slate-700 font-medium text-sm truncate">
                           {item.name}
                         </span>
                       </div>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-blue-500 font-semibold text-sm">
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        <span className="text-blue-500 font-semibold text-sm whitespace-nowrap">
                           {item.hours}
                         </span>
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-slate-500 text-xs whitespace-nowrap">
                           {item.percentage}%
                         </span>
                       </div>
