@@ -133,8 +133,7 @@ const EmpPrintLogs = () => {
               <span className="font-normal text-gray-500">{t("printLogs.logs")}</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-              &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-              consectetur adipisci&quot;
+              All print activity logged from monitored devices.
             </p>
           </div>
         </div>

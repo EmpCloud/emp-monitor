@@ -14,8 +14,7 @@ import EmpInsightsLogo from "../../../assets/employee/employees_real_time_insigh
 const MOCK_EMPLOYEES = Array.from({ length: 12 }, (_, i) => ({
   id: i + 1,
   name: "Robin Singh",
-  description:
-    "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo...",
+  description: "Currently active.",
   productivity: "14.77%",
   email: "robinsingh123@gmail.com",
 }));
@@ -76,8 +75,8 @@ const EmpRealtimeInsights = () => {
               <span className="font-normal text-gray-500">Time Insights</span>
             </h2>
             <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-              &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-              consectetur adipisci&quot;
+              Live productivity, activity and location for all monitored
+              employees.
             </p>
           </div>
           <div className="absolute right-0 -top-4 hidden lg:flex items-end gap-1 mr-2">
@@ -239,8 +238,7 @@ const EmpRealtimeInsights = () => {
                         {emp.name}
                       </h3>
                       <p className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                        &quot;Lorem ipsum quia dolor sit porro qui amet
-                        consectetur adipisci.
+                        {emp.description}
                       </p>
                     </div>
                   </div>

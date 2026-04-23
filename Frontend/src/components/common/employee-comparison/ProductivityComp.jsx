@@ -130,7 +130,7 @@ function ComparisonCard({ chartData, legendItems, timeStats, centerText = "0%", 
           <DonutChart
             data={chartData}
             centerText={centerText}
-            centerSubText="Lorem ipsum quia"
+            centerSubText="productive"
           />
         </div>
   
@@ -311,7 +311,7 @@ const ProductivityComp = () => {
             <span className="font-normal text-gray-500">{t("comparison.comparisonLabel")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-xs leading-tight">
-            &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci&quot;
+            Compare productive vs. unproductive time across selected employees for the chosen period.
           </p>
         </div>
         <div className="flex items-end gap-1 mr-2">

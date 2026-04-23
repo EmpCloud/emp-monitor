@@ -163,8 +163,8 @@ export default function EmpTimeline() {
               </div>
                   </div>
               <p className="text-[10px] text-gray-400 mt-1 leading-tight max-w-[220px]">
-                *Lorem ipsum quia dolor sit porro quisquam est qui amet
-                consectetur adipisci
+                Hour-by-hour activity for the selected employee on the chosen
+                date.
               </p>
             </div>
           </div>

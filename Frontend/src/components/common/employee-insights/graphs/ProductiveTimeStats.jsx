@@ -16,8 +16,7 @@ const ProductiveTimeStats = ({ today, yesterday }) => {
         {t("insights_productive_time")}
       </div>
       <div className="text-xs text-[#575757] max-w-md leading-snug">
-        &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur
-        adipisci&quot;
+        Total productive time today versus the previous day.
       </div>
 
       <div className="flex justify-between items-center gap-6 mt-4">
