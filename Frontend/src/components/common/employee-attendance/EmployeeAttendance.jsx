@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAttendanceStore } from "@/page/protected/admin/employee-attendance/AttendanceStore";
-import { Download, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, Search, ArrowUpDown, ArrowUp, ArrowDown, Info } from "lucide-react";
 import attendanceImage from "@/assets/calendar.png";
 import EmpFilter from "@/components/common/employee-attendance/EmpFilter";
 import PaginationComponent from "@/components/common/Pagination";
@@ -182,8 +182,24 @@ const EmployeeAttendance = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="border-l-2 border-blue-500 pl-4">
-          <h2 className="text-gray-800" style={{ fontSize: "21px", lineHeight: "18px" }}>
+          <h2 className="text-gray-800 flex items-center gap-2" style={{ fontSize: "21px", lineHeight: "18px" }}>
             <span className="font-semibold">{t("att_attendance")}</span>
+            {/* #119 — info icon explains the per-day single-letter codes
+                 (P/A/L/H/D/O/EL) that show in the calendar grid below. */}
+            <span
+              title={[
+                `P = ${t("att_present")}`,
+                `A = ${t("att_absent")}`,
+                `L = ${t("att_late_login")}`,
+                `H = ${t("att_half_day")}`,
+                `O = ${t("att_overtime")}`,
+                `D = ${t("att_day_off")}`,
+                `EL = ${t("att_early_logout")}`,
+              ].join("\n")}
+              className="inline-flex cursor-help"
+            >
+              <Info className="w-4 h-4 text-blue-500" />
+            </span>
           </h2>
           <p className="text-xs text-gray-400 mt-1">{t("att_overview")}</p>
         </div>
