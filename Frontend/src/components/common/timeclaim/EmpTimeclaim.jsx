@@ -17,9 +17,11 @@ import { useTimeClaimStore } from "@/page/protected/admin/time-claim/timeClaimSt
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar";
 import {
   REQUEST_TYPES, STATUS_MAP,
-  createIdleRequest, createOfflineRequest, createAttendanceRequest,
+  createIdleRequest, createOfflineRequest,
+  createAttendanceRequest, createAttendanceRequestByManager,
   fetchIdleAppWebData, fetchTotalOfflineTime, fetchReasons,
 } from "@/page/protected/admin/time-claim/service";
+import { fetchEmployeeList } from "@/page/protected/admin/employee-details/service";
 
 const getRequestTypeOptions = (t) => [
   { key: t("timeclaim.idle"), value: REQUEST_TYPES.IDLE },
@@ -407,7 +409,7 @@ const AttendanceTable = ({ rows, tableLoading, onView }) => {
 
 // ─── Create Request Modal ────────────────────────────────────────────────────
 
-const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
+const CreateRequestModal = ({ open, onClose, requestType, onSuccess, isEmployee = false }) => {
   const { t } = useTranslation();
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -421,36 +423,61 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
   const [saving, setSaving] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [error, setError] = useState("");
+  // `null` = never fetched, string = empty-state message after a fetch completed.
+  const [lookupMessage, setLookupMessage] = useState(null);
+  // Admin-side only: target employee for manager-initiated attendance create.
+  const [employees, setEmployees] = useState([]);
+  const [employeeId, setEmployeeId] = useState("");
 
   const isIdle = requestType === REQUEST_TYPES.IDLE;
   const isOffline = requestType === REQUEST_TYPES.OFFLINE;
   const isAttendance = requestType === REQUEST_TYPES.ATTENDANCE;
+  // Admins creating an attendance request use the manager endpoint, which requires employee_ids.
+  const needsEmployeePicker = !isEmployee && isAttendance;
 
   useEffect(() => {
     if (!open) return;
     setDate(""); setStartTime(""); setEndTime(""); setReason("");
     setActivities([]); setSelectedApps([]); setOfflineSlots([]); setSelectedSlots([]);
     setError("");
+    setLookupMessage(null);
+    setEmployeeId("");
     fetchReasons(requestType).then((list) => setReasons(Array.isArray(list) ? list : []));
-  }, [open, requestType]);
+    if (needsEmployeePicker) {
+      fetchEmployeeList({ status: 1 }).then((list) => setEmployees(Array.isArray(list) ? list : []));
+    } else {
+      setEmployees([]);
+    }
+  }, [open, requestType, needsEmployeePicker]);
 
   const handleGetActivities = async () => {
     if (!date || !startTime || !endTime) { setError("Date, start time and end time are required"); return; }
-    setLoadingActivities(true); setError("");
+    setLoadingActivities(true); setError(""); setLookupMessage(null);
     const res = await fetchIdleAppWebData({ date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}` });
-    setActivities(res?.code === 200 ? (res.data || []) : []);
+    const list = res?.code === 200 ? (res.data || []) : [];
+    setActivities(list);
     setSelectedApps([]);
     setLoadingActivities(false);
+    if (res?.code === 200) {
+      setLookupMessage(list.length === 0 ? "No idle activity found for this time range." : "");
+    } else {
+      setLookupMessage(res?.message || res?.error || "No idle activity found for this time range.");
+    }
   };
 
   const handleGetOfflineSlots = async () => {
     if (!date) { setError("Please select a date"); return; }
-    setLoadingActivities(true); setError("");
+    setLoadingActivities(true); setError(""); setLookupMessage(null);
     const res = await fetchTotalOfflineTime(date);
     const slots = res?.code === 200 ? (res.data?.offlineEntities || res.data || []) : [];
     setOfflineSlots(Array.isArray(slots) ? slots : []);
     setSelectedSlots([]);
     setLoadingActivities(false);
+    if (res?.code === 200) {
+      setLookupMessage(slots.length === 0 ? "No offline periods available for this date." : "");
+    } else {
+      setLookupMessage(res?.message || res?.error || "No offline periods available for this date.");
+    }
   };
 
   const toggleApp = (id) => setSelectedApps((prev) => prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]);
@@ -463,40 +490,76 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (!reason.trim()) { setError(t("timeclaim.ranking")); return; }
+    const reasonText = (reason || "").trim();
+    if (!reasonText) { setError(t("timeclaim.reasonRequired") || "Reason is required"); return; }
     setSaving(true); setError("");
 
     let res;
     if (isIdle) {
       if (!date || !startTime || !endTime) { setError("Date and time range are required"); setSaving(false); return; }
+      if (!selectedApps.length) { setError("Select at least one activity"); setSaving(false); return; }
+      // attendance_id rides on every activity returned by /settings/activity — grab it from the first.
+      const attendanceId = activities.find((a) => a.attendance_id != null)?.attendance_id;
+      if (!attendanceId) { setError("Could not resolve attendance for the selected range."); setSaving(false); return; }
       res = await createIdleRequest({
-        date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}`,
-        request_reason: reason, requestValue: "1", requestId: "", attendanceId: "",
-        selectedApp: selectedApps,
+        date,
+        start_time: `${date}T${startTime}`,
+        end_time: `${date}T${endTime}`,
+        reason: reasonText,
+        activity_ids: selectedApps.map(String),
+        attendance_id: Number(attendanceId),
       });
     } else if (isOffline) {
       const selected = selectedSlots.map((idx) => offlineSlots[idx]).filter(Boolean);
       if (!selected.length) { setError("Select at least one offline period"); setSaving(false); return; }
-      res = await createOfflineRequest({
-        selected_offline_timeclaim: selected.map((s) => ({
-          date, reason, offline_time: s.offlineTime || s.offline_time || 0,
-          start_time: s.from || s.start_time, end_time: s.to || s.end_time,
-        })),
-      });
+      res = await createOfflineRequest(selected.map((s) => ({
+        date,
+        start_time: s.from || s.start_time,
+        end_time: s.to || s.end_time,
+        reason: reasonText,
+        offline_time: Number(s.offlineTime || s.offline_time || 0),
+      })));
     } else if (isAttendance) {
       if (!date || !startTime || !endTime) { setError("Date and time range are required"); setSaving(false); return; }
-      res = await createAttendanceRequest({
-        date, startTime: `${date}T${startTime}`, endTime: `${date}T${endTime}`,
-        request_reason: reason, requestValue: "1", attendanceId: "",
-      });
+      if (needsEmployeePicker) {
+        if (!employeeId) { setError("Please select an employee"); setSaving(false); return; }
+        res = await createAttendanceRequestByManager({
+          date,
+          start_time: `${date}T${startTime}`,
+          end_time: `${date}T${endTime}`,
+          reason: reasonText,
+          employee_ids: [Number(employeeId)],
+        });
+      } else {
+        res = await createAttendanceRequest({
+          date,
+          start_time: `${date}T${startTime}`,
+          end_time: `${date}T${endTime}`,
+          reason: reasonText,
+        });
+      }
     }
 
     setSaving(false);
+    // Manager-endpoint partial-success: 200 with { successResponse, errorResponse }.
+    if (needsEmployeePicker && res?.code === 200 && Array.isArray(res.data?.errorResponse)) {
+      const { successResponse = [], errorResponse = [] } = res.data;
+      if (errorResponse.length > 0 && successResponse.length === 0) {
+        setError(errorResponse[0]?.message || "Failed to create request");
+        return;
+      }
+      if (errorResponse.length > 0) {
+        setError(`Created ${successResponse.length}; ${errorResponse.length} failed: ${errorResponse[0]?.message || ""}`);
+      }
+      onSuccess?.();
+      onClose(false);
+      return;
+    }
     if (res?.code === 200) {
       onSuccess?.();
       onClose(false);
     } else {
-      setError(res?.msg || "Failed to create request");
+      setError(res?.message || res?.msg || res?.error || "Failed to create request");
     }
   };
 
@@ -510,6 +573,27 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
         {error && <p className="text-red-500 text-xs bg-red-50 p-2 rounded">{error}</p>}
 
         <div className="space-y-4">
+          {/* Employee picker — admin-initiated attendance create only */}
+          {needsEmployeePicker && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("employee")}</label>
+              <select
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400"
+              >
+                <option value="">
+                  {employees.length === 0 ? (t("loadingText") || "Loading…") : "Select an employee"}
+                </option>
+                {employees.map((emp) => {
+                  const id = emp.id ?? emp.user_id ?? emp.employee_id;
+                  const name = emp.full_name || emp.name || [emp.first_name, emp.last_name].filter(Boolean).join(" ") || `#${id}`;
+                  return <option key={id} value={id}>{name}{emp.emp_code ? ` (${emp.emp_code})` : ""}</option>;
+                })}
+              </select>
+            </div>
+          )}
+
           {/* Date */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t("timeclaim.date")}</label>
@@ -536,6 +620,11 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
               <Button size="sm" variant="outline" onClick={handleGetActivities} disabled={loadingActivities} className="text-xs mb-2">
                 {loadingActivities ? t("loadingText") : t("timeclaim.getActivityList")}
               </Button>
+              {!loadingActivities && activities.length === 0 && lookupMessage && (
+                <p className="text-[12px] text-slate-500 bg-slate-50 border border-slate-200 rounded px-3 py-2">
+                  {lookupMessage}
+                </p>
+              )}
               {activities.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded text-xs">
                   <table className="w-full">
@@ -572,6 +661,11 @@ const CreateRequestModal = ({ open, onClose, requestType, onSuccess }) => {
               <Button size="sm" variant="outline" onClick={handleGetOfflineSlots} disabled={loadingActivities || !date} className="text-xs mb-2">
                 {loadingActivities ? t("loadingText") : t("timeclaim.getOfflinePeriods")}
               </Button>
+              {!loadingActivities && offlineSlots.length === 0 && lookupMessage && (
+                <p className="text-[12px] text-slate-500 bg-slate-50 border border-slate-200 rounded px-3 py-2">
+                  {lookupMessage}
+                </p>
+              )}
               {offlineSlots.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded text-xs">
                   <table className="w-full">
@@ -663,6 +757,11 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
   const [viewRow, setViewRow] = useState(null);
   const [deleteRow, setDeleteRow] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = (type, msg) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
   const debounceRef = useRef(null);
   const initialLoad = useRef(true);
 
@@ -735,7 +834,15 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
     setDeleteRow(null);
   };
 
-  const handleAutoApproveToggle = () => store.toggleAutoApprove();
+  const handleAutoApproveToggle = async () => {
+    const prev = autoApprove;
+    const result = await store.toggleAutoApprove();
+    if (result?.code === 200 && !result?.error) {
+      showToast("success", t(prev ? "timeclaim.autoApproveOff" : "timeclaim.autoApproveOn"));
+    } else {
+      showToast("error", result?.error || result?.message || result?.msg || t("timeclaim.autoApproveFailed"));
+    }
+  };
 
   if (loading) {
     return (
@@ -757,6 +864,11 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-[13px] font-medium text-white ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex relative items-start justify-between gap-4 mb-8">
         <div className="border-l-2 border-blue-500 pl-4">
@@ -769,13 +881,15 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Button
-            size="lg"
-            className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-1" /> {t("timeclaim.createRequest")}
-          </Button>
+          {filters.requestType !== REQUEST_TYPES.BREAK && (
+            <Button
+              size="lg"
+              className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-1" /> {t("timeclaim.createRequest")}
+            </Button>
+          )}
           <div className="hidden lg:flex items-end gap-1">
             <img alt="timeclaim" className="w-24" src={EmpTimeclaimLogo} />
           </div>
@@ -918,6 +1032,7 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
         onClose={setCreateOpen}
         requestType={filters.requestType}
         onSuccess={fetchData}
+        isEmployee={isEmployee}
       />
     </div>
   );

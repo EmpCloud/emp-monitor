@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogClose,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import CustomSelect from "@/components/common/elements/CustomSelect";
 import PaginationComponent from "@/components/common/Pagination";
@@ -127,6 +129,8 @@ function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-[85vw] w-fit lg:max-w-[75vw] max-h-[90vh] rounded-2xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">{activeSS?.name || "Screenshot preview"}</DialogTitle>
+        <DialogDescription className="sr-only">Preview of the selected screenshot</DialogDescription>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50/80">
           <div className="min-w-0">

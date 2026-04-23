@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { bulkRegisterEmployees } from "@/page/protected/admin/employee-details/service";
@@ -43,6 +43,8 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[95vw] sm:max-w-[550px] rounded-3xl p-0 border-0 shadow-2xl overflow-hidden gap-0 [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">{t("emp_bulk_register")}</DialogTitle>
+        <DialogDescription className="sr-only">Upload a file to bulk-register employees</DialogDescription>
         <div className="relative px-7 py-5 flex items-center justify-between"
           style={{ background: "linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #7c3aed 100%)" }}>
           <h2 className="text-white text-xl font-bold tracking-tight">{t("emp_bulk_register")}</h2>

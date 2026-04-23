@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Eye, EyeOff } from "lucide-react";
@@ -12,7 +12,8 @@ const UniPass = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md !rounded-xl p-0 text-white">
         <DialogHeader className=" bg-gradient-to-r from-[#727DFB] to-[#4B4395] p-4 rounded-xl text-white">
-          <h2 className="text-lg font-semibold ">{t("unipass_uninstall_password")}</h2>
+          <DialogTitle className="text-lg font-semibold text-white">{t("unipass_uninstall_password")}</DialogTitle>
+          <DialogDescription className="sr-only">Update the uninstall password for the agent</DialogDescription>
         </DialogHeader>
          <div className="px-5 pb-4">
             <label className="text-sm text-gray-600">{t("emp_password")}</label>

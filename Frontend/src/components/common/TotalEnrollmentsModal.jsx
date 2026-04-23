@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -135,12 +135,12 @@ export default function TotalEnrollmentsModal({
           {/* Header Section */}
           <div className="flex justify-between items-start mb-8 relative">
             <div className="flex flex-col gap-2 relative z-10 w-2/3">
-              <h2 className="text-2xl font-bold text-[#1A202C]">
+              <DialogTitle className="text-2xl font-bold text-[#1A202C]">
                 {title}
-              </h2>
-              <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-400 leading-relaxed max-w-sm">
                 {t("enrollments.description")}
-              </p>
+              </DialogDescription>
             </div>
 
             <div className="absolute right-0 top-[-20px] w-28 h-28 hidden sm:block z-0 opacity-90">

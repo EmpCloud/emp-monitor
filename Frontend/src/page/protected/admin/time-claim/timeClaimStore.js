@@ -189,8 +189,9 @@ export const useTimeClaimStore = create((set, get) => ({
 
     toggleAutoApprove: async () => {
         const newStatus = !get().autoApprove;
-        const result = await toggleAutoApprove(newStatus ? 1 : 0);
-        if (result?.code === 200) set({ autoApprove: newStatus });
+        const result = await toggleAutoApprove(newStatus);
+        // Backend returns code:200 even on validation error — check for error field too.
+        if (result?.code === 200 && !result?.error) set({ autoApprove: newStatus });
         return result;
     },
 

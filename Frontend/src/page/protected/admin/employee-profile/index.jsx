@@ -50,8 +50,9 @@ const EmployeeProfile = () => {
   const employee = location.state?.employee;
   const routeBase = location.pathname.startsWith("/non-admin") ? "/non-admin" : "/admin";
   const [activeTab, setActiveTab] = useState("productivity");
-  const [startDate, setStartDate] = useState(moment().subtract(6, "days").format("YYYY-MM-DD"));
-  const [endDate, setEndDate] = useState(moment().format("YYYY-MM-DD"));
+  const today = moment().format("YYYY-MM-DD");
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const [editOpen, setEditOpen] = useState(false);
   const [filterData, setFilterData] = useState({ roles: [], locations: [], shifts: [] });
 
