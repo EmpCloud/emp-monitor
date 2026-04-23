@@ -127,8 +127,7 @@ const EmpNotification = () => {
             <span className="font-semibold">{t("notification.notifications")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1 max-w-sm leading-tight">
-            &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-            consectetur adipisci&quot;
+            Recent alerts and updates for monitored employees.
           </p>
         </div>
         <div className="flex items-end">

@@ -45,8 +45,8 @@ const ProductivePercentage = ({ today, yesterday, organization }) => {
           {t("insights_productivity_percentage")}
         </div>
         <div className="text-xs text-slate-400 mt-1 max-w-md leading-snug">
-          &quot;Lorem ipsum quia dolor sit porro quisquam est qui amet
-          consectetur adipisci&quot;
+          Productive time as a percentage of total tracked time, compared to the
+          organization average.
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
