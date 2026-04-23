@@ -23,7 +23,7 @@ function TimesheetFilters({
 }) {
     const { t } = useTranslation();
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-4 mb-9">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-9">
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     {t("location")}
