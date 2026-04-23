@@ -198,8 +198,16 @@ export const getDepartmentsByLocation = async (locationId) => {
 
 export const deleteDeptFromLocation = async ({ locationId, departmentId }) => {
     try {
+        // Backend expects department_id as a string (comma-separated IDs supported).
+        // Sending a number crashes the validator at `department_id.split(",")`
+        // and surfaces a misleading "Failed To Delete Departments." error.
         const { data } = await apiService.apiInstance.delete("/location/delete-dept-location", {
-            data: { location_id: locationId, department_id: departmentId },
+            data: {
+                location_id: locationId,
+                department_id: Array.isArray(departmentId)
+                    ? departmentId.map(String).join(",")
+                    : String(departmentId),
+            },
         });
         if (data?.code === 200) {
             return { success: true, message: data.message || "Department removed from location" };
