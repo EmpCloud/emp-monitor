@@ -23,15 +23,26 @@ const LABEL_TO_I18N_KEY = {
   "Select Option": "usbDetection.selectOption",
 };
 
+// #129/#130 — Radix Select forbids empty-string SelectItem values. We
+// previously filtered such items out, which silently killed the "All X"
+// reset option that callers pass as `{ value: "", label: "All ..." }` —
+// once a user picked anything, there was no way back to "All". Use a
+// sentinel internally so the All row renders, and translate it back to
+// the empty string callers expect when bubbling onChange up.
+const ALL_SENTINEL = "__all__";
+
+const isAllOption = (v) => v === "" || v === null || v === undefined;
+
 const CustomSelect = ({ placeholder, items, onChange, selected, width }) => {
   const { t } = useTranslation();
   const translatedPlaceholder = LABEL_TO_I18N_KEY[placeholder] ? t(LABEL_TO_I18N_KEY[placeholder]) : placeholder;
+  const handleChange = (v) => onChange(v === ALL_SENTINEL ? "" : v);
   return (
     <div>
       <Select
-        onValueChange={onChange}
+        onValueChange={handleChange}
         value={
-          selected !== undefined && selected !== null
+          selected !== undefined && selected !== null && selected !== ""
             ? String(selected)
             : undefined
         }
@@ -48,15 +59,18 @@ const CustomSelect = ({ placeholder, items, onChange, selected, width }) => {
             width: "var(--radix-select-trigger-width)",
           }}
         >
-          {items?.filter((d) => d.value !== "" && d.value !== null && d.value !== undefined).map((d, i) => (
-            <SelectItem
-              key={`${d.value}-${i}`}
-              value={String(d.value)}
-              className="text-sm"
-            >
-              {LABEL_TO_I18N_KEY[d.label] ? t(LABEL_TO_I18N_KEY[d.label]) : d.label}
-            </SelectItem>
-          ))}
+          {items?.map((d, i) => {
+            const itemValue = isAllOption(d.value) ? ALL_SENTINEL : String(d.value);
+            return (
+              <SelectItem
+                key={`${itemValue}-${i}`}
+                value={itemValue}
+                className="text-sm"
+              >
+                {LABEL_TO_I18N_KEY[d.label] ? t(LABEL_TO_I18N_KEY[d.label]) : d.label}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>
