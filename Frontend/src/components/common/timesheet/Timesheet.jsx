@@ -199,7 +199,8 @@ const EmployeeTimesheet = () => {
                         value={String(pagination.pageSize)}
                         onValueChange={handlePageSizeChange}
                     >
-                        <SelectTrigger className="h-8 w-[70px] text-[13px] rounded-lg border-gray-200">
+                        {/* #123 — `w-[70px]` clipped "100" behind the chevron. */}
+                        <SelectTrigger className="h-8 w-24 text-[13px] rounded-lg border-gray-200">
                             <SelectValue placeholder="10" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
