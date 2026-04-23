@@ -669,10 +669,16 @@ export default function EmpWebAppUsage() {
               onDateRangeChange={handleDateRangeChange}
             />
           </div>
-          <Info
-            className="w-4 h-4 text-blue-500 shrink-0 cursor-help"
+          {/* #111 — `title` on a lucide SVG renders as the SVG's
+               <title> element, which most browsers don't surface as a
+               hover tooltip. Wrap in a <span title=...> instead so the
+               native HTML tooltip actually fires. */}
+          <span
             title="Custom Range allows maximum 30 days selection"
-          />
+            className="inline-flex shrink-0 cursor-help"
+          >
+            <Info className="w-4 h-4 text-blue-500" />
+          </span>
         </div>
       </div>
 
