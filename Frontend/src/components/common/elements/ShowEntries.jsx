@@ -15,7 +15,7 @@ export default function ShowEntries({ value, onChange }) {
     <div className="flex items-center gap-2">
       <span className="text-[13px] text-gray-500 font-medium">{t("show")}</span>
       <Select value={String(value)} onValueChange={onChange}>
-        <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
+        <SelectTrigger className="h-8 w-20 text-[13px] rounded-lg border-gray-200">
           <SelectValue placeholder="10" />
         </SelectTrigger>
         <SelectContent className="rounded-xl">

@@ -206,7 +206,7 @@ const ViewReportModal = ({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="h-8 w-16 text-xs rounded-lg border-gray-200">
+                <SelectTrigger className="h-8 w-20 text-xs rounded-lg border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

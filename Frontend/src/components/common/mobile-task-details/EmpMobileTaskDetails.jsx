@@ -105,7 +105,7 @@ const EmpMobileTaskDetails = () => {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
                 <div className="flex items-center gap-2">
                     <span className="text-[13px] text-[#424242] font-medium">{t("show")}</span>
-                    <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}><SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200"><SelectValue placeholder="10" /></SelectTrigger><SelectContent className="rounded-xl">{["10", "25", "50", "100"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select>
+                    <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}><SelectTrigger className="h-8 w-20 text-[13px] rounded-lg border-gray-200"><SelectValue placeholder="10" /></SelectTrigger><SelectContent className="rounded-xl">{["10", "25", "50", "100"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select>
                     <span className="text-[13px] text-[#424242] font-medium">{t("entries")}</span>
                 </div>
                 <div className="relative w-full max-w-xs"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input placeholder={t("search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 rounded-full bg-slate-50 border-slate-200 text-xs" /></div>
