@@ -60,8 +60,10 @@ const EmpScreenshotLogs = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
+      {/* Filters — #97 — see EmpEmailActivityLog for the same fix.
+           min-w-0 on each item + relax lg packing density so the date picker
+           and long CustomSelect labels don't visually overlap neighbors. */}
+      <div className="[&>*]:min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
           <CustomSelect placeholder="All Locations" items={locations} selected={filters.locationId} onChange={handleLocationChange} />
