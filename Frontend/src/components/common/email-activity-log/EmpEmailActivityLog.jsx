@@ -77,8 +77,11 @@ const EmpEmailActivityLog = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-x-6 gap-y-4 mb-5">
+      {/* Filters — #98 — give each grid item min-w-0 so the date picker / long
+           CustomSelect labels can shrink instead of pushing into the next
+           column at common laptop widths. Also drop lg from 3 cols (cramped at
+           1024-1280px) to 2; xl restores 3, 2xl keeps 6. */}
+      <div className="[&>*]:min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-x-6 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
           <CustomSelect placeholder="All Locations" items={locations} selected={filters.locationId} onChange={handleLocationChange} />
