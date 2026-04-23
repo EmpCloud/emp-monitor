@@ -999,6 +999,7 @@
   "ts_track_desc": "Acompanhe as horas de trabalho, horários de entrada e saída",
   "ts_select_date_ranges": "Selecionar intervalos de datas",
   "ts_date_range_tooltip": "Clique para selecionar uma data inicial e final",
+  "dateRangeTooltip": "Clique para selecionar um intervalo de datas inicial e final.",
   "ts_exporting": "Exportando…",
   "ts_columns": "Colunas",
   "ts_select_all": "Selecionar tudo",

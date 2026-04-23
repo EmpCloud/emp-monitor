@@ -999,6 +999,7 @@
   "ts_track_desc": "Lacak jam kerja karyawan, waktu masuk dan keluar",
   "ts_select_date_ranges": "Pilih Rentang Tanggal",
   "ts_date_range_tooltip": "Klik untuk memilih tanggal mulai dan akhir",
+  "dateRangeTooltip": "Klik untuk memilih rentang tanggal mulai dan akhir.",
   "ts_exporting": "Mengekspor…",
   "ts_columns": "Kolom",
   "ts_select_all": "Pilih Semua",

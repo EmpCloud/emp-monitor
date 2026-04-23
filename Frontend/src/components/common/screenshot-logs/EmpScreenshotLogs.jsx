@@ -77,7 +77,9 @@ const EmpScreenshotLogs = () => {
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
             {t("timeclaim.selectDateRanges")} :
-            <Info className="w-3.5 h-3.5 text-blue-500" />
+            <span title={t("dateRangeTooltip")}>
+              <Info className="w-3.5 h-3.5 text-blue-500 cursor-help" />
+            </span>
           </label>
           <div className="relative">
             <DateRangeCalendar
