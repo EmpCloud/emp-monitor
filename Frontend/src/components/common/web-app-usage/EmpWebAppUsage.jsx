@@ -498,7 +498,7 @@ function CustomizeModal() {
               value={String(modalPageSize)}
               onValueChange={(v) => setModalPageSize(parseInt(v, 10))}
             >
-              <SelectTrigger className="h-8 w-16 text-sm rounded-lg border-gray-200">
+              <SelectTrigger className="h-8 w-20 text-sm rounded-lg border-gray-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -732,7 +732,7 @@ export default function EmpWebAppUsage() {
             value={String(cTablePageSize)}
             onValueChange={(v) => setCTablePageSize(parseInt(v, 10))}
           >
-            <SelectTrigger className="h-8 w-16 text-[13px] rounded-lg border-gray-200">
+            <SelectTrigger className="h-8 w-20 text-[13px] rounded-lg border-gray-200">
               <SelectValue placeholder="10" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
