@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   UserPlus, Upload, RefreshCw, UserCheck, UserX, Trash2,
   Download, Search, Settings, ArrowUpDown, Eye, Edit, Trash,
-  Monitor, FileDiff, FileBox, Loader2, UserCog,
+  Monitor, FileDiff, FileBox, Loader2, UserCog, Clock3,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,9 @@ import EditEmployeeModal from "./EditEmployeeModal";
 import BulkUpdateModal from "./BulkUpdateModal";
 import BulkRegisterModal from "./BulkRegisterModal";
 import DeletedUsersModal from "./DeletedUsersModal";
+import AssignShiftDialog from "./AssignShiftDialog";
+import AssignManagerDialog from "./AssignManagerDialog";
+import AssignedManagersDialog from "./AssignedManagersDialog";
 import {
   deleteEmployee, deleteMultipleEmployees,
   suspendMultipleEmployees, activateMultipleEmployees,
@@ -100,6 +103,9 @@ export default function EmployeeDetailsTable({
   const [bulkRegisterOpen, setBulkRegisterOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [deletedUsersOpen, setDeletedUsersOpen] = useState(false);
+  const [assignShiftOpen, setAssignShiftOpen] = useState(false);
+  const [assignManagerOpen, setAssignManagerOpen] = useState(false);
+  const [viewManagersFor, setViewManagersFor] = useState(null);
 
   // Confirm dialog state
   const [confirm, setConfirm] = useState(null); // { type, ids, label }
@@ -285,6 +291,18 @@ export default function EmployeeDetailsTable({
                 <UserX size={12} /> {t("emp_suspend")}
               </Button>
             )}
+            {activeTab === "active" && (
+              <Button onClick={() => setAssignShiftOpen(true)} size="sm"
+                className="h-8 px-3 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-[12px] gap-1.5">
+                <Clock3 size={12} /> {t("emp_assign_shift")}
+              </Button>
+            )}
+            {activeTab === "active" && (
+              <Button onClick={() => setAssignManagerOpen(true)} size="sm"
+                className="h-8 px-3 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-[12px] gap-1.5">
+                <UserCog size={12} /> {t("emp_assign_manager")}
+              </Button>
+            )}
             {(activeTab === "suspended" || activeTab === "deleted") && (
               <Button onClick={openBulkActivate} size="sm"
                 className="h-8 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[12px] gap-1.5">
@@ -435,8 +453,8 @@ export default function EmployeeDetailsTable({
                           <Trash size={13} />
                         </button>
                       )}
-                      <button className="action-icon bg-sky-50 text-sky-500 hover:bg-sky-100" title={t("emp_view")}
-                        onClick={() => navigate(`${employeeProfilePath}?id=${emp.id}`, { state: { employee: emp } })}>
+                      <button className="action-icon bg-sky-50 text-sky-500 hover:bg-sky-100" title={t("emp_view_assigned_managers")}
+                        onClick={() => setViewManagersFor(emp)}>
                         <Eye size={13} />
                       </button>
                     </div>
@@ -481,6 +499,28 @@ export default function EmployeeDetailsTable({
       <BulkRegisterModal open={bulkRegisterOpen} onOpenChange={setBulkRegisterOpen} onSuccess={onRefresh} />
       <BulkUpdateModal   open={bulkUpdateOpen}   onOpenChange={setBulkUpdateOpen}   onSuccess={onRefresh} />
       <DeletedUsersModal isOpen={deletedUsersOpen} onClose={() => setDeletedUsersOpen(false)} />
+
+      <AssignShiftDialog
+        open={assignShiftOpen}
+        onOpenChange={setAssignShiftOpen}
+        userIds={selectedRows}
+        shifts={filterData.shifts ?? []}
+        onResult={(type, msg) => showToast(type, msg)}
+        onSuccess={() => { setSelectedRows([]); onRefresh?.(); }}
+      />
+      <AssignManagerDialog
+        open={assignManagerOpen}
+        onOpenChange={setAssignManagerOpen}
+        userIds={selectedRows}
+        allRoles={filterData.roles ?? []}
+        onResult={(type, msg) => showToast(type, msg)}
+        onSuccess={() => { setSelectedRows([]); onRefresh?.(); }}
+      />
+      <AssignedManagersDialog
+        open={!!viewManagersFor}
+        onOpenChange={(v) => { if (!v) setViewManagersFor(null); }}
+        employee={viewManagersFor}
+      />
 
       {/* Confirm Dialog */}
       <ConfirmDialog
