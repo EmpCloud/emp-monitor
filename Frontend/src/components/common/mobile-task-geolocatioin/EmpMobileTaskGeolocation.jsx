@@ -55,8 +55,10 @@ const EmpMobileTaskGeolocation = () => {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+            {/* Filters — #115 — dropped the legacy col-span tweaks on the
+                 date column now that DateRangeCalendar itself is
+                 `block w-full min-w-0`. All four columns shrink evenly. */}
+            <div className="[&>*]:min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
                 <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1">{t("gps.gpsStatus")}</label>
                     <CustomSelect placeholder={t("gps.all")} items={STATUS_OPTIONS} selected={statusFilter} onChange={setStatusFilter} width="full" />
@@ -70,8 +72,17 @@ const EmpMobileTaskGeolocation = () => {
                         onChange={setSelectedEmployee}
                         width="full"
                     />
+                    {/* #115 — if the API returned zero employees the dropdown
+                         panel is empty and appears broken. Tell the user why,
+                         and point at the GPS Status filter that narrows the
+                         set. Hidden while loading so it doesn't flash. */}
+                    {!loading && employees.length === 0 && (
+                        <p className="mt-1 text-[11px] text-slate-400">
+                            No employees match the current GPS status filter.
+                        </p>
+                    )}
                 </div>
-                <div className="sm:col-span-2 lg:col-span-1 min-w-0">
+                <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1">{t("gps.dateRange")}</label>
                     <DateRangeCalendar
                         startDate={startDate}
