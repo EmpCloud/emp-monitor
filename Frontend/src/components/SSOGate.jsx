@@ -108,8 +108,17 @@ export default function SSOGate({ children }) {
         // Also set the bare token (used by some API interceptors)
         localStorage.setItem('token', accessToken);
 
-        // Remember where to return to in EMP Cloud
-        localStorage.setItem('empcloud_return_url', window.location.origin.replace(/monitor[^.]*/i, 'cloud') + '/dashboard');
+        // Remember where to return to in EMP Cloud.
+        // For empmonitor.empcloud.com → empcloud.com (strip the empmonitor subdomain).
+        // For other hosts (localhost, custom domains) leave unchanged.
+        const host = window.location.host;
+        const empCloudHost = /^empmonitor\./i.test(host)
+          ? host.replace(/^empmonitor\./i, '')
+          : host;
+        localStorage.setItem(
+          'empcloud_return_url',
+          `${window.location.protocol}//${empCloudHost}/dashboard`,
+        );
 
         // Navigate based on role
         const dest = is_admin ? '/admin/dashboard'

@@ -121,10 +121,16 @@ export default function NonAdminTopBar() {
           <span className="hidden lg:inline">{t("topbar_help")}</span>
         </button>
 
-        <div className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-lg hover:bg-slate-100 transition-colors">
+        <button
+          type="button"
+          onClick={() => navigate("/non-admin/behaviour/alertnotification")}
+          title={t("alerts")}
+          aria-label={t("alerts")}
+          className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-lg hover:bg-slate-100 transition-colors"
+        >
           <Bell className="h-5 w-5 text-gray-600" />
           <span className="absolute top-1 right-1.5 h-2 w-2 rounded-full bg-red-500" />
-        </div>
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
