@@ -23,7 +23,7 @@
     "author": "Vikash Verma",
     "license": "ISC",
     "dependencies": {
-        "@hapi/joi": "^17.1.1",
+        "@hapi/joi": "^16.1.8",
         "@sendgrid/mail": "^8.1.4",
         "aes256": "^1.1.0",
         "async": "^3.2.6",
@@ -53,7 +53,7 @@
         "is-mac-address": "^1.0.4",
         "is-valid-domain": "0.1.6",
         "isomorphic-fetch": "^3.0.0",
-        "joi": "^17.13.3",
+        "joi": "^14.3.1",
         "jsonwebtoken": "^9.0.3",
         "metadata-scraper": "^0.2.61",
         "mocha": "^11.0.1",

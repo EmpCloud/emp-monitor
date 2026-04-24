@@ -1,8 +1,15 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || `https://test-monitor-api.empcloud.com/api/v3`;
-const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_URL || `wss://test-monitor-ws.empcloud.com`;
-const BACKEND_V4_URL = import.meta.env.VITE_BACKEND_V4_URL || `https://test-monitor-api.empcloud.com`;
+const runtimeOrigin =
+    typeof window !== 'undefined' ? window.location.origin : '';
+const runtimeSocketUrl =
+    typeof window !== 'undefined'
+        ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
+        : '';
+
+const BASE_URL = import.meta.env.VITE_API_URL || `${runtimeOrigin}/api/v3`;
+const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_URL || runtimeSocketUrl;
+const BACKEND_V4_URL = import.meta.env.VITE_BACKEND_V4_URL || runtimeOrigin;
 
 const authInstance = axios.create({
     baseURL: BASE_URL,

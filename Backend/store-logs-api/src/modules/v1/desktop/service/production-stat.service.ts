@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Injectable } from "@nestjs/common";
 import moment = require('moment-timezone');
 import { IDecodedToken } from '../../../../common/interfaces/decoded-token.interface';

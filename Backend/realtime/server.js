@@ -9,10 +9,10 @@ const morgan = require('morgan');
 
 const { onMessageHandler, onCloseHandler } = require('./source/handler/datahandler');
 
-// For count to create cluster workers
-// Adjust the number of CPU cores based on your server's capabilities
-// const numCPUs = os.cpus().length; // Automatically use all available CPU cores
-const numCPUs = 2;
+// Keep the worker count aligned with the actual host capacity.
+const hostCpuCount = os.cpus().length || 1;
+const requestedWorkers = Number(process.env.WS_WORKER_COUNT || hostCpuCount);
+const numCPUs = Math.max(1, Math.min(hostCpuCount, requestedWorkers || 1));
 
 if (cluster.isMaster) {
     console.log(`Master process ${process.pid} is running`);

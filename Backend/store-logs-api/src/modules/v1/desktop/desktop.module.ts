@@ -12,17 +12,13 @@ import { ConfigModule } from '@nestjs/config';
 import { UserFeatureService } from './service/user-feature.service';
 import { SystemLogsService } from './service/system-logs.service';
 import { SequelizeDbModule } from 'src/database/sequelize-db/sequelize-db.module';
-import { NestEventModule } from 'nest-event';
 import { ProductionStatsService } from './service/production-stat.service';
-import { DataLogEventHandler } from './events/logs-recorded.event';
-import { ExternalRecordedAPICall } from './events/external-recorded.event';
 import { Logger } from '../../../common/errlogger/logger';
 
 
 @Module({
     imports: [
         ConfigModule.forRoot(),
-        NestEventModule,
         MongooseDBModule,
         HelperModule,
         SequelizeDbModule,
@@ -30,6 +26,6 @@ import { Logger } from '../../../common/errlogger/logger';
         HttpModule
     ],
     controllers: [DesktopController],
-    providers: [ActivityService, ScreenshotService, ScreenRecordService, SystemLogsService, UserFeatureService, ProductionStatsService, DataLogEventHandler, ExternalRecordedAPICall, Logger]
+    providers: [ActivityService, ScreenshotService, ScreenRecordService, SystemLogsService, UserFeatureService, ProductionStatsService, Logger]
 })
 export class DesktopModule { }
