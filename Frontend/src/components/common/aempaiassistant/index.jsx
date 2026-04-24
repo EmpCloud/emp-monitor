@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Minus, X, Maximize2, Minimize2 } from "lucide-react";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import aiLogo from "@/assets/ailogo.png";
 import GenieEffect from "./GenieEffect";
 import AiSidebar from "./AiSidebar";
