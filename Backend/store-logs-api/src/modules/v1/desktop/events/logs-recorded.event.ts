@@ -9,7 +9,7 @@ import { forEachSeries } from 'async';
 import { IDecodedToken } from 'src/common/interfaces/decoded-token.interface';
 import { timesByDate } from '../utils/shift.util';
 import { Logger } from '../../../../common/errlogger/logger';
-import { RedisService } from '@liaoliaots/nestjs-redis';
+import { RedisService } from 'src/common/helper/redis.helper.service';
 
 const { MongoClient } = require('mongodb');
 
@@ -78,7 +78,7 @@ export class DataLogEventHandler extends EventEmitter {
             const collection = db.collection('failedactivitydatas');
             const insertResult = await collection.insertMany([params]);
             client.close();
-            let data = await this.redisService.getOrThrow().get('failedDataCronJobs');
+            let data = await this.redisService.getClient().get('failedDataCronJobs');
             if (!data || +data == 0) {
                 try {
                     const res = await this.httpService.get(process.env.CRONS_JOBS_URL, params).toPromise();

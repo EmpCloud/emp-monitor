@@ -2,15 +2,14 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { RouterModule, Routes } from 'nest-router';
 import { HelperModule } from './common/helper/helper.module';
 import { MongooseDBModule } from './database/mongoose-db/mongoose-db.module';
 import { AuthModule } from './modules/v1/auth/auth.module';
 import { DesktopModule } from './modules/v1/desktop/desktop.module';
 import { AuthMiddleware } from './modules/v1/auth/auth.middleware';
+import { DesktopController } from './modules/v1/desktop/desktop.controller';
 import { TimesheetModule } from './modules/v1/timesheet/timesheet.module';
-
-const routes: Routes = [{ path: 'v1', children: [DesktopModule, TimesheetModule] }];
+import { TimesheetController } from './modules/v1/timesheet/timesheet.controller';
 
 @Module({
   imports: [
@@ -18,8 +17,7 @@ const routes: Routes = [{ path: 'v1', children: [DesktopModule, TimesheetModule]
     MongooseDBModule,
     HelperModule, AuthModule,
     DesktopModule,
-    TimesheetModule,
-    RouterModule.forRoutes(routes)
+    TimesheetModule
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -27,7 +25,6 @@ const routes: Routes = [{ path: 'v1', children: [DesktopModule, TimesheetModule]
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('/v1');
-    // consumer.apply(AuthMiddleware).forRoutes('/v1/timesheet');
+    consumer.apply(AuthMiddleware).forRoutes(DesktopController, TimesheetController);
   }
 }

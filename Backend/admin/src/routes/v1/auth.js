@@ -30,8 +30,10 @@ const moment = require('moment-timezone');
 const authModel = require('../v3/auth/auth.model');
 const redis = require('../v3/auth/services/redis.service');
 const jwtService = require('../v3/auth/services/jwt.service');
+const passwordService = require('../v3/auth/services/password.service');
 const Comman = require('../../utils/helpers/Common');
 const defaultSettings = require('../v3/auth/default.settings.json');
+const mySql = require('../../database/MySqlConnection').getInstance();
 
 const router = express.Router();
 
@@ -39,6 +41,7 @@ const router = express.Router();
 
 const EMPCLOUD_API_URL = (process.env.EMPCLOUD_API_URL || 'http://localhost:6001/api/v1').replace(/\/+$/, '');
 const EMPCLOUD_LOGIN_TIMEOUT_MS = 8000;
+const ALLOW_LOCAL_V1_ADMIN_LOGIN = process.env.ALLOW_LOCAL_V1_ADMIN_LOGIN === 'true';
 
 function validationFail(res, message) {
   return res.status(400).json({ code: 400, data: null, error: 'Validation', message });
@@ -88,6 +91,38 @@ async function findAdminByEmail(email) {
   return rows && rows[0] ? rows[0] : null;
 }
 
+/**
+ * Local self-hosted fallback for /api/v1/auth/admin.
+ *
+ * Some self-hosted deployments do not have EmpCloud available. In that case
+ * we allow a normal local password check against the admin owner user row.
+ */
+async function loginAgainstLocalAdmin(email, password) {
+  try {
+    const [row] = await mySql.query(
+      `SELECT u.id, u.password
+       FROM users u
+       JOIN organizations o ON o.user_id = u.id
+       WHERE u.email = ? OR u.a_email = ?
+       LIMIT 1`,
+      [email, email],
+    );
+
+    if (!row || !row.password) {
+      return { ok: false, status: 400, message: 'Invalid email or password.' };
+    }
+
+    const { decoded, error } = await passwordService.decrypt(row.password, process.env.CRYPTO_PASSWORD);
+    if (error || decoded !== password) {
+      return { ok: false, status: 400, message: 'Invalid email or password.' };
+    }
+
+    return { ok: true, user: { id: row.id, email } };
+  } catch (err) {
+    return { ok: false, status: 0, message: `Local admin login failed: ${err.message}` };
+  }
+}
+
 // ---- Route: POST /api/v1/auth/admin ---------------------------------------
 
 router.post('/admin', async (req, res) => {
@@ -99,7 +134,10 @@ router.post('/admin', async (req, res) => {
     }
 
     // 1. Authenticate against EmpCloud — never trust our own password here.
-    const cloud = await loginAgainstEmpCloud(email.trim(), password);
+    let cloud = await loginAgainstEmpCloud(email.trim(), password);
+    if (!cloud.ok && ALLOW_LOCAL_V1_ADMIN_LOGIN) {
+      cloud = await loginAgainstLocalAdmin(email.trim(), password);
+    }
     if (!cloud.ok) {
       if (cloud.status === 0) {
         return res.status(502).json({

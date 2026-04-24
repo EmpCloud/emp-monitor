@@ -24,8 +24,8 @@ async function bootstrap() {
     // Add global interceptor for calculating execution time for completing any req handler
     app.useGlobalInterceptors(new ExecutionTimeInterceptor());
 
-    // prefixing 'api' to all routes
-    app.setGlobalPrefix('api');
+    // Keep self-hosted routes stable without relying on nest-router.
+    app.setGlobalPrefix('api/v1');
 
     SwaggerModule.setup('/api/v1/explorer', app, SwaggerModule.createDocument(app, new DocumentBuilder()
         .setTitle('Emp Service Api Documentation')
