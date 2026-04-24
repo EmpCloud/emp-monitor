@@ -25,8 +25,6 @@ const EmpResellerDashboard = () => {
     const toggleAllStorageAction = useResellerStore((s) => s.toggleAllStorage);
     const clientLoginAction = useResellerStore((s) => s.clientLogin);
     const fetchAssigned = useResellerStore((s) => s.fetchAssignedEmployees);
-    const downloadEmpStats = useResellerStore((s) => s.downloadEmployeeStats);
-    const downloadMgrStats = useResellerStore((s) => s.downloadManagerStats);
     const clearMessages = useResellerStore((s) => s.clearMessages);
 
     useEffect(() => { loadDashboard(); }, []);
@@ -124,8 +122,6 @@ const EmpResellerDashboard = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={downloadEmpStats}>{t("reseller.employeeStatistics")}</Button>
-                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={downloadMgrStats}>{t("reseller.managerStatistics")}</Button>
                     <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={() => setModal("registerModalOpen", true)}>{t("reseller.addClient")}</Button>
                     <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-xs" onClick={() => setModal("assignModalOpen", true)}>{t("reseller.assignEmployee")}</Button>
                 </div>
