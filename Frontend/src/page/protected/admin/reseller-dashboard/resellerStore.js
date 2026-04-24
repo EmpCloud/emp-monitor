@@ -11,8 +11,6 @@ import {
     assignEmployees as assignEmployeesApi,
     getAssignedEmployees,
     deleteAssignedEmployee as deleteAssignedEmployeeApi,
-    downloadEmployeeStatistics,
-    downloadManagerStatistics,
 } from "./service";
 
 export const useResellerStore = create((set, get) => ({
@@ -166,16 +164,6 @@ export const useResellerStore = create((set, get) => ({
         } else {
             set({ error: result.message });
         }
-    },
-
-    downloadEmployeeStats: async () => {
-        const ok = await downloadEmployeeStatistics();
-        if (!ok) set({ error: "Failed to download employee statistics" });
-    },
-
-    downloadManagerStats: async () => {
-        const ok = await downloadManagerStatistics();
-        if (!ok) set({ error: "Failed to download manager statistics" });
     },
 
     openEdit: (client) => {

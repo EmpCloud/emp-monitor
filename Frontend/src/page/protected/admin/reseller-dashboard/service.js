@@ -1,5 +1,4 @@
 import apiService from "@/services/api.service";
-import * as XLSX from "xlsx";
 
 // ─── Dashboard APIs ──────────────────────────────────────────────────────────
 
@@ -180,54 +179,6 @@ const deleteAssignedEmployee = async (employeeId, resellerOrgId) => {
     }
 };
 
-// Controller: employeeStatisticsData()
-// Backend: GET /external/get-employee-statistics
-const downloadEmployeeStatistics = async () => {
-    try {
-        const { data } = await apiService.apiInstance.get("/external/get-employee-statistics");
-        if (data?.code === 200 && Array.isArray(data.data?.data)) {
-            const rows = data.data.data.map((e) => [
-                e.organization_name, e.employee_name, e.email, e.password,
-                e.emp_code, e.created_at?.split("T")[0] || "", e.computer_name, e.mobile_os || "",
-            ]);
-            const headers = ["Company Name", "Employee Name", "Username", "Password", "Employee Code", "Account Creation Date", "Computer Name", "Mobile OS"];
-            const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Employee Statistics");
-            XLSX.writeFile(wb, "Employee_Statistics.xlsx");
-            return true;
-        }
-        return false;
-    } catch {
-        return false;
-    }
-};
-
-// Controller: managerStatisticsData()
-// Backend: GET /external/get-manager-statistics
-const downloadManagerStatistics = async () => {
-    try {
-        const { data } = await apiService.apiInstance.get("/external/get-manager-statistics");
-        if (data?.code === 200 && Array.isArray(data.data?.data)) {
-            const rows = data.data.data.map((e) => [
-                e.organization_name, e.username, e.email, e.organization_password,
-                e.organization_created_at?.split("T")[0] || "", e.employee_email,
-                e.employee_password, e.employee_created_at?.split("T")[0] || "",
-                e.assigned_count, e.computer_name, e.mobile_os || "",
-            ]);
-            const headers = ["Company Name", "Company Username", "Company Email", "Password", "Account Creation Date", "Manager Email", "Password", "Account Creation Date", "Employee Accounts", "Computer Name", "Mobile OS"];
-            const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Manager Statistics");
-            XLSX.writeFile(wb, "Manager_Statistics.xlsx");
-            return true;
-        }
-        return false;
-    } catch {
-        return false;
-    }
-};
-
 // ─── Settings APIs ───────────────────────────────────────────────────────────
 
 // Controller: resellerGetSettings()
@@ -265,8 +216,6 @@ export {
     assignEmployees,
     getAssignedEmployees,
     deleteAssignedEmployee,
-    downloadEmployeeStatistics,
-    downloadManagerStatistics,
     getResellerSettings,
     saveResellerSettings,
 };
