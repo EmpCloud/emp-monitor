@@ -330,7 +330,7 @@ const createRule = async (ruleData) => {
         const { data } = await apiService.apiInstance.post("/alerts-and-notifications", ruleData);
         return {
             success: data?.code === 200,
-            message: data?.msg || (data?.code === 403 ? "Duplicate alert rule" : ""),
+            message: data?.message || data?.msg || (data?.code === 403 ? "Duplicate alert rule" : ""),
             nameError: data?.name,
         };
     } catch {
@@ -345,7 +345,7 @@ const updateRule = async (ruleData) => {
         const { data } = await apiService.apiInstance.put("/alerts-and-notifications", ruleData);
         return {
             success: data?.code === 200,
-            message: data?.msg || "",
+            message: data?.message || data?.msg || "",
         };
     } catch {
         return { success: false, message: "Failed to update rule" };

@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { MapPin, Pencil } from "lucide-react"
+import { FaLocationDot } from "react-icons/fa6";
 import InsightsFilter from "./InsightsFilter"
 import InsightsGraphs from "./InsightsGraphs"
 import {
@@ -12,28 +11,7 @@ import {
   getRoles,
 } from "@/page/protected/admin/employee-insights/service"
 import { getSessionCookie } from "@/lib/sessionCookie"
-
-
-
-import { FaLocationDot, FaPen } from "react-icons/fa6";
 import EmpInsightsLogo from "../../../assets/employee/employee_insights.svg";
-
-// import React, { useState } from "react";
-// import { MapPin, Pencil } from "lucide-react";
-// import { FaLocationDot, FaPen } from "react-icons/fa6";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import InsightsFilter from "./InsightsFilter";
-// import InsightsGraphs from "./InsightsGraphs";
-// import EmpInsightsLogo from "../../../assets/employee/employee_insights.svg";
-
-
 
 const ROLES = [
   { label: "See all", value: "all" },
@@ -210,9 +188,7 @@ const EmpInsights = () => {
         />
       </div>
 
-
-
-        <div className="flex items-center gap-6 w-full mt-8  border-t border-[#6B6B6B]/20 pt-4">
+        <div className="flex items-center gap-6 w-full mt-8 border-t border-[#6B6B6B]/20 pt-4">
           <div className="flex items-center gap-2 min-w-fit">
             <span className="text-sm text-[#424242]">
               {t("insights_current_location")} :{" "}
@@ -220,19 +196,10 @@ const EmpInsights = () => {
             <FaLocationDot className="h-4 w-4 text-red-500 fill-red-500" />
           </div>
 
-          <div className="relative flex-1">
-            <div className="h-10 w-full rounded-lg bg-[#DADADA] px-4 pr-12 flex items-center">
-              <span className="text-xs text-slate-500 truncate">
-                {insightStats?.currentLocation || ""}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700"
-              aria-label="Edit current location"
-            >
-              <FaPen className="h-4 w-4" />
-            </button>
+          <div className="flex-1 h-10 rounded-lg bg-[#DADADA] px-4 flex items-center">
+            <span className="text-xs text-slate-500 truncate">
+              {insightStats?.currentLocation || ""}
+            </span>
           </div>
         </div>
       </div>

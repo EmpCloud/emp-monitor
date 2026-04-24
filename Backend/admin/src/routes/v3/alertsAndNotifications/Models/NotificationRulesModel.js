@@ -22,6 +22,22 @@ const escapeRegExp = (text) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 };
 
+// Best-effort webhook to the alert service. The rule CRUD itself has already
+// succeeded in the DB by the time we get here; a downstream outage here would
+// otherwise bubble up as a 400 to the client and surface as a misleading
+// "Failed" toast even though the rule was persisted (see issue #109).
+const notifyAlertService = async (ruleId, eventType) => {
+    if (!process.env.ALERT_SERVICE_URL) return;
+    try {
+        await axios.post(
+            `${process.env.ALERT_SERVICE_URL}/api/v3/process-rule`,
+            { ruleId, eventType },
+        );
+    } catch (err) {
+        console.error(`notifyAlertService [${eventType} rule ${ruleId}] failed:`, err.message);
+    }
+};
+
 class NotificationRulesModel extends BaseModel {
     static get TABLE_NAME() {
         return 'notification_rules';
@@ -76,7 +92,7 @@ class NotificationRulesModel extends BaseModel {
                     })
                 ])
                 .then(async (_) => {
-                    await axios.post(`${process.env.ALERT_SERVICE_URL}/api/v3/process-rule`, { ruleId: result.insertId, eventType: 'created' });
+                    await notifyAlertService(result.insertId, 'created');
                     return result;
                 });
         });
@@ -105,7 +121,7 @@ class NotificationRulesModel extends BaseModel {
                         ]);
                 })
                 .then(async (_) => {
-                    await axios.post(`${process.env.ALERT_SERVICE_URL}/api/v3/process-rule`, { ruleId: id, eventType: 'updated' });
+                    await notifyAlertService(id, 'updated');
                     return result;
                 });
         });
@@ -233,7 +249,7 @@ class NotificationRulesModel extends BaseModel {
             ])
             .then(_ => super.delete(id))
             .then(async (result) => {
-                await axios.post(`${process.env.ALERT_SERVICE_URL}/api/v3/process-rule`, { ruleId: id, eventType: 'deleted' });
+                await notifyAlertService(id, 'deleted');
                 return result;
             });
     }

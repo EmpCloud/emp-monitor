@@ -299,7 +299,8 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         return
       }
 
-      exportReportPDF(res.data, type, employeeName)
+      const ok = exportReportPDF(res.data, type, employeeName)
+      if (!ok) showToast("Failed to generate PDF. Please try again.")
     } else {
       showToast(res.msg || "Failed to get report data")
     }
@@ -384,11 +385,8 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         </div>
       </div>
 
-      {/* Filters Row 1 — #110 — same pattern as the DLP fix (PR #134).
-           lg:grid-cols-3 was too tight for the date picker + long CustomSelect
-           labels at 1024-1280px; relax to 2, xl restores 3. `[&>*]:min-w-0`
-           lets grid items actually shrink. */}
-      <div className="[&>*]:min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
+      {/* Filters Row 1 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             {t("rd_role")}

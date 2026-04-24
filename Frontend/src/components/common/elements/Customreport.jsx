@@ -75,7 +75,7 @@ const Customreport = ({
     const target = findCardAncestor(rootRef.current);
     if (!target) return;
     try {
-      const { default: html2canvas } = await import("html2canvas");
+      const { default: html2canvas } = await import("html2canvas-pro");
       const canvas = await html2canvas(target, {
         backgroundColor: "#ffffff",
         scale: 2,

@@ -15,7 +15,7 @@ import {
 } from "@/page/protected/admin/reports-download/service";
 
 const TIMEZONE = "Asia/Kolkata";
-const defaultStart = moment().tz(TIMEZONE).format("YYYY-MM-DD");
+const defaultStart = moment().tz(TIMEZONE).subtract(6, "days").format("YYYY-MM-DD");
 const defaultEnd = moment().tz(TIMEZONE).format("YYYY-MM-DD");
 
 export const useNonAdminReportsDownloadStore = create((set, get) => ({
@@ -43,7 +43,7 @@ export const useNonAdminReportsDownloadStore = create((set, get) => ({
         role: "all",
         location: "all",
         department: "all",
-        downloadOption: "all",
+        downloadOption: "1",
         searchWebApp: "",
         startDate: defaultStart,
         endDate: defaultEnd,
