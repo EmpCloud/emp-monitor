@@ -82,15 +82,14 @@ export function useEmployeeForm(locations = []) {
 
   const validate = (isEdit = false) => {
     const e = {};
-    const nameRegex = /^[a-zA-Z\s'-]+$/;
+    const nameRegex = /^[a-zA-Z '-]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!form.firstName.trim()) e.firstName = "First name is required";
-    else if (!nameRegex.test(form.firstName.trim())) e.firstName = "First name must contain only letters";
-    else if (form.firstName.trim().length < 2) e.firstName = "First name must be at least 2 characters";
+    else if (!nameRegex.test(form.firstName)) e.firstName = "First name must contain only letters and spaces";
 
     if (!form.lastName.trim()) e.lastName = "Last name is required";
-    else if (!nameRegex.test(form.lastName.trim())) e.lastName = "Last name must contain only letters";
+    else if (!nameRegex.test(form.lastName)) e.lastName = "Last name must contain only letters and spaces";
     else if (form.lastName.trim().length < 2) e.lastName = "Last name must be at least 2 characters";
 
     if (!form.email.trim()) e.email = "Email is required";
