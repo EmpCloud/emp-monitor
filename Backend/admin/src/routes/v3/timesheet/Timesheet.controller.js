@@ -201,8 +201,14 @@ class TimeSheetController {
             if (req.decoded.role === 'Employee') {
                 req.query.employee_id = req.decoded.employee_id;
             }
-            const { organization_id, role_id, productive_hours, language, employee_id: manager_id = null } = req.decoded;
-            //const manager_id = req.decoded.employee_id || null;
+            // Only treat the caller as a manager when their role actually
+            // is Manager. Admins (and any other non-manager role) should
+            // see the full org and skip the "assigned employees" filter,
+            // otherwise the API rejects with "No Employee Assigned to
+            // this account!" the moment an admin lists all employees.
+            const isManagerRole = req.decoded.role === 'Manager';
+            const { organization_id, role_id, productive_hours, language } = req.decoded;
+            const manager_id = isManagerRole ? (req.decoded.employee_id || null) : null;
             let {
                 location_id, department_id, employee_id, start_date, end_date, absent, employee_avg, avg, shift_id
             } = await TimeSheetValidator.getTimesheet().validateAsync(req.query);
@@ -384,7 +390,9 @@ class TimeSheetController {
             const { organization_id, role_id, productive_hours } = req.decoded;
 
             const language = req.decoded.language;
-            const manager_id = req.decoded.employee_id || null;
+            // Manager-only filter — see getTimesheet() above for context.
+            const isManagerRole = req.decoded.role === 'Manager';
+            const manager_id = isManagerRole ? (req.decoded.employee_id || null) : null;
             let { location_id, department_id, employee_id, start_date, end_date, skip, limit, sortColumn, sortOrder, name, shift_id } = await TimeSheetValidator.getTimesheetValidation().validateAsync(req.query);
             start_date = moment(start_date).format('YYYY-MM-DD');
             end_date = moment(end_date).format('YYYY-MM-DD');
@@ -617,7 +625,9 @@ class TimeSheetController {
             }
 
             const language = req.decoded.language;
-            const manager_id = req.decoded.employee_id || null;
+            // Manager-only filter — see getTimesheet() above for context.
+            const isManagerRole = req.decoded.role === 'Manager';
+            const manager_id = isManagerRole ? (req.decoded.employee_id || null) : null;
             let { location_id, department_id, employee_id, start_date, end_date, skip, limit, sortColumn, sortOrder, name } = await TimeSheetValidator.getTimesheetValidationCustom().validateAsync(req.query);
             start_date = moment(start_date).format('YYYY-MM-DD');
             end_date = moment(end_date).format('YYYY-MM-DD');
@@ -837,7 +847,9 @@ class TimeSheetController {
             const { organization_id, role_id, productive_hours } = req.decoded;
 
             const language = req.decoded.language;
-            const manager_id = req.decoded.employee_id || null;
+            // Manager-only filter — see getTimesheet() above for context.
+            const isManagerRole = req.decoded.role === 'Manager';
+            const manager_id = isManagerRole ? (req.decoded.employee_id || null) : null;
             let { location_id, department_id, employee_id, start_date, end_date, skip, limit, sortColumn, sortOrder, name } = await TimeSheetValidator.getTimesheetValidationCustom().validateAsync(req.query);
             start_date = moment(start_date).format('YYYY-MM-DD');
             end_date = moment(end_date).format('YYYY-MM-DD');
