@@ -19,6 +19,11 @@ import {
 export const useDashboardStore = create((set, get) => ({
 
     stats: [],
+    // Raw employee buckets keyed by API field (registeredEmp, onlineEmps,
+    // idleEmps, offlineEmp, absentEmp, suspendedEmp) — used by the
+    // combined Dashboard Report so the PDF can show the actual roster
+    // behind each Stat card.
+    statsLists: {},
     activitySnapshot: [],
     activityBreakdown: [],
     webUsage: [],
@@ -117,6 +122,7 @@ export const useDashboardStore = create((set, get) => ({
 
             set({
                 stats: statsRes?.stats || [],
+                statsLists: statsRes?.data || {},
                 activitySnapshot: snapshotRes?.stats || [],
                 activityBreakdown: activityBreakdownRes?.stats || [],
                 webUsage: webUsageRes?.stats || [],

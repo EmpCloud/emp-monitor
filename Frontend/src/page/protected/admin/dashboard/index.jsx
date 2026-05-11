@@ -323,6 +323,43 @@ const Dashboard = () => {
         };
       });
 
+      // ── Per-bucket employee rosters (data behind each Stat card) ──
+      const statsLists = fresh.statsLists || {};
+      const rosterEmpName = (e) => {
+        const f = e?.first_name ?? e?.firstName ?? "";
+        const l = e?.last_name ?? e?.lastName ?? "";
+        const full = `${f} ${l}`.trim();
+        return full || e?.name || e?.employee_name || "-";
+      };
+      const ROSTER_COLUMNS = [
+        { header: "#", render: (_, i) => i, width: 24 },
+        { header: "Name", render: rosterEmpName },
+        { header: "Emp Code", render: (e) => e?.emp_code ?? e?.empCode ?? "-" },
+        { header: "Email", render: (e) => e?.a_email ?? e?.email ?? "-" },
+        { header: "Department", render: (e) => e?.department ?? e?.department_name ?? "-" },
+        { header: "Location", render: (e) => e?.location ?? e?.location_name ?? "-" },
+      ];
+      const ROSTERS = [
+        { title: "Total Enrollments — Employee Roster",   key: "registeredEmp", subtitle: "Every employee registered on this organisation." },
+        { title: "Currently Active Employees",            key: "onlineEmps",    subtitle: "Employees marked Active (Present) right now." },
+        { title: "Currently Idle Employees",              key: "idleEmps",      subtitle: "Employees whose workstation is idle right now." },
+        { title: "Currently Offline Employees",           key: "offlineEmp",    subtitle: "Employees whose agent is offline right now." },
+        { title: "Absent Employees",                      key: "absentEmp",     subtitle: "Employees marked absent for today." },
+        { title: "Suspended Employees",                   key: "suspendedEmp",  subtitle: "Employees whose accounts are suspended." },
+      ];
+      const rosterModules = ROSTERS.map(({ title, subtitle, key }) => ({
+        title,
+        subtitle,
+        target: null, // text-only; no card to screenshot
+        data: Array.isArray(statsLists?.[key]) ? statsLists[key] : [],
+        meta: {
+          "Date Generated": today,
+          Bucket: title.split(" — ")[0],
+          Count: Array.isArray(statsLists?.[key]) ? String(statsLists[key].length) : "0",
+        },
+        columns: ROSTER_COLUMNS,
+      }));
+
       const modules = [
         {
           title: "Dashboard Statistics",
@@ -336,6 +373,7 @@ const Dashboard = () => {
             { header: "Count", render: (r) => r?.value ?? "-" },
           ],
         },
+        ...rosterModules,
         {
           title: "Today's Activity Snapshot",
           subtitle: "Distribution of time across idle, active, productive, non-productive, and neutral buckets for today.",
