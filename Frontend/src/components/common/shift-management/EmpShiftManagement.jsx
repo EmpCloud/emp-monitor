@@ -23,8 +23,13 @@ import { useShiftManagementStore } from "@/page/protected/admin/shift-management
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const DAY_LABELS = {
-    mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu",
-    fri: "Fri", sat: "Sat", sun: "Sun",
+    mon: "Monday",
+    tue: "Tuesday",
+    wed: "Wednesday",
+    thu: "Thursday",
+    fri: "Friday",
+    sat: "Saturday",
+    sun: "Sunday",
 }
 
 // Canonical week order — the API returns shift days keyed by short
@@ -121,9 +126,16 @@ const DaysCell = ({ data }) => {
     if (rawKeys.length === 0) return <span className="text-slate-400">--</span>
     const days = sortDays(rawKeys)
     return (
-        <span className="text-xs font-medium text-slate-700">
-            {days.map((day) => DAY_LABELS[day] || day).join(", ")}
-        </span>
+        <div className="flex flex-wrap gap-1.5 max-w-[260px]">
+            {days.map((day) => (
+                <span
+                    key={day}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 text-[11px] font-semibold text-blue-700 border border-blue-100 whitespace-nowrap"
+                >
+                    {DAY_LABELS[day] || day}
+                </span>
+            ))}
+        </div>
     )
 }
 
