@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import UniPass from "@/components/common/UniPass";
 import BackToCloud from "@/components/BackToCloud";
 import aiWhiteLogo from "@/assets/ai_white_logo.svg";
+import EmpAiAssistant from "@/components/common/aempaiassistant";
 import "./TopBar.css";
 
 export default function TopHeader() {
@@ -31,6 +32,7 @@ export default function TopHeader() {
   const { open } = useSidebar();
   const { admin, clearAdmin } = useAdminSession();
   const [openUniPass, setOpenUniPass] = useState(false);
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -75,6 +77,8 @@ export default function TopHeader() {
           />
           <button
             type="button"
+            onClick={() => setAiAssistantOpen(true)}
+            aria-label="Open EmpMonitor AI Assistant"
             className="emp-ai-btn relative flex items-center gap-1.5 rounded-[9px] px-3 py-1.5 cursor-pointer text-white text-[10px] font-semibold"
           >
             <img src={aiWhiteLogo} alt="" className="h-3.75" />
@@ -196,6 +200,11 @@ export default function TopHeader() {
       </div>
 
        <UniPass isOpen={openUniPass} onClose={() => setOpenUniPass(false)}/>
+
+       <EmpAiAssistant
+         open={aiAssistantOpen}
+         onClose={() => setAiAssistantOpen(false)}
+       />
     </div>
 
   );
