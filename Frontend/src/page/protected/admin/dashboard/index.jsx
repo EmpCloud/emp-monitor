@@ -300,17 +300,40 @@ const Dashboard = () => {
       const getEl = (key) =>
         document.querySelector(`[data-pdf-section="${key}"]`);
 
+      // Guarantee all 6 stat buckets show up in the PDF even when the
+      // dashboard store hasn't populated them yet (slow fetch / error /
+      // empty response). Friendly names map to the existing i18n keys.
+      const STAT_BUCKETS = [
+        { key: "stat_total_enrollments", label: "Total Enrollments" },
+        { key: "stat_currently_active",  label: "Currently Active (Present)" },
+        { key: "stat_currently_idle",    label: "Currently Idle" },
+        { key: "stat_currently_offline", label: "Currently Offline" },
+        { key: "stat_absent",            label: "Absent" },
+        { key: "stat_suspended",         label: "Suspended" },
+      ];
+      const freshStatsByKey = new Map(
+        (fresh.stats || []).map((s) => [s?.labelKey, s])
+      );
+      const statRows = STAT_BUCKETS.map(({ key, label }) => {
+        const match = freshStatsByKey.get(key);
+        return {
+          labelKey: key,
+          friendlyLabel: label,
+          value: match?.value ?? "-",
+        };
+      });
+
       const modules = [
         {
           title: "Dashboard Statistics",
-          subtitle: "Real-time headcount and status across the organisation.",
+          subtitle: "Real-time headcount across every employee bucket — total, present, idle, offline, absent and suspended.",
           target: getEl("stats"),
-          data: fresh.stats,
+          data: statRows,
           meta: { "Date Generated": today },
           columns: [
             { header: "#", render: (_, i) => i, width: 24 },
-            { header: "Stat", render: (r) => t(r?.labelKey) || r?.labelKey || "-" },
-            { header: "Value", render: (r) => r?.value ?? "-" },
+            { header: "Bucket", render: (r) => r?.friendlyLabel || t(r?.labelKey) || "-" },
+            { header: "Count", render: (r) => r?.value ?? "-" },
           ],
         },
         {
