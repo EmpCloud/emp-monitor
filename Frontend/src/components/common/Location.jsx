@@ -206,10 +206,12 @@ export default function LocationPerformance({
         <div className="max-w-5xl mx-auto">
           {/* ── Header ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
-            <h2 className="text-slate-900 font-semibold text-[1.1rem]">
+            <h2 className="text-slate-900 font-semibold text-[1.1rem] truncate">
               {resolvedTitle}
             </h2>
-            {report}
+            <div className="flex items-center gap-3 flex-nowrap shrink-0">
+              {report}
+            </div>
           </div>
 
           {/* ── Tabs + Filter ── */}
@@ -219,10 +221,10 @@ export default function LocationPerformance({
           <div className="flex flex-col sm:flex-row gap-5 items-start">
             {/* Map */}
             <div
-              className="w-full sm:w-72 shrink-0 bg-slate-800 rounded-xl relative"
-              style={{ minHeight: 300, zIndex: 10 }}
+              className="w-full sm:w-56 shrink-0 bg-slate-800 rounded-xl relative"
+              style={{ minHeight: 260, zIndex: 10 }}
             >
-              <div className="w-full h-72 p-2">
+              <div className="w-full h-64 p-2">
                 {loading ? (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
                     {t("loadingText")}
@@ -236,8 +238,8 @@ export default function LocationPerformance({
             {/* List */}
             <div className="flex-1 w-full min-w-0">
               {/* Column headers */}
-              <div className="flex items-center justify-between gap-3 px-1 mb-2">
-                <span className="text-slate-500 text-xs font-medium whitespace-nowrap">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3 px-1 mb-2">
+                <span className="text-slate-500 text-xs font-medium truncate">
                   {t("location")}
                 </span>
                 <span className="text-slate-500 text-xs font-medium whitespace-nowrap">

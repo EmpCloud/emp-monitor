@@ -3,7 +3,7 @@ import ProductivityComp from '@/components/common/employee-comparison/Productivi
 
 const EmployeeComparison = () => {
   return (
-    <div className="bg-slate-200 w-full p-5 h-full">
+    <div className="bg-slate-200 w-full p-5">
       <ProductivityComp />
     </div>
   )

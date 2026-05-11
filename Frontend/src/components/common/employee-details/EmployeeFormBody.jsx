@@ -52,16 +52,36 @@ export default function EmployeeFormBody({
 
       {/* Email / Password */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
+        {/* Hidden fields to absorb Chrome/Edge autofill so the admin's
+            credentials don't land in the employee email/password inputs */}
+        <input type="text" name="username" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden="true" />
+        <input type="password" name="password" autoComplete="current-password" className="hidden" tabIndex={-1} aria-hidden="true" />
         <Field label={t("emp_email_address")} required error={errors.email}>
-          <Input type="email" placeholder={t("emp_enter_email")} value={form.email}
+          <Input
+            type="email"
+            placeholder={t("emp_enter_email")}
+            value={form.email}
             onChange={(e) => set("email", e.target.value)}
-            className="h-11 rounded-xl border-gray-300 text-[13px] px-5" />
+            name="emp-email"
+            autoComplete="off"
+            data-form-type="other"
+            data-lpignore="true"
+            className="h-11 rounded-xl border-gray-300 text-[13px] px-5"
+          />
         </Field>
         <Field label={isEdit ? t("emp_new_password_keep") : t("emp_password")} required={!isEdit} error={errors.password}>
           <div className="relative">
-            <Input type={showPassword ? "text" : "password"} placeholder={t("emp_password")}
-              value={form.password} onChange={(e) => set("password", e.target.value)}
-              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11" />
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder={t("emp_password")}
+              value={form.password}
+              onChange={(e) => set("password", e.target.value)}
+              name="emp-password"
+              autoComplete="new-password"
+              data-form-type="other"
+              data-lpignore="true"
+              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11"
+            />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -79,9 +99,17 @@ export default function EmployeeFormBody({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
         <Field label={t("emp_confirm_password")} required={!isEdit} error={errors.confirmPassword}>
           <div className="relative">
-            <Input type={showConfirmPassword ? "text" : "password"} placeholder={t("emp_confirm_password")}
-              value={form.confirmPassword} onChange={(e) => set("confirmPassword", e.target.value)}
-              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11" />
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder={t("emp_confirm_password")}
+              value={form.confirmPassword}
+              onChange={(e) => set("confirmPassword", e.target.value)}
+              name="emp-confirm-password"
+              autoComplete="new-password"
+              data-form-type="other"
+              data-lpignore="true"
+              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11"
+            />
             <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

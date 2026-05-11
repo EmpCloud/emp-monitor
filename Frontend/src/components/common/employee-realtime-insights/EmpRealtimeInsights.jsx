@@ -279,12 +279,26 @@ const EmpRealtimeInsights = () => {
                   </div>
 
                   {/* Footer action icons */}
-                  <div className="flex items-center justify-center absolute bottom-0 right-0 bg-[#159DD8] rounded-tl-xl rounded-br-md px-3 py-0.5 gap-2 mt-3">
-                    <button onClick={(e) => { e.stopPropagation(); handleAnalytics(emp); }} className="flex items-center justify-center transition-colors" title="Analytics">
-                      <Maximize2 className="w-3 text-white" />
+                  <div className="flex items-center justify-center absolute bottom-0 right-0 bg-[#159DD8] rounded-tl-xl rounded-br-md px-2 py-1 gap-1 z-10">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); handleAnalytics(emp); }}
+                      className="flex items-center justify-center p-1 rounded hover:bg-white/15 cursor-pointer transition-colors"
+                      title="Analytics"
+                      aria-label="Analytics"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5 text-white pointer-events-none" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDownloadReport(); }} className="flex items-center justify-center transition-colors" title="Download Report">
-                      <Download className="w-3 text-white" />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); handleDownloadReport(); }}
+                      className="flex items-center justify-center p-1 rounded hover:bg-white/15 cursor-pointer transition-colors"
+                      title="Download Report"
+                      aria-label="Download Report"
+                    >
+                      <Download className="w-3.5 h-3.5 text-white pointer-events-none" />
                     </button>
                   </div>
                 </div>

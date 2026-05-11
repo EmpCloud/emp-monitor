@@ -91,7 +91,22 @@ export default function ActivityBreakDown({ data = [] }) {
           <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {t("breakDown")}
           </h2>
-          <Customreport showMaximize={true} showDownload={true} />
+          <Customreport
+            title={t("breakDown")}
+            showMaximize
+            showDownload
+            pdfTitle="Activity Break Down"
+            pdfSubtitle="Office, active, idle, productive, non-productive and neutral hours across Today / Yesterday / This Week."
+            pdfMeta={{ "Date Generated": new Date().toLocaleDateString() }}
+            pdfData={rows}
+            pdfColumns={[
+              { header: "#", render: (_, i) => i, width: 24 },
+              { header: "Activity", render: (r) => activityKeyMap[r?.activity] ? t(activityKeyMap[r.activity]) : (r?.activity ?? "-") },
+              { header: "Today", render: (r) => r?.today ?? "-" },
+              { header: "Yesterday", render: (r) => r?.yesterday ?? "-" },
+              { header: "This Week", render: (r) => r?.thisWeek ?? "-" },
+            ]}
+          />
         </div>
 
         {/* Table */}

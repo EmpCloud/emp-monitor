@@ -12,9 +12,9 @@ export const AdminLayout = ({ children }) => {
                 <AppSidebar />
                 <main className="w-full flex flex-col  overflow-x-hidden">
                     <TopHeader />
-                    <div className="flex-1 max-h-[calc(100vh-70px)] overflow-y-auto">
-                        {children}
-                    <Footer show={showFooter} />
+                    <div className="flex-1 max-h-[calc(100vh-70px)] overflow-y-auto flex flex-col">
+                        <div className="flex-1">{children}</div>
+                        <Footer show={showFooter} />
                     </div>
                 </main>
             </SidebarProvider>

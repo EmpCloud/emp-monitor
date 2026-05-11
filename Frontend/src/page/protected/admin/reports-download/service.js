@@ -495,16 +495,21 @@ function checkPdfEligibility(dateRange, employeesCount) {
 
 // ─── Export: PDF (multi-user report) ───────────────────────────────
 
+// Keystrokes intentionally omitted from the PDF — long key streams would
+// otherwise dominate the row and squeeze the actual app/website columns
+// to the point that the PDF looked like a keystroke dump instead of an
+// app/website usage report. Use the CSV export with "Keystrokes" checked
+// if you need that data.
 const APP_HEADERS = [
     "Employee Name", "Location", "Department", "Application Used",
     "Start Date", "Start Time", "End Date", "End Time",
-    "Active Time", "Idle Time", "Total Time", "Keystrokes", "Category",
+    "Active Time", "Idle Time", "Total Time", "Category",
 ];
 
 const BROWSER_HEADERS = [
     "Employee Name", "Location", "Department", "Browser",
     "Start Date", "Start Time", "End Date", "End Time",
-    "Active Time", "Idle Time", "Total Time", "Keystrokes",
+    "Active Time", "Idle Time", "Total Time",
     "Domain", "Category",
 ];
 
@@ -530,7 +535,6 @@ const exportReportPDF = (reportData, type, employeeName = "") => {
                     formatDuration(app.active_seconds),
                     formatDuration(app.idle_seconds),
                     formatDuration(app.total_duration),
-                    (app.keystrokes || "").replace(/\n/g, " "),
                     app.status === 1 ? "Productive" : app.status === 2 ? "Non Productive" : "Neutral",
                 ]);
 
@@ -574,7 +578,6 @@ const exportReportPDF = (reportData, type, employeeName = "") => {
                     formatDuration(hist.active_seconds),
                     formatDuration(hist.idle_seconds),
                     formatDuration(hist.total_duration),
-                    (hist.keystrokes || "").replace(/\n/g, " "),
                     hist.domain_name || hist.url || "-",
                     hist.status === 1 ? "Productive" : hist.status === 2 ? "Non Productive" : "Neutral",
                 ]);

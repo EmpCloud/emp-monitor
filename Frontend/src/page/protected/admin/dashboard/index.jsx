@@ -102,6 +102,8 @@ const Dashboard = () => {
   const [aiContext, setAiContext] = useState(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
+  const [webTab, setWebTab] = useState("today");
+  const [appTab, setAppTab] = useState("today");
 
   const openAiAssistant = useCallback((ctx) => {
     setAiContext(ctx);
@@ -250,6 +252,10 @@ const Dashboard = () => {
       setFilter("nonActiveBy", period);
       setFilter("locationPerformanceBy", period);
       setFilter("departmentPerformanceBy", period);
+      // Web / App Usage chart cards keep their own internal tab — push
+      // it so the screenshot reflects the chosen period too.
+      setWebTab(period);
+      setAppTab(period);
 
       // Re-fetch every module with the chosen period. Promise.all
       // resolves only after the store has been updated by each fetch.
@@ -295,6 +301,44 @@ const Dashboard = () => {
         document.querySelector(`[data-pdf-section="${key}"]`);
 
       const modules = [
+        {
+          title: "Dashboard Statistics",
+          subtitle: "Real-time headcount and status across the organisation.",
+          target: getEl("stats"),
+          data: fresh.stats,
+          meta: { "Date Generated": today },
+          columns: [
+            { header: "#", render: (_, i) => i, width: 24 },
+            { header: "Stat", render: (r) => t(r?.labelKey) || r?.labelKey || "-" },
+            { header: "Value", render: (r) => r?.value ?? "-" },
+          ],
+        },
+        {
+          title: "Today's Activity Snapshot",
+          subtitle: "Distribution of time across idle, active, productive, non-productive, and neutral buckets for today.",
+          target: getEl("snapshot"),
+          data: fresh.activitySnapshot,
+          meta: { "Date Generated": today },
+          columns: [
+            { header: "#", render: (_, i) => i, width: 24 },
+            { header: "Activity", render: (r) => r?.label ?? "-" },
+            { header: "Duration", render: (r) => fmtDuration(r?.value) },
+          ],
+        },
+        {
+          title: "Activity Break Down",
+          subtitle: "Office, active, idle, productive, non-productive and neutral hours compared across Today / Yesterday / This Week.",
+          target: getEl("breakdown"),
+          data: fresh.activityBreakdown,
+          meta: { "Date Generated": today },
+          columns: [
+            { header: "#", render: (_, i) => i, width: 24 },
+            { header: "Activity", render: (r) => r?.activity ?? "-" },
+            { header: "Today", render: (r) => r?.today ?? "-" },
+            { header: "Yesterday", render: (r) => r?.yesterday ?? "-" },
+            { header: "This Week", render: (r) => r?.thisWeek ?? "-" },
+          ],
+        },
         {
           title: t("top10productive"),
           subtitle: "Employees with the highest productive time over the selected period.",
@@ -478,15 +522,17 @@ const Dashboard = () => {
 
     <div className="bg-slate-200 w-full p-5">
 
-      <Stats stats={stats} />
+      <div data-pdf-section="stats">
+        <Stats stats={stats} />
+      </div>
 
       <div className="grid grid-cols-12 gap-3 py-5">
 
-        <div className="xl:col-span-4 col-span-12">
+        <div className="xl:col-span-4 col-span-12" data-pdf-section="snapshot">
           <ActivitySnapshot data={activitySnapshot} />
         </div>
 
-        <div className="xl:col-span-5 col-span-12">
+        <div className="xl:col-span-5 col-span-12" data-pdf-section="breakdown">
           <ActivityBreakDown data={activityBreakdown} />
         </div>
 
@@ -788,6 +834,8 @@ const Dashboard = () => {
           <WebUsageChart
             title={t("top10webUsage")}
             data={webUsage}
+            activeTab={webTab}
+            onTabChange={setWebTab}
             report={
               <Customreport
                 title={t("top10webUsage")}
@@ -819,6 +867,8 @@ const Dashboard = () => {
           <AppUsageChart
             title={t("top10appUsage")}
             data={appUsage}
+            activeTab={appTab}
+            onTabChange={setAppTab}
             report={
               <Customreport
                 title={t("top10appUsage")}

@@ -10,8 +10,8 @@ export const NonAdminLayout = ({ children }) => {
         <NonAdminAppSidebar />
         <main className="w-full flex flex-col overflow-x-hidden">
           <NonAdminTopBar />
-          <div className="flex-1 max-h-[calc(100vh-70px)] overflow-y-auto">
-            {children}
+          <div className="flex-1 max-h-[calc(100vh-70px)] overflow-y-auto flex flex-col">
+            <div className="flex-1">{children}</div>
             <Footer show={true} />
           </div>
         </main>

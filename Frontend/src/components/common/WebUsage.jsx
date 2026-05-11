@@ -20,14 +20,18 @@ const fallbackData = {
 export default function WebUsageChart({
   data,
   title,
-  report
+  report,
+  activeTab: activeTabProp,
+  onTabChange,
 }) {
   const { t } = useTranslation();
   const resolvedTitle = title || t("topTenWebUsage");
   const chartRef = useRef(null);
   const rootRef = useRef(null);
   const seriesRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("today");
+  const [internalTab, setInternalTab] = useState("today");
+  const activeTab = activeTabProp ?? internalTab;
+  const setActiveTab = onTabChange ?? setInternalTab;
 
   // Keys are aligned with CustomTab values: "today", "yesterday", "thisweek"
   const chartData = {

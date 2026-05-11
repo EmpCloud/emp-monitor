@@ -13,17 +13,37 @@ const timeOptions = Array.from({ length: 24 }, (_, i) => {
   return { label: `${v}:00`, value: v };
 });
 
-function RecordingCard({ recording, apiBase }) {
-  const videoSrc = recording.video_path
-    ? `${apiBase}${recording.video_path}`
-    : recording.video_url ?? null;
+// Pretty timestamp from a recording payload — falls back through the
+// known shape variants the API has returned over time.
+const recordingTime = (r) => {
+  if (r?.name) {
+    // name like "16-2026-05-11 16:01:42.mp4" → show "16:01:42"
+    const m = r.name.match(/(\d{2}:\d{2}:\d{2})/);
+    if (m) return m[1];
+  }
+  const raw = r?.created_at ?? r?.start_time ?? r?.time;
+  return raw ? moment(raw).format("HH:mm:ss") : "—";
+};
+
+function RecordingCard({ recording, onPlay }) {
+  const videoSrc =
+    recording.link ?? recording.video_url ?? recording.video_path ?? null;
 
   return (
-    <div className="bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-violet-400 transition-all cursor-pointer group">
+    <div
+      className="bg-gray-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-violet-400 transition-all cursor-pointer group"
+      onClick={() => videoSrc && onPlay?.(recording)}
+    >
       <div className="aspect-[4/3] relative flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         {videoSrc ? (
-          <video src={videoSrc} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          <video
+            src={videoSrc}
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
+            muted
+            preload="metadata"
+            playsInline
+          />
         ) : (
           <div className="absolute inset-0 opacity-30 p-2 overflow-hidden">
             <div className="text-[6px] text-green-400 font-mono leading-tight">
@@ -38,25 +58,47 @@ function RecordingCard({ recording, apiBase }) {
         </div>
       </div>
       <div className="px-2.5 py-2 space-y-0.5">
-        <p className="text-[10px] text-gray-400 truncate">
-          {recording.time ?? recording.start_time ?? recording.created_at ?? "—"}
-        </p>
+        <p className="text-[10px] text-gray-300 truncate">{recordingTime(recording)}</p>
       </div>
     </div>
   );
 }
 
-// Group recordings into hour slots
-function groupByHour(recordings) {
-  const map = {};
-  recordings.forEach((r) => {
-    const raw = r.time ?? r.start_time ?? r.created_at ?? "";
-    const hour = raw ? String(raw).slice(11, 13) : "00";
-    const key = `${hour}:00 - ${String(Number(hour) + 1).padStart(2, "0")}:00`;
-    if (!map[key]) map[key] = [];
-    map[key].push(r);
-  });
-  return Object.entries(map).map(([range, recordings]) => ({ range, recordings }));
+// Normalize the API response into [{ range, recordings }] regardless of
+// the response shape (new: { screenRecords: [{ t, s }] }; legacy: array).
+const formatRange = (hour) => {
+  const h = Number(hour);
+  if (!Number.isFinite(h)) return String(hour);
+  const next = (h + 1) % 24;
+  return `${String(h).padStart(2, "0")}:00 - ${String(next).padStart(2, "0")}:00`;
+};
+
+function buildSlots(payload) {
+  // New shape: { screenRecords: [{ t, actual_t, s: [...] }] }
+  const groups = payload?.screenRecords;
+  if (Array.isArray(groups) && groups.length) {
+    return groups
+      .filter((g) => Array.isArray(g?.s) && g.s.length)
+      .map((g) => ({
+        range: formatRange(g.actual_t ?? g.t),
+        recordings: g.s,
+      }));
+  }
+  // Legacy: flat array of recordings.
+  if (Array.isArray(payload)) {
+    const map = {};
+    payload.forEach((r) => {
+      const raw = r.time ?? r.start_time ?? r.created_at ?? "";
+      const hour = raw ? String(raw).slice(11, 13) : "00";
+      if (!map[hour]) map[hour] = [];
+      map[hour].push(r);
+    });
+    return Object.entries(map).map(([hour, recordings]) => ({
+      range: formatRange(hour),
+      recordings,
+    }));
+  }
+  return [];
 }
 
 export default function ScreenRecordingTab({ employee }) {
@@ -68,16 +110,16 @@ export default function ScreenRecordingTab({ employee }) {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading]   = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const apiBase = import.meta.env.VITE_API_URL;
+  const [playing, setPlaying]   = useState(null);
 
   const load = async () => {
     if (!employee?.id) return;
     setLoading(true);
     const res = await fetchScreenRecords(employee.id, date, fromTime, toTime);
-    if (res?.code === 200 && Array.isArray(res.data)) {
-      setSlots(groupByHour(res.data));
-      setTotalCount(res.data.length);
+    if (res?.code === 200) {
+      const built = buildSlots(res.data);
+      setSlots(built);
+      setTotalCount(built.reduce((n, s) => n + (s.recordings?.length || 0), 0));
     } else {
       setSlots([]);
       setTotalCount(0);
@@ -148,11 +190,45 @@ export default function ScreenRecordingTab({ employee }) {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {slot.recordings.map((rec, ri) => (
-              <RecordingCard key={rec.id ?? ri} recording={rec} apiBase={apiBase} />
+              <RecordingCard
+                key={rec.id ?? ri}
+                recording={rec}
+                onPlay={setPlaying}
+              />
             ))}
           </div>
         </div>
       ))}
+
+      {/* Full-screen player overlay */}
+      {playing && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-6"
+          onClick={() => setPlaying(null)}
+        >
+          <div
+            className="bg-gray-900 rounded-xl overflow-hidden w-full max-w-4xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+              <span className="text-sm text-gray-300">{recordingTime(playing)}</span>
+              <button
+                type="button"
+                onClick={() => setPlaying(null)}
+                className="text-gray-400 hover:text-white text-sm cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+            <video
+              src={playing.link ?? playing.video_url ?? playing.video_path}
+              controls
+              autoPlay
+              className="w-full bg-black"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-2">

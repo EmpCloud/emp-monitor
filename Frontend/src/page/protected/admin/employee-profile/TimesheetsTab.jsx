@@ -4,8 +4,19 @@ import { Info } from "lucide-react";
 import "@/components/common/employee-details/emp.css";
 import TableToolbar from "@/components/common/TableToolbar";
 import PaginationFooter from "@/components/common/PaginationFooter";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { fetchTimesheets } from "./service";
 import { secToHMS, fmtDateTime } from "@/lib/dateTimeUtils";
+
+const INFO_TEXT = {
+  productiveHours: "Time spent on apps and websites flagged as productive.",
+  unproductiveHours: "Time spent on apps and websites flagged as unproductive.",
+};
 
 const columnDefs = [
   { key: "clockIn",            labelKey: "clockin",            className: "text-gray-800" },
@@ -71,6 +82,7 @@ export default function TimesheetsTab({ employee, startDate, endDate }) {
   const paged = filtered.slice((currentPage - 1) * size, currentPage * size);
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-5">
       <TableToolbar
         pageSize={pageSize}
@@ -89,7 +101,18 @@ export default function TimesheetsTab({ employee, startDate, endDate }) {
                   className={`px-4 py-3.5 text-[13px] font-bold text-center whitespace-nowrap ${col.className} ${i === 0 ? "rounded-tl-2xl" : ""} ${i === columns.length - 1 ? "rounded-tr-2xl" : ""}`}
                 >
                   {col.label}
-                  {col.hasInfo && <Info size={13} className="inline ml-1 text-blue-400 -mt-0.5" />}
+                  {col.hasInfo && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex align-middle">
+                          <Info size={13} className="inline ml-1 text-blue-400 -mt-0.5 cursor-help" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px] text-xs">
+                        {INFO_TEXT[col.key]}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </th>
               ))}
             </tr>
@@ -132,5 +155,6 @@ export default function TimesheetsTab({ employee, startDate, endDate }) {
         onPageChange={setCurrentPage}
       />
     </div>
+    </TooltipProvider>
   );
 }

@@ -440,18 +440,38 @@ const exportTimesheetCsv = async (rows, selectedKeys, filters) => {
             const workbook = XLSX.utils.book_new();
             const employeeGroups = new Map();
 
+            // Group by a stable id so two employees with the same display
+            // name don't collide (collisions previously caused only the
+            // first employee's sheet to be written).
             rows.forEach((row) => {
-                const key = row.name || "Unknown";
-                if (!employeeGroups.has(key)) employeeGroups.set(key, []);
-                employeeGroups.get(key).push(row);
+                const key = String(row.id ?? row.empCode ?? row.name ?? "Unknown");
+                if (!employeeGroups.has(key)) {
+                    employeeGroups.set(key, {
+                        displayName: row.name || row.empCode || "Unknown",
+                        rows: [],
+                    });
+                }
+                employeeGroups.get(key).rows.push(row);
             });
 
-            employeeGroups.forEach((empRows, empName) => {
+            // Ensure every sheet name is unique and XLSX-safe.
+            const usedSheetNames = new Set();
+            const sanitize = (s) => String(s).replace(/[\/\\\?\*\[\]:]/g, "_") || "Sheet";
+            employeeGroups.forEach(({ displayName, rows: empRows }) => {
                 const { headers, dataRows } = buildExportRows(empRows, selectedKeys, filters);
                 const sheetData = [headers, ...dataRows];
                 const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-                // Sheet names limited to 31 chars
-                const sheetName = empName.slice(0, 31);
+                let sheetName = sanitize(displayName).slice(0, 31);
+                if (usedSheetNames.has(sheetName)) {
+                    let suffix = 2;
+                    let candidate;
+                    do {
+                        const tag = `_${suffix++}`;
+                        candidate = `${sheetName.slice(0, 31 - tag.length)}${tag}`;
+                    } while (usedSheetNames.has(candidate));
+                    sheetName = candidate;
+                }
+                usedSheetNames.add(sheetName);
                 XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
             });
 

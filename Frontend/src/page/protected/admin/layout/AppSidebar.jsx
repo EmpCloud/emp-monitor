@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import empLogo from "@/assets/emp.png";
 import smallempLogo from "@/assets/smallemp.png";
+import favLogo from "@/assets/fav.png";
 import {
   Sidebar,
   SidebarContent,
@@ -184,7 +185,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center font-bold">
               <img
-                src={open ? empLogo : smallempLogo}
+                src={open ? empLogo : favLogo}
                 className={open ? "w-40" : "w-8 h-8 object-contain"}
                 alt="Logo"
               />

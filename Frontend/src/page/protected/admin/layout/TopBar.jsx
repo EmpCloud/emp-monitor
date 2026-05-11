@@ -1,11 +1,11 @@
 import {
-  Bell,
   HelpCircle,
   Settings,
   ShieldCheck,
   Fingerprint,
   LogOut,
 } from "lucide-react";
+import NotificationBell from "@/components/common/NotificationBell";
 import { useTranslation } from "react-i18next";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import userData from "@/data/user.json";
@@ -84,10 +84,15 @@ export default function TopHeader() {
 
         <BackToCloud />
         {/* HRMS Badge */}
-        {/* <button className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors">
+        <a
+          href="https://app.empcloud.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors"
+        >
           <img src={hrms} alt="" className="h-6 w-6" />
           <span className="hidden lg:inline"> HRMS</span>
-        </button> */}
+        </a>
 
         {/* Help */}
         <a
@@ -101,16 +106,7 @@ export default function TopHeader() {
         </a>
 
         {/* Notification Bell */}
-        <button
-          type="button"
-          onClick={() => navigate("/admin/behaviour/alertnotification")}
-          title={t("alerts")}
-          aria-label={t("alerts")}
-          className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-lg hover:bg-slate-100 transition-colors"
-        >
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute top-1 right-1.5 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
+        <NotificationBell viewAllPath="/admin/behaviour/alertnotification" />
 
         {/* Profile Dropdown */}
         <DropdownMenu>
