@@ -10,7 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, FileSpreadsheet } from "lucide-react";
+import { Search, FileSpreadsheet, FileText } from "lucide-react";
+import autoTable from "jspdf-autotable";
+import {
+  createBrandedPdf,
+  drawSummaryCard,
+  drawSectionHeading,
+  adaptiveTableStyles,
+  drawFooter,
+} from "@/utils/pdfBrand";
 import PaginationComponent from "./Pagination";
 import clip from "@/assets/clipboard.png";
 
@@ -72,18 +80,23 @@ export default function TotalEnrollmentsModal({
     });
   };
 
-  const handleGenerateCSV = () => {
+  const buildExportRows = () => {
     const list = Array.isArray(employees) ? employees : [];
-    if (list.length === 0) return;
-
-    const headers = ["Name", "Email", "EMP Code", "Department", "Location"];
-    const rows = list.map((emp) => [
+    return list.map((emp) => [
       getEmployeeName(emp),
       getEmployeeEmail(emp),
       getEmployeeCode(emp),
       getEmployeeDepartment(emp),
       getEmployeeLocation(emp),
     ]);
+  };
+
+  const handleGenerateCSV = () => {
+    const list = Array.isArray(employees) ? employees : [];
+    if (list.length === 0) return;
+
+    const headers = ["Name", "Email", "EMP Code", "Department", "Location"];
+    const rows = buildExportRows();
 
     const csvContent = [
       headers.join(","),
@@ -101,6 +114,47 @@ export default function TotalEnrollmentsModal({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleGeneratePDF = async () => {
+    const list = Array.isArray(employees) ? employees : [];
+    if (list.length === 0) return;
+
+    const headers = ["Name", "Email", "EMP Code", "Department", "Location"];
+    const body = buildExportRows();
+
+    const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+      await createBrandedPdf({ title });
+    let cursorY = startY;
+
+    cursorY = drawSummaryCard({
+      doc,
+      cursorY,
+      pageWidth,
+      margin,
+      contentWidth,
+      recordCount: body.length,
+      cols: 2,
+      entries: [
+        ["Bucket", title || "-"],
+        ["Date Generated", new Date().toLocaleDateString()],
+      ],
+    });
+
+    cursorY = drawSectionHeading(doc, "Employees", margin, cursorY);
+
+    const styles = adaptiveTableStyles(headers.length);
+    autoTable(doc, {
+      startY: cursorY,
+      head: [headers],
+      body,
+      theme: "grid",
+      ...styles,
+      margin: { left: margin, right: margin },
+    });
+
+    drawFooter(doc, { margin, pageWidth });
+    doc.save(`${(title || "employees").replace(/\s+/g, "_")}_employees.pdf`);
   };
 
   const filtered = useMemo(() => {
@@ -352,10 +406,18 @@ export default function TotalEnrollmentsModal({
             <button
               onClick={handleGenerateCSV}
               disabled={!employees?.length}
-              className="flex items-center gap-2 bg-[#0066ff] hover:bg-[#0052cc] text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileSpreadsheet className="w-4 h-4" />
               {t("enrollments.generateCsv")}
+            </button>
+            <button
+              onClick={handleGeneratePDF}
+              disabled={!employees?.length}
+              className="flex items-center gap-2 bg-[#0066ff] hover:bg-[#0052cc] text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileText className="w-4 h-4" />
+              Generate PDF
             </button>
             <button
               onClick={onClose}

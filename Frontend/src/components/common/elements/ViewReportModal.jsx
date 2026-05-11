@@ -22,9 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, FileText } from "lucide-react";
+import autoTable from "jspdf-autotable";
 import PaginationComponent from "@/components/common/Pagination";
 import { getWebAppActivityForEmployees } from "@/page/protected/admin/dashboard/service";
+import {
+  createBrandedPdf,
+  drawSummaryCard,
+  drawSectionHeading,
+  adaptiveTableStyles,
+  drawFooter,
+} from "@/utils/pdfBrand";
 
 const formatDuration = (value) => {
   const n = Number(value);
@@ -183,6 +191,63 @@ const ViewReportModal = ({
   const currentPage = Math.min(page, totalPages);
   const pageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  const handleDownloadPdf = async () => {
+    if (!filtered.length) return;
+    const headers = columns.map((c) => c.label);
+    const body = filtered.map((row) =>
+      columns.map((c) => {
+        const v = resolveValue(row, c);
+        return v == null ? "-" : String(v);
+      })
+    );
+
+    const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+      await createBrandedPdf({ title: title || "Report" });
+    let cursorY = startY;
+
+    const modeLabel =
+      mode === "employee_activity" ? "Employee Activity" :
+      mode === "timesheet" ? "Timesheet" :
+      mode === "performance" ? "Performance" :
+      mode === "web_app" ? "Web / App Usage" : "Report";
+
+    cursorY = drawSummaryCard({
+      doc,
+      cursorY,
+      pageWidth,
+      margin,
+      contentWidth,
+      recordCount: filtered.length,
+      cols: 2,
+      entries: [
+        ["Mode", modeLabel],
+        ["Period", String(by || "today")],
+        ["Generated", new Date().toLocaleString()],
+        ["Search", search ? `“${search}”` : "—"],
+      ],
+    });
+
+    cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
+
+    const styles = adaptiveTableStyles(headers.length);
+    autoTable(doc, {
+      startY: cursorY,
+      head: [headers],
+      body,
+      theme: "grid",
+      ...styles,
+      margin: { left: margin, right: margin },
+    });
+
+    drawFooter(doc, { margin, pageWidth });
+
+    const slug = String(title || "report")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    doc.save(`${slug || "report"}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-0 gap-0 border border-[#8F96FF]/45 [&>button]:text-white [&>button]:opacity-100 [&>button:hover]:bg-white/10 [&>button]:rounded-full">
@@ -218,14 +283,26 @@ const ViewReportModal = ({
               <span className="text-xs text-slate-500">{t("entries")}</span>
             </div>
 
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder={t("search")}
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9 h-9 rounded-lg text-xs"
-              />
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="relative w-full max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder={t("search")}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="pl-9 h-9 rounded-lg text-xs"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={!filtered.length || loading}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Download as PDF"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </button>
             </div>
           </div>
 
