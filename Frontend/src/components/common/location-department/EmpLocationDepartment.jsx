@@ -8,9 +8,6 @@ import {
     Settings,
     MapPin,
     Search,
-    Download,
-    FileText,
-    FileSpreadsheet,
     Loader2,
     Pencil,
 } from "lucide-react";
@@ -84,51 +81,6 @@ const DepartmentBadges = ({ departments, rowIdx }) => {
                 >
                     {expanded ? t("locDept.showLess") : `+${departments.length - visibleCount} ${t("locDept.more")}`}
                 </button>
-            )}
-        </div>
-    );
-};
-
-// ─── Export Dropdown ─────────────────────────────────────────────────────────
-
-const ExportDropdown = () => {
-    const { t } = useTranslation();
-    const [open, setOpen] = useState(false);
-    const exportCsv = useLocationDepartmentStore((s) => s.exportCsv);
-    const exportPdf = useLocationDepartmentStore((s) => s.exportPdf);
-
-    return (
-        <div className="relative">
-            <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg border-slate-200 text-xs gap-1.5"
-                onClick={() => setOpen(!open)}
-            >
-                <Download className="w-3.5 h-3.5" />
-                Export
-                <ChevronDown className="w-3 h-3" />
-            </Button>
-            {open && (
-                <>
-                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[160px]">
-                        <button
-                            onClick={() => { exportPdf(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-t-lg"
-                        >
-                            <FileText className="w-3.5 h-3.5 text-red-500" />
-                            {t("locDept.exportPdf")}
-                        </button>
-                        <button
-                            onClick={() => { exportCsv(); setOpen(false); }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors rounded-b-lg"
-                        >
-                            <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
-                            {t("locDept.exportExcel")}
-                        </button>
-                    </div>
-                </>
             )}
         </div>
     );
@@ -353,7 +305,6 @@ export default function EmpLocationDepartment() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                    <ExportDropdown />
                     <Button
                         variant="destructive"
                         size="sm"
