@@ -344,7 +344,7 @@ export const useProductivityRulesStore = create((set, get) => ({
             if (result.success && result.data) {
                 let exported = false;
                 if (format === "pdf") {
-                    exported = exportToPDF(result.data, apiStatus);
+                    exported = await exportToPDF(result.data, apiStatus);
                 } else if (format === "csv") {
                     exported = exportToCSV(result.data, apiStatus);
                 } else {

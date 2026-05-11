@@ -1,8 +1,14 @@
 import apiService from "@/services/api.service";
 import moment from "moment-timezone";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    createBrandedPdf,
+    drawSummaryCard,
+    drawSectionHeading,
+    adaptiveTableStyles,
+    drawFooter,
+} from "@/utils/pdfBrand";
 
 // ─── Utility: Seconds → HH:MM:SS ───────────────────────────────────────────
 
@@ -528,7 +534,9 @@ export const exportToExcel = (exportData, rankingFilter = "") => {
 
 // ─── Export: PDF ────────────────────────────────────────────────────────────
 
-export const exportToPDF = (exportData, rankingFilter = "") => {
+const STATUS_LABEL = { 1: "Productive", 2: "Unproductive", 3: "Neutral" };
+
+export const exportToPDF = async (exportData, rankingFilter = "") => {
     try {
         let filtered = exportData;
         if (rankingFilter) {
@@ -540,11 +548,7 @@ export const exportToPDF = (exportData, rankingFilter = "") => {
             .map((item) => [
                 item.type === 1 ? "Application" : "Website",
                 item.name,
-                item.status === 1
-                    ? "Productive"
-                    : item.status === 2
-                    ? "Unproductive"
-                    : "Neutral",
+                STATUS_LABEL[item.status] || "Neutral",
                 item.pre_request >= 60 ? convertSecToHM(item.pre_request) : "00:00",
                 item.createdAt || "-",
                 item.updatedAt || "-",
@@ -552,21 +556,40 @@ export const exportToPDF = (exportData, rankingFilter = "") => {
 
         if (!rows.length) return false;
 
-        const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
-        doc.setFontSize(14);
-        doc.text("Productivity Rules", 40, 30);
+        const headers = ["Type", "Activity", "Status", "Pre Request", "Created At", "Updated At"];
+        const filterLabel = rankingFilter ? (STATUS_LABEL[rankingFilter] || rankingFilter) : "All";
 
-        autoTable(doc, {
-            head: [["Type", "Activity", "Status", "Pre Request", "Created At", "Updated At"]],
-            body: rows,
-            startY: 50,
-            theme: "grid",
-            styles: { fontSize: 7, cellPadding: 3 },
-            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
-            margin: { left: 20, right: 20 },
+        const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+            await createBrandedPdf({ title: "Productivity Rules" });
+        let cursorY = startY;
+
+        cursorY = drawSummaryCard({
+            doc,
+            cursorY,
+            pageWidth,
+            margin,
+            contentWidth,
+            recordCount: rows.length,
+            cols: 2,
+            entries: [
+                ["Status Filter", filterLabel],
+                ["Date Generated", new Date().toLocaleDateString()],
+            ],
         });
 
+        cursorY = drawSectionHeading(doc, "Detailed Rules", margin, cursorY);
+
+        const styles = adaptiveTableStyles(headers.length);
+        autoTable(doc, {
+            startY: cursorY,
+            head: [headers],
+            body: rows,
+            theme: "grid",
+            ...styles,
+            margin: { left: margin, right: margin },
+        });
+
+        drawFooter(doc, { margin, pageWidth });
         doc.save("Productivity_Rules.pdf");
         return true;
     } catch (error) {
