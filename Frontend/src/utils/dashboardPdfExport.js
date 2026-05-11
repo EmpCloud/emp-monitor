@@ -1,25 +1,12 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import logoUrl from "@/assets/emp.png";
 
-let cachedLogoDataUrl = null;
-
-const loadImageAsDataUrl = async (url) => {
-  if (cachedLogoDataUrl) return cachedLogoDataUrl;
-  try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    cachedLogoDataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-    return cachedLogoDataUrl;
-  } catch {
-    return null;
-  }
-};
+// Use the shared logo loader from pdfBrand so the combined dashboard
+// report and every other report PDF resolve the EmpMonitor logo the
+// same way (via an <Image> element + canvas, which is reliable across
+// production CSP / asset-routing setups where fetch was silently
+// failing and leaving PDFs without a logo).
+import { loadLogoDataUrl } from "./pdfBrand";
 
 const slugify = (s) =>
   (s || "report")
@@ -212,7 +199,7 @@ export const generateModulePdf = async ({
   doc.setFillColor(...BRAND.band);
   doc.rect(0, 0, pageWidth, 84, "F");
 
-  const logo = await loadImageAsDataUrl(logoUrl);
+  const logo = await loadLogoDataUrl();
   if (logo) {
     doc.addImage(logo, "PNG", margin, 22, 118, 38);
   }
@@ -693,7 +680,7 @@ export const generateCombinedDashboardPdf = async ({
   doc.rect(0, 0, pageWidth, 6, "F");
   doc.rect(0, pageHeight - 6, pageWidth, 6, "F");
 
-  const logo = await loadImageAsDataUrl(logoUrl);
+  const logo = await loadLogoDataUrl();
   if (logo) {
     const logoW = 220;
     const logoH = 72;

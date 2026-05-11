@@ -16,22 +16,46 @@ export const PDF_BRAND = {
   band: [248, 250, 252],      // slate-50 (lighter, less heavy than slate-100)
 };
 
+// Rasterize the EmpMonitor logo asset to a PNG data URL via an off-DOM
+// canvas. The previous fetch+FileReader approach silently failed on
+// some production deploys (CSP, asset routing, etc.) which is why the
+// branded header dropped the logo. Using an <Image> element bypasses
+// those issues — the same approach used for dashboard avatars.
 let cachedLogoDataUrl = null;
-export const loadLogoDataUrl = async () => {
-  if (cachedLogoDataUrl) return cachedLogoDataUrl;
-  try {
-    const res = await fetch(logoUrl);
-    const blob = await res.blob();
-    cachedLogoDataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-    return cachedLogoDataUrl;
-  } catch {
-    return null;
-  }
+let logoInflight = null;
+export const loadLogoDataUrl = () => {
+  if (cachedLogoDataUrl) return Promise.resolve(cachedLogoDataUrl);
+  if (logoInflight) return logoInflight;
+
+  logoInflight = new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || 220;
+        const h = img.naturalHeight || 72;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        cachedLogoDataUrl = canvas.toDataURL("image/png");
+        resolve(cachedLogoDataUrl);
+      } catch {
+        resolve(null);
+      } finally {
+        logoInflight = null;
+      }
+    };
+    img.onerror = () => {
+      logoInflight = null;
+      resolve(null);
+    };
+    img.src = logoUrl;
+  });
+
+  return logoInflight;
 };
 
 /**
