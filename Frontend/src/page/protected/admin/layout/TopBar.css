@@ -1,0 +1,52 @@
+@property --ai-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ai-glow-spin {
+  to {
+    --ai-glow-angle: 360deg;
+  }
+}
+
+.emp-ai-btn {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(to right, #096FA6, #032B40) padding-box,
+    #B8B8B8 border-box;
+  transition: background 300ms ease;
+}
+
+.emp-ai-btn-wrap:hover .emp-ai-btn {
+  background:
+    linear-gradient(to right, #096FA6, #032B40) padding-box,
+    linear-gradient(
+      to right,
+      #00D9FF 0%,
+      #0078FF 14%,
+      #39FF14 28%,
+      #FF7A00 55%,
+      #FF00B8 100%
+    ) border-box;
+}
+
+.emp-ai-btn-glow {
+  opacity: 0;
+  filter: blur(6px);
+  background: conic-gradient(
+    from var(--ai-glow-angle),
+    #00D9FF 0%,
+    #0078FF 14%,
+    #39FF14 28%,
+    #FF7A00 55%,
+    #FF00B8 100%,
+    #00D9FF
+  );
+  transition: opacity 300ms ease;
+}
+
+.emp-ai-btn-wrap:hover .emp-ai-btn-glow {
+  opacity: 0.9;
+  animation: ai-glow-spin 3s linear infinite;
+}

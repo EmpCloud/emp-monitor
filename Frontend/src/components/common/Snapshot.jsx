@@ -99,7 +99,7 @@ export default function ActivitySnapshot({ data }) {
       <div className="bg-white flex flex-col rounded-[21px] shadow-md w-full h-full p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+          <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {t("snapshot")}
           </h2>
           <Customreport showMaximize={true} showDownload={true} />

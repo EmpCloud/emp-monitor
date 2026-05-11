@@ -32,6 +32,12 @@ const formatDuration = (value) => {
   ).padStart(2, "0")}`;
 };
 
+const formatPercent = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+  return `${n.toFixed(2)}%`;
+};
+
 export default function NonActiveEmp({
   title,
   employees = [],
@@ -52,15 +58,27 @@ export default function NonActiveEmp({
       const current = byEmp.get(key) || {
         ...emp,
         computer_activities_time: 0,
+        _prodSum: 0,
+        _prodCount: 0,
       };
 
       const add = Number(emp?.computer_activities_time ?? 0);
       current.computer_activities_time += Number.isFinite(add) ? add : 0;
 
+      const prod = Number(emp?.productivity);
+      if (Number.isFinite(prod)) {
+        current._prodSum += prod;
+        current._prodCount += 1;
+      }
+
       byEmp.set(key, current);
     });
 
     return Array.from(byEmp.values())
+      .map((e) => ({
+        ...e,
+        productivityAvg: e._prodCount > 0 ? e._prodSum / e._prodCount : null,
+      }))
       .sort(
         (a, b) =>
           (a?.computer_activities_time ?? 0) -
@@ -71,10 +89,10 @@ export default function NonActiveEmp({
 
   return (
     <>
-      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-4xl p-6 h-full">
+      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-4xl p-6 h-[600px] flex flex-col">
         {/* ── Top Header Row ── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 shrink-0">
+          <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {resolvedTitle}
           </h2>
 
@@ -82,7 +100,7 @@ export default function NonActiveEmp({
         </div>
 
         {/* ── Tabs + Filters Row ── */}
-        {filter}
+        <div className="shrink-0">{filter}</div>
 
         {/* Loading / Empty states */}
         {loading ? (
@@ -97,10 +115,11 @@ export default function NonActiveEmp({
 
         {/* ── Table ── */}
         {rows.length > 0 && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-slate-200 hover:bg-transparent">
-                {[t("empName"), t("timeHoursLabel")].map((h) => (
+                {[t("empName"), t("timeHoursLabel"), "Productivity"].map((h) => (
                   <TableHead
                     key={h}
                     className="text-slate-500 font-medium text-sm pb-3"
@@ -134,7 +153,7 @@ export default function NonActiveEmp({
                           {getEmployeeName(emp)}
                         </p>
                         <p className="text-slate-400 text-xs mt-0.5">
-                          {emp?.a_email ?? emp?.email ?? emp?.role ?? emp?.designation ?? "-"}
+                          {emp?.emp_code ?? emp?.a_email ?? emp?.email ?? emp?.role ?? emp?.designation ?? "-"}
                         </p>
                       </div>
                     </div>
@@ -144,10 +163,16 @@ export default function NonActiveEmp({
                   <TableCell className="py-3.5 text-blue-500 font-semibold text-sm">
                     {formatDuration(emp?.computer_activities_time)}
                   </TableCell>
+
+                  {/* Productivity % */}
+                  <TableCell className="py-3.5 text-emerald-600 font-semibold text-sm">
+                    {formatPercent(emp?.productivityAvg)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
     </>

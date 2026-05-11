@@ -149,7 +149,7 @@ export default function AppUsageChart({
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-slate-900 font-bold text-xl sm:text-2xl tracking-tight">
+          <h2 className="text-slate-900 font-bold text-[1.1rem] tracking-tight">
             {resolvedTitle}
           </h2>
           <div className="flex items-center gap-2 mt-1">

@@ -486,7 +486,8 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          {/* PDF Note & PDF Download Button */}
+          {/* PDF Note & PDF Download Button — temporarily disabled */}
+          {/*
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
               {t("rd_pdf_note")}
@@ -504,6 +505,7 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
               </Button>
             )}
           </div>
+          */}
 
           {/* CSV Download Links (for completed reports) */}
           {doneFiles.length > 0 && (

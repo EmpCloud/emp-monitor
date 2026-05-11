@@ -277,30 +277,15 @@ const EmpAiAssistant = ({ open, onClose, context }) => {
     }
   }, [webglData, getTargetRect, dragState]);
 
-  const handleClose = useCallback(async () => {
-    const el = modalRef.current;
-    if (el) {
-      setAnimState("capturing");
-      try {
-        const canvas = await html2canvas(el, { backgroundColor: null, scale: window.devicePixelRatio || 2 });
-        setWebglData({
-          texture: canvas,
-          startRect: el.getBoundingClientRect(),
-          targetRect: getTargetRect(),
-        });
-        setAnimState("minimizing_webgl");
-        setTimeout(() => {
-          setAnimState("visible");
-          onClose?.();
-        }, GENIE_DURATION);
-        return;
-      } catch (e) {
-        // fallback
-      }
-    }
+  const handleClose = useCallback(() => {
+    // Skip the html2canvas + genie capture on close. The modal is about
+    // to unmount entirely (parent flips `open` to false), so a screenshot
+    // animation to the orb position would be invisible anyway — and on
+    // a populated modal html2canvas takes seconds.
     setAnimState("visible");
+    setWebglData({ texture: null, startRect: null, targetRect: null });
     onClose?.();
-  }, [onClose, getTargetRect]);
+  }, [onClose]);
 
   const handleWebglComplete = useCallback(() => {
     if (animState === "minimizing_webgl") {

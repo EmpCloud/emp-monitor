@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next";
-import { Search, Info } from "lucide-react"
+import { Search, Info, FileSpreadsheet, FileText } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Input } from "@/components/ui/input"
@@ -15,13 +15,12 @@ import {
 import ShowEntries from "@/components/common/elements/ShowEntries"
 import EmpSystemLogsLogo from "@/assets/dlp/system-logs.svg"
 import { useSystemLogsStore } from "@/page/protected/admin/system-logs/systemLogsStore"
-import { useDlpFilters, getDownloadOptions } from "@/hooks/useDlpFilters"
+import { useDlpFilters } from "@/hooks/useDlpFilters"
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 import { Checkbox } from "@/components/ui/checkbox"
 
 const EmpSystemLogs = () => {
     const { t } = useTranslation();
-  const DOWNLOAD_OPTIONS = getDownloadOptions(t);
   const store = useSystemLogsStore()
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading } = store
   const [selectedRows, setSelectedRows] = useState([])
@@ -39,10 +38,11 @@ const EmpSystemLogs = () => {
   }
 
   const {
-    search, setSearch, downloadOption, handleDateRangeChange,
+    search, setSearch, handleDateRangeChange,
     totalPages, currentPage,
     handleLocationChange, handleDepartmentChange, handleEmployeeChange,
-    handlePageSizeChange, handlePageChange, handleDownload,
+    handlePageSizeChange, handlePageChange,
+    handleExportCsv, handleExportPdf,
   } = useDlpFilters(store)
 
   if (loading) {
@@ -105,7 +105,24 @@ const EmpSystemLogs = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("downloads")}</label>
-          <CustomSelect placeholder={t("usbDetection.selectOption")} items={DOWNLOAD_OPTIONS} selected={downloadOption} onChange={handleDownload} />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-sm font-medium transition-colors flex-1"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              {t("csv")}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-sm font-medium transition-colors flex-1"
+            >
+              <FileText className="w-4 h-4" />
+              {t("pdf")}
+            </button>
+          </div>
         </div>
       </div>
 

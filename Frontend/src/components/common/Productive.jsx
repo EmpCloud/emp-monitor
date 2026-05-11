@@ -40,6 +40,12 @@ const formatDuration = (value) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
+const formatPercent = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+  return `${n.toFixed(2)}%`;
+};
+
 export default function TopProductiveEmployees({
   title,
   columns,
@@ -55,23 +61,25 @@ export default function TopProductiveEmployees({
     t("shift"),
     t("clockedIn"),
     t("clockedOut"),
-    t("timeHoursCol")
+    t("timeHoursCol"),
+    "Productivity",
   ];
   return (
     <>
-      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-4xl p-6 h-full">
+      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-4xl p-6 h-[600px] flex flex-col">
         {/* ── Top Header Row ── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 shrink-0">
+          <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {resolvedTitle}
           </h2>
 
           {report}
         </div>
 
-        {filter}
+        <div className="shrink-0">{filter}</div>
 
         {/* ── Table ── */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-200 hover:bg-transparent">
@@ -130,6 +138,15 @@ export default function TopProductiveEmployees({
                     );
                   }
 
+                  if (/productivity|percent/i.test(col)) {
+                    const pct = emp?.percentage ?? emp?.productivity ?? emp?.productive_percentage;
+                    return (
+                      <TableCell key={key} className="py-3.5 text-emerald-600 font-semibold text-sm">
+                        {formatPercent(pct)}
+                      </TableCell>
+                    );
+                  }
+
                   if (/time/i.test(col)) {
                     return (
                       <TableCell key={key} className="py-3.5 text-blue-500 font-semibold text-sm">
@@ -149,6 +166,7 @@ export default function TopProductiveEmployees({
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </>
   );

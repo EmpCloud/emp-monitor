@@ -22,6 +22,12 @@ const formatDuration = (value) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
+const formatPercent = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+  return `${n.toFixed(2)}%`;
+};
+
 const buildChartDataFromEmployees = (employees = []) => {
   if (!Array.isArray(employees) || employees.length === 0) {
     return [];
@@ -34,6 +40,11 @@ const buildChartDataFromEmployees = (employees = []) => {
       emp?.timeHours ??
       emp?.duration_seconds ??
       0;
+    const productivity =
+      emp?.percentage ??
+      emp?.productivity ??
+      emp?.productive_percentage ??
+      null;
 
     return {
       date: String(idx + 1),
@@ -41,6 +52,7 @@ const buildChartDataFromEmployees = (employees = []) => {
       name: getEmployeeName(emp),
       role: emp?.role ?? emp?.designation ?? emp?.a_email ?? emp?.email ?? "",
       hours: formatDuration(duration),
+      productivity: formatPercent(productivity),
       seed: String(emp?.id ?? emp?.employee_id ?? `emp-${idx}`),
     };
   });
@@ -228,19 +240,15 @@ export default function TopNonProductiveEmployees({
             >
               ${d.role}
             </div>
-            <div
-              style="
-                display:inline-block;
-                margin-top:6px;
-                background:rgba(59,130,246,0.14);
-                border-radius:999px;
-                padding:3px 10px;
-                color:#60a5fa;
-                font-weight:700;
-                font-size:11px;
-              "
-            >
-              ${d.hours}
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="color:#94a3b8; font-size:10px; font-weight:500;">Active Time</span>
+                <span style="color:#60a5fa; font-size:12px; font-weight:700;">${d.hours}</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="color:#94a3b8; font-size:10px; font-weight:500;">Productivity %</span>
+                <span style="color:#6ee7b7; font-size:12px; font-weight:700;">${d.productivity && d.productivity !== "-" ? d.productivity : "—"}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -258,17 +266,17 @@ export default function TopNonProductiveEmployees({
 
   return (
     <>
-      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-5xl p-6">
+      <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full max-w-5xl p-6 h-[600px] flex flex-col">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 shrink-0">
+          <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {resolvedTitle}
           </h2>
           {report}
         </div>
 
         {/* Tabs + Filters */}
-        {filter}
+        <div className="shrink-0">{filter}</div>
 
         {/* Loading / Empty states */}
         {loading ? (
@@ -282,7 +290,7 @@ export default function TopNonProductiveEmployees({
         ) : null}
 
         {/* Chart */}
-        <div ref={chartRef} style={{ width: "100%", height: 380 }} />
+        <div ref={chartRef} className="flex-1 min-h-0" style={{ width: "100%" }} />
       </div>
     </>
   );

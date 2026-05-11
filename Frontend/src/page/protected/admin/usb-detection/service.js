@@ -41,7 +41,7 @@ const buildUrl = (filters) => {
     const start = filters.startDate || moment().format("YYYY-MM-DD");
     const end = filters.endDate || moment().format("YYYY-MM-DD");
 
-    let url = `/system-logs?startDate=${start}&endDate=${end}&limit=${filters.limit}&offset=${filters.skip}`;
+    let url = `/system-logs?startDate=${start}&endDate=${end}&limit=${filters.limit}&offset=${filters.skip}&type=2,3,4,5`;
 
     if (filters.employeeId && filters.employeeId !== "all") url += `&employee_id=${filters.employeeId}`;
     if (filters.locationId && filters.locationId !== "all") url += `&location_id=${filters.locationId}`;

@@ -331,8 +331,8 @@ export default function TrackEmp() {
               )}
               <Button
                 onClick={handleSave}
-                disabled={saving}
-                className="h-9 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold shadow-sm"
+                disabled={saving || settings.settingType !== "3"}
+                className="h-9 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? t("track_saving") : t("save")}
               </Button>

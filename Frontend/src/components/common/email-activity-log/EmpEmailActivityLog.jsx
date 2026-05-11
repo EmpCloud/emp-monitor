@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { Search, Info, Eye, Send, Inbox, Paperclip } from "lucide-react"
+import { Search, Info, Eye, Send, Inbox, Paperclip, FileSpreadsheet, FileText } from "lucide-react"
 import moment from "moment"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import EmpEmailActivityLogLogo from "@/assets/dlp/email-activity-logs.svg"
 import { useEmailActivityLogsStore } from "@/page/protected/admin/email-activity-logs/emailActivityLogsStore"
-import { useDlpFilters, getDownloadOptions } from "@/hooks/useDlpFilters"
+import { useDlpFilters } from "@/hooks/useDlpFilters"
 import DateRangeCalendar from "@/components/common/elements/DateRangeCalendar"
 
 const getTypeOptions = (t) => [
@@ -31,15 +31,15 @@ const getTypeOptions = (t) => [
 const EmpEmailActivityLog = () => {
   const { t } = useTranslation()
   const TYPE_OPTIONS = useMemo(() => getTypeOptions(t), [t])
-  const DOWNLOAD_OPTIONS = useMemo(() => getDownloadOptions(t), [t])
   const store = useEmailActivityLogsStore()
   const { rows, totalDocs, locations, departments, employees, filters, loading, tableLoading, setFilters } = store
 
   const {
-    search, setSearch, downloadOption, handleDateRangeChange,
+    search, setSearch, handleDateRangeChange,
     totalPages, currentPage,
     handleLocationChange, handleDepartmentChange, handleEmployeeChange,
-    handlePageSizeChange, handlePageChange, handleDownload,
+    handlePageSizeChange, handlePageChange,
+    handleExportCsv, handleExportPdf,
   } = useDlpFilters(store, ["type"])
 
   const [viewRow, setViewRow] = useState(null)
@@ -115,7 +115,24 @@ const EmpEmailActivityLog = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("email_download")}</label>
-          <CustomSelect placeholder={t("email_select_option")} items={DOWNLOAD_OPTIONS} selected={downloadOption} onChange={handleDownload} />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-sm font-medium transition-colors flex-1"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              {t("csv")}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-sm font-medium transition-colors flex-1"
+            >
+              <FileText className="w-4 h-4" />
+              {t("pdf")}
+            </button>
+          </div>
         </div>
       </div>
 

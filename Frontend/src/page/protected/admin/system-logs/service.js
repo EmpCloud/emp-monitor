@@ -49,7 +49,7 @@ export const fetchLogs = async (filters) => {
         const totalDocs = data?.data?.totalDocs ?? 0;
         return { rows: (Array.isArray(docs) ? docs : []).map(mapRow), totalDocs };
     } catch (error) {
-        console.error("System Logs API Error:", error);
+        console.error("Clipboard Logs API Error:", error);
         return { rows: [], totalDocs: 0 };
     }
 };
@@ -62,7 +62,7 @@ export const fetchExport = async (filters) => {
         const docs = data?.data?.docs ?? [];
         return (Array.isArray(docs) ? docs : []).map(mapRow);
     } catch (error) {
-        console.error("System Logs Export API Error:", error);
+        console.error("Clipboard Logs Export API Error:", error);
         return [];
     }
 };
@@ -78,13 +78,13 @@ const buildExportRow = (row) => [
 
 export const exportCsv = (rows, filters) => exportToCsv({
     rows, headers: HEADERS, buildRow: buildExportRow,
-    sheetName: "System Logs",
-    fileName: `System_Logs_${filters.startDate}_to_${filters.endDate}.xlsx`,
+    sheetName: "Clipboard Logs",
+    fileName: `Clipboard_Logs_${filters.startDate}_to_${filters.endDate}.xlsx`,
 });
 
 export const exportPdf = (rows, filters) => exportToPdf({
     rows, headers: HEADERS, buildRow: buildExportRow,
-    title: "System Logs Report",
-    fileName: `System_Logs_${filters.startDate}_to_${filters.endDate}.pdf`,
+    title: "Clipboard Logs Report",
+    fileName: `Clipboard_Logs_${filters.startDate}_to_${filters.endDate}.pdf`,
     dateRange: `${filters.startDate} to ${filters.endDate}`,
 });

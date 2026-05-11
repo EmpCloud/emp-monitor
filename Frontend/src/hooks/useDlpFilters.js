@@ -105,6 +105,22 @@ export const useDlpFilters = (store, extraDeps = []) => {
         setTimeout(() => setDownloadOption("all"), 500);
     }, [exportPdf, exportCsv, rows.length]);
 
+    const handleExportCsv = useCallback(() => {
+        if (rows.length === 0) {
+            alert("No data available to download.");
+            return;
+        }
+        exportCsv();
+    }, [exportCsv, rows.length]);
+
+    const handleExportPdf = useCallback(() => {
+        if (rows.length === 0) {
+            alert("No data available to download.");
+            return;
+        }
+        exportPdf();
+    }, [exportPdf, rows.length]);
+
     return {
         search, setSearch,
         downloadOption,
@@ -116,5 +132,7 @@ export const useDlpFilters = (store, extraDeps = []) => {
         handlePageSizeChange,
         handlePageChange,
         handleDownload,
+        handleExportCsv,
+        handleExportPdf,
     };
 };

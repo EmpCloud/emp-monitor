@@ -138,7 +138,7 @@ export default function WebUsageChart({
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+          <h2 className="text-slate-900 font-semibold text-[1.1rem]">
             {resolvedTitle}
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">{t("fromDateRange")}</p>

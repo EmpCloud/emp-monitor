@@ -22,6 +22,27 @@ import { useNonAdminDashboardStore } from "./dashboardStore";
 import useNonAdminSession from "../../../../sessions/useNonAdminSession";
 import { usePermission }  from "../../../../hooks/usePermission";
 
+// ── PDF export helpers (shared across modules) ──────────────────────
+const fmtDuration = (sec) => {
+  const n = Number(sec);
+  if (!Number.isFinite(n) || n < 0) return "-";
+  const total = Math.floor(n);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+};
+const fmtPercent = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? `${n.toFixed(2)}%` : "-";
+};
+const empName = (e) => {
+  const f = e?.first_name ?? "";
+  const l = e?.last_name ?? "";
+  const full = `${f} ${l}`.trim();
+  return full || e?.name || e?.employee_name || "-";
+};
+
 const NonAdminDashboard = () => {
   const { t } = useTranslation();
   const { nonAdmin }   = useNonAdminSession();
@@ -148,9 +169,54 @@ const NonAdminDashboard = () => {
     );
   }
 
-  const reportControls = (
-    <Customreport showShield showButton showMaximize showDownload />
+  // Each module supplies its own data/columns so the downloaded PDF
+  // reflects what's actually visible on that card.
+  const makeControls = ({ pdfTitle, pdfSubtitle, pdfMeta, pdfData, pdfColumns } = {}) => (
+    <Customreport
+      title={pdfTitle}
+      showShield
+      showButton
+      showMaximize
+      showDownload
+      pdfTitle={pdfTitle}
+      pdfSubtitle={pdfSubtitle}
+      pdfMeta={pdfMeta}
+      pdfData={pdfData}
+      pdfColumns={pdfColumns}
+    />
   );
+
+  const employeeListColumns = [
+    { header: "#", render: (_, i) => i, width: 24 },
+    { header: "Employee", render: empName },
+    { header: "Emp Code", render: (r) => r?.emp_code ?? "-" },
+    { header: "Department", render: (r) => r?.department ?? "-" },
+    { header: "Location", render: (r) => r?.location ?? "-" },
+    { header: "Active Time", render: (r) => fmtDuration(r?.computer_activities_time) },
+    { header: "Productivity", render: (r) => fmtPercent(r?.productivity) },
+  ];
+
+  const productiveListColumns = [
+    { header: "#", render: (_, i) => i, width: 24 },
+    { header: "Employee", render: empName },
+    { header: "Emp Code", render: (r) => r?.emp_code ?? "-" },
+    { header: "Active Time", render: (r) => fmtDuration(r?.duration ?? r?.time_hours) },
+    { header: "Productivity", render: (r) => fmtPercent(r?.percentage ?? r?.productivity) },
+  ];
+
+  const usageListColumns = (entityHeader) => [
+    { header: "#", render: (_, i) => i, width: 24 },
+    { header: entityHeader, render: (r) => r?.name ?? "-" },
+    { header: "Usage %", render: (r) => fmtPercent(r?.value) },
+  ];
+
+  const performanceListColumns = (entityHeader) => [
+    { header: "#", render: (_, i) => i, width: 24 },
+    { header: entityHeader, render: (r) => r?.name ?? "-" },
+    { header: "Total Time", render: (r) => r?.hours ?? r?.time ?? "-" },
+  ];
+
+  const today = new Date().toLocaleDateString();
 
   return (
     <div className="bg-slate-200 w-full p-5">
@@ -177,10 +243,22 @@ const NonAdminDashboard = () => {
             <div className="xl:col-span-6 col-span-12">
               <TopProductiveEmployees
                 title={t("top10productive")}
-                columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
+                columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`, "Productivity"]}
                 employees={productiveEmployees}
                 loading={productiveEmployeesLoading}
-                report={reportControls}
+                report={makeControls({
+                  pdfTitle: t("top10productive"),
+                  pdfSubtitle: "Employees with the highest productive time over the selected period.",
+                  pdfMeta: {
+                    Module: "Top 10 Productive Employees",
+                    "Date Generated": today,
+                    "View By": filters.productiveBy || "today",
+                    Location: filters.productiveLocation || "All",
+                    Department: filters.productiveDepartment || "All",
+                  },
+                  pdfData: productiveEmployees,
+                  pdfColumns: productiveListColumns,
+                })}
                 filter={
                   <DashboardFilter
                     locations={locations}
@@ -202,7 +280,19 @@ const NonAdminDashboard = () => {
                 columns={[`${t("employee")} ${t("name")}`, `${t("time")} (${t("hours")})`]}
                 employees={unproductiveEmployees}
                 loading={unproductiveEmployeesLoading}
-                report={reportControls}
+                report={makeControls({
+                  pdfTitle: t("top10nonproductive"),
+                  pdfSubtitle: "Employees with the lowest productive time / highest idle time.",
+                  pdfMeta: {
+                    Module: "Top 10 Non-Productive Employees",
+                    "Date Generated": today,
+                    "View By": filters.unproductiveBy || "today",
+                    Location: filters.unproductiveLocation || "All",
+                    Department: filters.unproductiveDepartment || "All",
+                  },
+                  pdfData: unproductiveEmployees,
+                  pdfColumns: productiveListColumns,
+                })}
                 filter={
                   <DashboardFilter
                     locations={locations}
@@ -228,7 +318,19 @@ const NonAdminDashboard = () => {
                 title={t("top10active")}
                 employees={activeEmployees}
                 loading={activeEmployeesLoading}
-                report={reportControls}
+                report={makeControls({
+                  pdfTitle: t("top10active"),
+                  pdfSubtitle: "Employees with the highest active hours on their workstations.",
+                  pdfMeta: {
+                    Module: "Top 10 Active Employees",
+                    "Date Generated": today,
+                    "View By": filters.activeBy || "today",
+                    Location: filters.activeLocation || "All",
+                    Department: filters.activeDepartment || "All",
+                  },
+                  pdfData: activeEmployees,
+                  pdfColumns: employeeListColumns,
+                })}
                 filter={
                   <DashboardFilter
                     locations={locations}
@@ -249,7 +351,19 @@ const NonAdminDashboard = () => {
                 title={t("top10nonactive")}
                 employees={nonActiveEmployees}
                 loading={nonActiveEmployeesLoading}
-                report={reportControls}
+                report={makeControls({
+                  pdfTitle: t("top10nonactive"),
+                  pdfSubtitle: "Employees with the lowest active hours during the period.",
+                  pdfMeta: {
+                    Module: "Top 10 Non-Active Employees",
+                    "Date Generated": today,
+                    "View By": filters.nonActiveBy || "today",
+                    Location: filters.nonActiveLocation || "All",
+                    Department: filters.nonActiveDepartment || "All",
+                  },
+                  pdfData: nonActiveEmployees,
+                  pdfColumns: employeeListColumns,
+                })}
                 filter={
                   <DashboardFilter
                     locations={locations}
@@ -273,7 +387,18 @@ const NonAdminDashboard = () => {
             title={t("locPerform")}
             data={locationPerformance}
             loading={locationPerformanceLoading}
-            report={reportControls}
+            report={makeControls({
+              pdfTitle: t("locPerform"),
+              pdfSubtitle: "Aggregated productive hours grouped by office location.",
+              pdfMeta: {
+                Module: "Location Performance",
+                "Date Generated": today,
+                "View By": filters.locationPerformanceBy || "today",
+                "Metric Type": filters.locationPerformanceType || "default",
+              },
+              pdfData: locationPerformance?.rows || [],
+              pdfColumns: performanceListColumns("Location"),
+            })}
             filter={
               <PerformanceFilter
                 tabValue={filters.locationPerformanceBy}
@@ -291,7 +416,18 @@ const NonAdminDashboard = () => {
             title={t("deptPerform")}
             data={departmentPerformance}
             loading={departmentPerformanceLoading}
-            report={reportControls}
+            report={makeControls({
+              pdfTitle: t("deptPerform"),
+              pdfSubtitle: "Aggregated productive hours grouped by department.",
+              pdfMeta: {
+                Module: "Department Performance",
+                "Date Generated": today,
+                "View By": filters.departmentPerformanceBy || "today",
+                "Metric Type": filters.departmentPerformanceType || "default",
+              },
+              pdfData: departmentPerformance?.rows || [],
+              pdfColumns: performanceListColumns("Department"),
+            })}
             filter={
               <PerformanceFilter
                 tabValue={filters.departmentPerformanceBy}
@@ -310,7 +446,17 @@ const NonAdminDashboard = () => {
             <WebUsageChart
               title={t("top10webUsage")}
               data={webUsage}
-              report={reportControls}
+              report={makeControls({
+                pdfTitle: t("top10webUsage"),
+                pdfSubtitle: "The 10 websites that received the most total time during the period.",
+                pdfMeta: {
+                  Module: "Top 10 Website Usage",
+                  "Date Generated": today,
+                  Period: "Today",
+                },
+                pdfData: webUsage?.today || [],
+                pdfColumns: usageListColumns("Website"),
+              })}
             />
           </div>
         )}
@@ -321,7 +467,17 @@ const NonAdminDashboard = () => {
             <AppUsageChart
               title={t("top10appUsage")}
               data={appUsage}
-              report={reportControls}
+              report={makeControls({
+                pdfTitle: t("top10appUsage"),
+                pdfSubtitle: "The 10 applications that received the most total time during the period.",
+                pdfMeta: {
+                  Module: "Top 10 Application Usage",
+                  "Date Generated": today,
+                  Period: "Today",
+                },
+                pdfData: appUsage?.today || [],
+                pdfColumns: usageListColumns("Application"),
+              })}
             />
           </div>
         )}

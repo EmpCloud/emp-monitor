@@ -1,19 +1,167 @@
-import React from 'react'
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  Instagram,
+  Usb,
+  MonitorPlay,
+  Settings,
+} from "lucide-react";
 import empaiLogo from "@/assets/empai.png";
+import "./EmpAi.css";
+
+const CARDS = [
+  {
+    id: 1,
+    name: "Andrei Luca",
+    desc: '"Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci"',
+    Icon: Instagram,
+    palette: {
+      bg: "bg-[#E6FBF7]",
+      bar: "bg-[#00CC9A]",
+      text: "text-[#00CC9A]",
+      iconBg: "bg-[#00CC9A]",
+      divider: "bg-[#00CC9A]/30",
+    },
+  },
+  {
+    id: 2,
+    name: "Andrei Luca",
+    desc: '"Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci"',
+    Icon: Usb,
+    palette: {
+      bg: "bg-[#FFEEEF]",
+      bar: "bg-[#EB5958]",
+      text: "text-[#EB5958]",
+      iconBg: "bg-[#EB5958]",
+      divider: "bg-[#EB5958]/30",
+    },
+  },
+  {
+    id: 3,
+    name: "Andrei Luca",
+    desc: '"Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci"',
+    Icon: MonitorPlay,
+    palette: {
+      bg: "bg-[#FEF8E8]",
+      bar: "bg-[#F2C84F]",
+      text: "text-[#F2C84F]",
+      iconBg: "bg-[#F2C84F]",
+      divider: "bg-[#F2C84F]/30",
+    },
+  },
+  {
+    id: 4,
+    name: "Andrei Luca",
+    desc: '"Lorem ipsum quia dolor sit porro quisquam est qui amet consectetur adipisci"',
+    Icon: Settings,
+    palette: {
+      bg: "bg-[#ECEDFE]",
+      bar: "bg-[#5458F4]",
+      text: "text-[#5458F4]",
+      iconBg: "bg-[#5458F4]",
+      divider: "bg-[#5458F4]/30",
+    },
+  },
+];
+
+const MORPH_MS = 320;
+
 const EmpAi = () => {
   const { t } = useTranslation();
-  return (
-     <div className="  h-full">
-        <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 p-4 h-full flex flex-col items-center justify-center">
-            <img src={empaiLogo} alt="" className='w-24 h-24' />
-            <div className='text-center mt-4'>
-                <h2 className='2xl:text-xl  font-semibold text-black'>{t("askEmpAiAssistant")}</h2>
-                <p className='text-black/80 text-xs'>{t("readyToAssist")}</p>
-            </div>
-        </div>
-     </div>
-  )
-}
+  const [expanded, setExpanded] = useState(false);
 
-export default EmpAi
+  return (
+    <div className="h-full">
+      <div className="relative bg-white rounded-[21px] shadow-sm border border-slate-100 h-full overflow-hidden">
+
+        {/* Sky-blue header backdrop — grows from 0 height into view */}
+        <div
+          className={`absolute inset-x-0 top-0 bg-[#E9F6FF] transition-[height,opacity] duration-300 ease-out
+            ${expanded ? "h-21 opacity-100" : "h-0 opacity-0"}`}
+        />
+
+        {/* Click layer:
+            collapsed → covers whole panel, opens it
+            expanded  → covers only the header strip, closes it back */}
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-label={expanded ? "Back" : "Open EMP AI"}
+          className={`absolute inset-x-0 top-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-300
+            ${expanded ? "h-22 z-20" : "h-full z-30 rounded-[21px]"}`}
+        />
+
+        {/* The SAME logo image — morphs from centered/large to top-left/small */}
+        <img
+          src={empaiLogo}
+          alt=""
+          className={`absolute object-contain z-10 transition-all duration-300 ease-out
+            ${expanded
+              ? "top-4 left-4 w-14 h-14"
+              : "top-[calc(50%-75px)] left-1/2 -translate-x-1/2 w-24 h-24"
+            }`}
+        />
+
+        {/* The SAME text — morphs position + size to sit beside the small logo */}
+        <div
+          className={`absolute z-10 transition-all duration-300 ease-out
+            ${expanded
+              ? "top-5 left-19.5 right-4 text-left"
+              : "top-[calc(50%+37px)] inset-x-0 text-center"
+            }`}
+        >
+          <h2
+            className={`font-semibold text-black transition-all duration-300 ease-out
+              ${expanded ? "text-base sm:text-lg leading-tight truncate" : "2xl:text-xl"}`}
+          >
+            {t("askEmpAiAssistant")}
+          </h2>
+          <p
+            className={`text-xs transition-all duration-300 ease-out
+              ${expanded ? "text-black/70 mt-0.5 truncate" : "text-black/80"}`}
+          >
+            {t("readyToAssist")}
+          </p>
+        </div>
+
+        {/* Cards — mounted only when expanded; each notifies-in with stagger */}
+        {expanded && (
+          <div className="absolute inset-x-0 bottom-0 top-22 overflow-y-auto overflow-x-hidden px-3 pt-2 pb-3 space-y-3">
+            {CARDS.map((card, idx) => {
+              const { Icon, palette } = card;
+              return (
+                <div
+                  key={card.id}
+                  style={{ animationDelay: `${MORPH_MS - 120 + idx * 60}ms` }}
+                  className={`${palette.bg} empai-card empai-notif-in rounded-[6px] flex items-stretch overflow-`}
+                >
+                  <div className={`min-w-1.5 my-[1px] ${palette.bar} rounded-full`} />
+                  <div className="flex-1 min-w-0 flex items-center gap-3 p-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-sm font-semibold ${palette.text} truncate`}>
+                        {card.name}
+                      </h3>
+                      <p className="text-[11px] leading-snug text-slate-600 mt-1 line-clamp-2">
+                        {card.desc}
+                      </p>
+                    </div>
+                    <div className={`w-px self-stretch ${palette.divider}`} />
+                    <div
+                      className={`${palette.iconBg} relative shrink-0 w-11 h-11 rounded-lg
+                                  flex items-center justify-center text-white shadow-sm`}
+                    >
+                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-white/40" />
+                      <Icon className="size-5" strokeWidth={2} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EmpAi;

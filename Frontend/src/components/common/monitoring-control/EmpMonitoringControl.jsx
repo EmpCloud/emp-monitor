@@ -316,13 +316,6 @@ const EmpMonitoringControl = () => {
             ) : (
               tableRows
             )}
-            {!loading && !tableLoading && groups.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center text-sm text-gray-400 py-6">
-                  {t("monitoring.noGroupsFound")}
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

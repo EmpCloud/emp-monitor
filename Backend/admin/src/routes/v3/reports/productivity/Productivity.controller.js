@@ -18,7 +18,7 @@ class PrController {
             actionsTracker(req, 'Productivity report requested (?).', [req.query]);
             let manager_id = req.decoded.employee_id || null;
             if (req.decoded.role === 'Employee') {
-                req.query.employee_id = req.decoded.employee_id.toString();
+                req.query.employee_id = req?.decoded?.employee_id?.toString();
             } else if (req.query.employee_id == req.decoded.employee_id) {
                 manager_id = null;
             }

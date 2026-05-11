@@ -1,0 +1,25 @@
+/* ── EmpAi: morph logo+text to top, then cascade cards ── */
+
+:root {
+  --empai-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Notification card entrance: slides in from the right + fade */
+@keyframes empai-notif-in {
+  0%   { opacity: 0; transform: translateX(28px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.empai-notif-in {
+  animation: empai-notif-in 260ms var(--empai-ease) both;
+}
+
+/* Soft hover on cards */
+.empai-card {
+  transition: transform 200ms var(--empai-ease),
+              box-shadow 200ms var(--empai-ease);
+}
+.empai-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -8px rgba(15, 23, 42, 0.12);
+}

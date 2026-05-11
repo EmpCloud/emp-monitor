@@ -1,8 +1,9 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Download, Fullscreen } from "lucide-react";
+import { Download, Fullscreen, Minimize2 } from "lucide-react";
 import aiVideo from "@/assets/ai.webm";
+import { generateModulePdf } from "@/utils/dashboardPdfExport";
 
 /**
  * Walk up the DOM from `start` to the nearest card-looking ancestor
@@ -35,10 +36,17 @@ const Customreport = ({
   onAiClick,
   onMaximize,
   onDownload,
+  pdfTitle,
+  pdfSubtitle,
+  pdfData,
+  pdfColumns,
+  pdfMeta,
 }) => {
   const { t } = useTranslation();
   const videoRef = useRef(null);
   const rootRef = useRef(null);
+  const fsTargetRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const resolvedButtonText = buttonText || t("viewReport");
 
   const handleVideoMouseEnter = useCallback(() => {
@@ -55,18 +63,46 @@ const Customreport = ({
     el.currentTime = 0;
   }, []);
 
-  const handleMaximize = useCallback(async () => {
+  // Exit fullscreen on ESC and clean up on unmount
+  useEffect(() => {
+    if (!isFullscreen) {
+      document.body.classList.remove("has-emp-fullscreen");
+      return;
+    }
+    document.body.classList.add("has-emp-fullscreen");
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        fsTargetRef.current?.classList.remove("emp-fullscreen");
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = original;
+      document.body.classList.remove("has-emp-fullscreen");
+    };
+  }, [isFullscreen]);
+
+  useEffect(() => () => {
+    // safety: if unmounted while fullscreen, clean up the class
+    fsTargetRef.current?.classList.remove("emp-fullscreen");
+    document.body.classList.remove("has-emp-fullscreen");
+  }, []);
+
+  const handleMaximize = useCallback(() => {
     if (onMaximize) return onMaximize();
     const target = findCardAncestor(rootRef.current);
     if (!target) return;
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await target.requestFullscreen();
-      }
-    } catch (err) {
-      console.error("Fullscreen toggle failed:", err);
+    fsTargetRef.current = target;
+    if (target.classList.contains("emp-fullscreen")) {
+      target.classList.remove("emp-fullscreen");
+      setIsFullscreen(false);
+    } else {
+      target.classList.add("emp-fullscreen");
+      setIsFullscreen(true);
     }
   }, [onMaximize]);
 
@@ -75,31 +111,24 @@ const Customreport = ({
     const target = findCardAncestor(rootRef.current);
     if (!target) return;
     try {
-      const { default: html2canvas } = await import("html2canvas-pro");
-      const canvas = await html2canvas(target, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      await generateModulePdf({
+        title: pdfTitle || title || "Dashboard Report",
+        subtitle: pdfSubtitle,
+        target,
+        data: pdfData,
+        columns: pdfColumns,
+        meta: pdfMeta,
+        fileName: `${slugify(pdfTitle || title)}-${new Date()
+          .toISOString()
+          .slice(0, 10)}.pdf`,
       });
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${slugify(title)}-${new Date().toISOString().slice(0, 10)}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, "image/png");
     } catch (err) {
-      console.error("Card download failed:", err);
+      console.error("PDF export failed:", err);
     }
-  }, [onDownload, title]);
+  }, [onDownload, title, pdfTitle, pdfSubtitle, pdfData, pdfColumns, pdfMeta]);
 
   return (
-    <div ref={rootRef} className="flex flex-wrap items-center justify-between gap-3">
+    <div ref={rootRef} className="emp-pdf-hide-on-capture flex flex-wrap items-center justify-between gap-3">
       {showShield && (
         <div
           className="w-12 h-12 flex items-center justify-center shrink-0 cursor-pointer"
@@ -133,11 +162,11 @@ const Customreport = ({
         <button
           type="button"
           onClick={handleMaximize}
-          title="Fullscreen"
-          aria-label="Fullscreen"
-          className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+          title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          className="emp-pdf-hide-on-capture text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
         >
-          <Fullscreen size={16} />
+          {isFullscreen ? <Minimize2 size={16} /> : <Fullscreen size={16} />}
         </button>
       )}
 
@@ -145,9 +174,9 @@ const Customreport = ({
         <button
           type="button"
           onClick={handleDownload}
-          title="Download as image"
-          aria-label="Download as image"
-          className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+          title="Download as PDF"
+          aria-label="Download as PDF"
+          className="emp-pdf-hide-on-capture text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
         >
           <Download size={16} />
         </button>

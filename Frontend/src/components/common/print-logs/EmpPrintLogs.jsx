@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next";
-import { Download, Search, Info, Printer } from "lucide-react"
+import { Search, Info, Printer, FileSpreadsheet, FileText } from "lucide-react"
 import PaginationComponent from "@/components/common/Pagination"
 import CustomSelect from "@/components/common/elements/CustomSelect"
 import { Button } from "@/components/ui/button"
@@ -204,20 +204,20 @@ const EmpPrintLogs = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            size="lg"
-            className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-sm font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            CSV
-          </Button>
-          <Button
-            size="lg"
-            className="rounded-xl bg-violet-500 hover:bg-violet-600 px-5 text-xs font-semibold shadow-sm"
+            <FileSpreadsheet className="w-4 h-4" />
+            {t("csv")}
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-sm font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            PDF
-          </Button>
+            <FileText className="w-4 h-4" />
+            {t("pdf")}
+          </button>
         </div>
       </div>
 

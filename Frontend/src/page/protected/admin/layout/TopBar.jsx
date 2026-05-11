@@ -23,6 +23,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UniPass from "@/components/common/UniPass";
 import BackToCloud from "@/components/BackToCloud";
+import aiWhiteLogo from "@/assets/ai_white_logo.svg";
+import "./TopBar.css";
 
 export default function TopHeader() {
   const { t } = useTranslation();
@@ -65,6 +67,21 @@ export default function TopHeader() {
 
       {/* Right — Actions */}
       <div className="flex items-center gap-4">
+
+        <div className="emp-ai-btn-wrap relative inline-flex">
+          <div
+            aria-hidden="true"
+            className="emp-ai-btn-glow pointer-events-none absolute -inset-0.5 rounded-[10px]"
+          />
+          <button
+            type="button"
+            className="emp-ai-btn relative flex items-center gap-1.5 rounded-[9px] px-3 py-1.5 cursor-pointer text-white text-[10px] font-semibold"
+          >
+            <img src={aiWhiteLogo} alt="" className="h-3.75" />
+            EMP AI ASSISTANT
+          </button>
+        </div>
+
         <BackToCloud />
         {/* HRMS Badge */}
         {/* <button className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-slate-50 transition-colors">

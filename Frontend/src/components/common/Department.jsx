@@ -84,7 +84,7 @@ export default function DepartmentPerformance({
     <div className="bg-white rounded-[21px] shadow-sm border border-slate-100 w-full h-full p-5 sm:p-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <h2 className="text-slate-900 font-semibold text-xl sm:text-2xl">
+        <h2 className="text-slate-900 font-semibold text-[1.1rem]">
           {resolvedTitle}
         </h2>
         {report}
