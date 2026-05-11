@@ -27,6 +27,18 @@ const DAY_LABELS = {
     fri: "Fri", sat: "Sat", sun: "Sun",
 }
 
+// Canonical week order — the API returns shift days keyed by short
+// weekday names but the keys are not always inserted in calendar order,
+// so the days chip strip looked shuffled in the table. Sorting here
+// fixes that for both the day chips and the time cell preview.
+const DAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+const dayIndex = (k) => {
+    const i = DAY_ORDER.indexOf(String(k).toLowerCase())
+    return i === -1 ? DAY_ORDER.length : i
+}
+const sortDays = (keys) =>
+    Array.from(keys).sort((a, b) => dayIndex(a) - dayIndex(b))
+
 const COLOR_CLASSES = {
     1: "bg-emerald-500",   // green
     2: "bg-yellow-400",    // yellow
@@ -105,8 +117,9 @@ const ExportDropdown = () => {
 // ─── Days Cell ──────────────────────────────────────────────────────────────
 
 const DaysCell = ({ data }) => {
-    const days = data && typeof data === "object" ? Object.keys(data) : []
-    if (days.length === 0) return <span className="text-slate-400">--</span>
+    const rawKeys = data && typeof data === "object" ? Object.keys(data) : []
+    if (rawKeys.length === 0) return <span className="text-slate-400">--</span>
+    const days = sortDays(rawKeys)
     return (
         <div className="flex flex-wrap gap-1">
             {days.map((day) => (
@@ -123,11 +136,14 @@ const DaysCell = ({ data }) => {
 
 // ─── Time Cell ──────────────────────────────────────────────────────────────
 
+// Pick the earliest weekday's time so the preview is deterministic
+// (was "first inserted key", which made consecutive renders look
+// inconsistent when the API returned keys in different orders).
 const getFirstTime = (data, field) => {
     if (!data || typeof data !== "object") return "--"
-    const entries = Object.values(data)
-    if (entries.length === 0) return "--"
-    return entries[0]?.time?.[field] || "--"
+    const keys = sortDays(Object.keys(data))
+    if (keys.length === 0) return "--"
+    return data[keys[0]]?.time?.[field] || "--"
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────
