@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import autoTable from "jspdf-autotable"
 
 import Headers from "@/components/common/employee-realtime-insights/Headers"
 import SearchSection from "@/components/common/employee-realtime-insights/SearchSection"
@@ -7,6 +9,13 @@ import ProductivitySlider from "@/components/common/employee-realtime-insights/P
 import EmployeeCard from "@/components/common/employee-realtime-insights/EmployeeCard"
 
 import { useRealtimeInsightsStore } from "./realtimeInsightsStore"
+import {
+  createBrandedPdf,
+  drawSummaryCard,
+  drawSectionHeading,
+  adaptiveTableStyles,
+  drawFooter,
+} from "@/utils/pdfBrand"
 
 const EmpRealtimeInsights = () => {
   const { t } = useTranslation()
@@ -73,6 +82,70 @@ const EmpRealtimeInsights = () => {
 
   const handleSelect = useCallback((id) => setSelectedId(id), [])
 
+  // Wire the EmployeeCard footer icons that were rendering as no-ops
+  // because the parent never passed onAnalytics / onDownload handlers.
+  const navigate = useNavigate()
+  const location = useLocation()
+  const routeBase = location.pathname.startsWith("/non-admin") ? "/non-admin" : "/admin"
+
+  const handleAnalytics = useCallback((emp) => {
+    if (!emp?.id) return
+    navigate(`${routeBase}/get-employee-details?id=${emp.id}`, { state: { employee: emp } })
+  }, [navigate, routeBase])
+
+  const handleDownload = useCallback(async (emp) => {
+    if (!emp) return
+    const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+      await createBrandedPdf({ title: "Real-Time Insights Report" })
+    let cursorY = startY
+
+    cursorY = drawSummaryCard({
+      doc,
+      cursorY,
+      pageWidth,
+      margin,
+      contentWidth,
+      recordCount: 1,
+      cols: 2,
+      entries: [
+        ["Employee", emp.name || "-"],
+        ["Email", emp.email || "-"],
+        ["Status", emp.description || emp.status || "-"],
+        ["Productivity", emp.productivity || "-"],
+        ["Office Hours", emp.officeHours || "-"],
+        ["Active Hours", emp.activeHours || "-"],
+        ["Idle Hours", emp.idleHours || "-"],
+        ["Captured At", new Date().toLocaleString()],
+      ],
+    })
+
+    if (emp.activity) {
+      cursorY = drawSectionHeading(doc, "Live Activity", margin, cursorY)
+      const a = emp.activity
+      const activityRows = [
+        ["Title", a.title || "-"],
+        ["Application", a.appName || "-"],
+        ["URL", a.currentUrl || "-"],
+        ["Latitude", a.latitude ?? "-"],
+        ["Longitude", a.longitude ?? "-"],
+      ]
+      const styles = adaptiveTableStyles(2)
+      autoTable(doc, {
+        startY: cursorY,
+        head: [],
+        body: activityRows,
+        theme: "grid",
+        ...styles,
+        columnStyles: { 0: { fontStyle: "bold", cellWidth: 130 } },
+        margin: { left: margin, right: margin },
+      })
+    }
+
+    drawFooter(doc, { margin, pageWidth })
+    const slug = String(emp.name || "employee").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+    doc.save(`realtime-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`)
+  }, [])
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-slate-50">
@@ -118,6 +191,8 @@ const EmpRealtimeInsights = () => {
             idx={idx}
             isSelected={selectedId === emp.id}
             onSelect={handleSelect}
+            onAnalytics={handleAnalytics}
+            onDownload={handleDownload}
           />
         ))}
       </div>

@@ -1,7 +1,13 @@
 import apiService from "@/services/api.service";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    createBrandedPdf,
+    drawSummaryCard,
+    drawSectionHeading,
+    adaptiveTableStyles,
+    drawFooter,
+} from "@/utils/pdfBrand";
 
 // ─── Shared Filter APIs ─────────────────────────────────────────────────────
 
@@ -97,26 +103,66 @@ export const exportToCsv = async ({ rows, headers, buildRow, sheetName, fileName
     }
 };
 
-export const exportToPdf = async ({ rows, headers, buildRow, title, fileName, dateRange }) => {
+/**
+ * Branded DLP PDF export — single helper consumed by every DLP sub-page
+ * (USB Detection, Clipboard Logs, Screenshot Logs, Email Activity Logs,
+ * Print Logs). Updating the visual identity here propagates to all.
+ *
+ * @param {Object} opts
+ * @param {Array}  opts.rows         Pre-fetched row objects
+ * @param {Array<string>} opts.headers
+ * @param {Function} opts.buildRow
+ * @param {string} opts.title        Report title (header band)
+ * @param {string} opts.fileName     Downloaded file name
+ * @param {string} opts.dateRange    Range label (e.g. "2026-05-01 to 2026-05-11")
+ * @param {Object} [opts.extraMeta]  Optional extra key/value rows in the summary card
+ */
+export const exportToPdf = async ({
+    rows,
+    headers,
+    buildRow,
+    title,
+    fileName,
+    dateRange,
+    extraMeta = {},
+}) => {
     try {
         const dataRows = rows.map(buildRow);
-        const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+        const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+            await createBrandedPdf({ title });
+        let cursorY = startY;
 
-        doc.setFontSize(14);
-        doc.text(title, 40, 30);
-        doc.setFontSize(9);
-        doc.text(`Date Range: ${dateRange}`, 40, 45);
-
-        autoTable(doc, {
-            head: [headers],
-            body: dataRows,
-            startY: 60,
-            styles: { fontSize: 7, cellPadding: 3 },
-            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
-            margin: { left: 20, right: 20 },
+        // Summary card
+        const metaEntries = [["Date Range", dateRange]];
+        Object.entries(extraMeta).forEach(([k, v]) => {
+            if (v != null && v !== "") metaEntries.push([k, String(v)]);
         });
 
+        cursorY = drawSummaryCard({
+            doc,
+            cursorY,
+            pageWidth,
+            margin,
+            contentWidth,
+            recordCount: dataRows.length,
+            cols: metaEntries.length > 3 ? 3 : 2,
+            entries: metaEntries,
+        });
+
+        cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
+
+        // Adaptive table styling sized to the column count
+        const styles = adaptiveTableStyles(headers.length);
+        autoTable(doc, {
+            startY: cursorY,
+            head: [headers],
+            body: dataRows,
+            theme: "grid",
+            ...styles,
+            margin: { left: margin, right: margin },
+        });
+
+        drawFooter(doc, { margin, pageWidth });
         doc.save(fileName);
         return { success: true };
     } catch (error) {

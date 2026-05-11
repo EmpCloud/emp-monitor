@@ -1,8 +1,14 @@
 import apiService from "@/services/api.service";
 import moment from "moment-timezone";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  createBrandedPdf,
+  drawSummaryCard,
+  drawSectionHeading,
+  adaptiveTableStyles,
+  drawFooter,
+} from "@/utils/pdfBrand";
 
 const TZ = "Asia/Kolkata";
 
@@ -409,19 +415,6 @@ export const exportPDF = async ({
 
   const STATUS_MAP = { 0: "Neutral", 1: "Productive", 2: "Unproductive", 4: "Customization" };
 
-  const doc = new jsPDF("p", "pt", "a3");
-  const totalPagesExp = "{total_pages_count_string}";
-
-  doc.setFontSize(13);
-  doc.text(sheetName, 80, 30);
-
-  doc.setFontSize(10);
-  doc.text(`From: ${startDate}`, 80, 55);
-  doc.text(`To: ${endDate}`, 350, 55);
-  doc.text(`Location: ${locationLabel}`, 80, 75);
-  doc.text(`Department: ${departmentLabel}`, 350, 75);
-  doc.text(`Employee: ${employeeLabel}`, 80, 95);
-
   const bodyData = res.data.map((item) => {
     const prefix = item.type == 2 || item.type === "2" ? "https://" : "";
     return [
@@ -431,29 +424,44 @@ export const exportPDF = async ({
     ];
   });
 
-  autoTable(doc, {
-    head: [[headerLabel, "Ranking", "Duration (hr)"]],
-    body: bodyData,
-    startY: 120,
-    theme: "grid",
-    styles: { fontSize: 10, cellPadding: 5 },
-    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-    columnStyles: {
-      0: { cellWidth: 350 },
-      1: { cellWidth: 250 },
-      2: { cellWidth: 155 },
-    },
-    didDrawPage: (data) => {
-      const str = `Page ${data.pageNumber} of ${totalPagesExp}`;
-      doc.setFontSize(8);
-      doc.text(str, 40, doc.internal.pageSize.height - 10);
-    },
+  const headers = [headerLabel, "Ranking", "Duration (hr)"];
+
+  const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+    await createBrandedPdf({
+      title: sheetName,
+      orientation: "portrait",
+    });
+  let cursorY = startY;
+
+  cursorY = drawSummaryCard({
+    doc,
+    cursorY,
+    pageWidth,
+    margin,
+    contentWidth,
+    recordCount: bodyData.length,
+    cols: 2,
+    entries: [
+      ["Date Range", `${startDate} to ${endDate}`],
+      ["Location", locationLabel || "All"],
+      ["Department", departmentLabel || "All"],
+      ["Employee", employeeLabel || "All"],
+    ],
   });
 
-  if (typeof doc.putTotalPages === "function") {
-    doc.putTotalPages(totalPagesExp);
-  }
+  cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
 
+  const styles = adaptiveTableStyles(headers.length);
+  autoTable(doc, {
+    startY: cursorY,
+    head: [headers],
+    body: bodyData,
+    theme: "grid",
+    ...styles,
+    margin: { left: margin, right: margin },
+  });
+
+  drawFooter(doc, { margin, pageWidth });
   doc.save(`${sheetName.replace(/ /g, "_")}.pdf`);
 };
 

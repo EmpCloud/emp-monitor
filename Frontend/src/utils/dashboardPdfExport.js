@@ -30,14 +30,18 @@ const slugify = (s) =>
     .replace(/[^a-z0-9-]/g, "");
 
 // ── Brand colors ────────────────────────────────────────────────────
+// Aligned with the live dashboard (blue-500 / slate-50 surfaces) — the
+// previous blue-600 + slate-100 combo printed noticeably darker than
+// what users see on screen.
 const BRAND = {
-  primary: [37, 99, 235],     // blue-600
+  primary: [59, 130, 246],    // #3B82F6 — blue-500
+  primarySoft: [219, 234, 254], // #DBEAFE — blue-100
   accent: [16, 185, 129],     // emerald-500
   text: [15, 23, 42],         // slate-900
   muted: [100, 116, 139],     // slate-500
   subtle: [148, 163, 184],    // slate-400
   hairline: [226, 232, 240],  // slate-200
-  band: [241, 245, 249],      // slate-100
+  band: [248, 250, 252],      // slate-50
 };
 
 // ── Capture-mode helpers ───────────────────────────────────────────
@@ -94,34 +98,79 @@ const restoreCard = (target, restore) => {
   target.classList.remove("emp-pdf-capturing");
 };
 
-// Preload every <img> in the target into a data URL so html2canvas
-// captures the fully-decoded image (avoids broken external-SVG /
-// CORS / not-yet-loaded races — e.g. dicebear avatars).
+// URL → PNG data URL cache. The same dicebear avatar (seed=emp) is
+// reused across many cards in the combined report; rasterizing once
+// and reusing the result cuts seconds off generation.
+const rasterCache = new Map();
+const inflight = new Map();
+
+const rasterizeImageToPng = (url, size = 96) => {
+  if (rasterCache.has(url)) return Promise.resolve(rasterCache.get(url));
+  if (inflight.has(url)) return inflight.get(url);
+  const promise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || size;
+        const h = img.naturalHeight || size;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/png");
+        rasterCache.set(url, dataUrl);
+        resolve(dataUrl);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = reject;
+    img.src = url;
+  }).finally(() => inflight.delete(url));
+  inflight.set(url, promise);
+  return promise;
+};
+
+// Preload every <img> in the target as a PNG data URL so html2canvas
+// captures the fully-decoded raster image (avoids the SVG-canvas-taint
+// and not-yet-loaded races that left dicebear avatars blank).
 const preloadImages = async (target) => {
   const restore = [];
   const imgs = Array.from(target.querySelectorAll("img"));
   await Promise.all(
     imgs.map(async (img) => {
       const src = img.src || img.getAttribute("src") || "";
-      if (!src || src.startsWith("data:")) return;
+      if (!src || src.startsWith("data:image/png")) return;
       try {
-        const res = await fetch(src, { mode: "cors", credentials: "omit" });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
+        const dataUrl = await rasterizeImageToPng(src);
         restore.push({ img, originalSrc: src });
+        img.removeAttribute("srcset");
         img.src = dataUrl;
-        // Force decode so html2canvas reads correct dimensions.
+        // Wait for the browser to actually decode the freshly-set data
+        // URL. Without this html2canvas can read the <img> before the
+        // pixel data is ready and the avatar renders blank in the PDF.
         if (typeof img.decode === "function") {
           try { await img.decode(); } catch {}
+        } else {
+          // Older browsers: fall back to a load-event promise.
+          await new Promise((resolve) => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            const done = () => {
+              img.removeEventListener("load", done);
+              img.removeEventListener("error", done);
+              resolve();
+            };
+            img.addEventListener("load", done);
+            img.addEventListener("error", done);
+          });
         }
       } catch {
-        // network/CORS failure — leave the original src alone.
+        // Network / CORS / decode failure — leave original src alone so
+        // the live UI keeps working; the avatar may render blank in the
+        // PDF for this row but the rest of the report is unaffected.
       }
     })
   );
@@ -278,9 +327,10 @@ export const generateModulePdf = async ({
       const { default: html2canvas } = await import("html2canvas-pro");
       const canvas = await html2canvas(target, {
         backgroundColor: "#ffffff",
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         logging: false,
+        imageTimeout: 0,
       });
       const imgData = canvas.toDataURL("image/png");
 
@@ -518,9 +568,10 @@ const renderModuleSection = async (
       const { default: html2canvas } = await import("html2canvas-pro");
       const canvas = await html2canvas(target, {
         backgroundColor: "#ffffff",
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         logging: false,
+        imageTimeout: 0,
       });
       const imgData = canvas.toDataURL("image/png");
 

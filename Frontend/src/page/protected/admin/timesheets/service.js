@@ -1,8 +1,14 @@
 import apiService from "@/services/api.service";
 import moment from "moment-timezone";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  createBrandedPdf,
+  drawSummaryCard,
+  drawSectionHeading,
+  adaptiveTableStyles,
+  drawFooter,
+} from "@/utils/pdfBrand";
 
 const getLocations = async () => {
     try {
@@ -500,26 +506,51 @@ const exportTimesheetPdf = async (rows, selectedKeys, filters) => {
     try {
         const { headers, dataRows } = buildExportRows(rows, selectedKeys, filters);
 
-        const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+        const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+            await createBrandedPdf({ title: "Timesheet Report" });
+        let cursorY = startY;
 
-        doc.setFontSize(14);
-        doc.text("Timesheet Report", 40, 30);
-        doc.setFontSize(9);
-        doc.text(`Date Range: ${filters.startDate} to ${filters.endDate}`, 40, 45);
+        // ── Summary card with filter context ────────────────────
+        const filterValue = (raw) => {
+            if (raw == null || raw === "" || raw === "all" || raw === "0") return "All";
+            return String(raw);
+        };
+        const sortOrderLabel = filters.sortOrder === "A" ? "Ascending" : "Descending";
 
-        autoTable(doc, {
-            head: [headers],
-            body: dataRows,
-            startY: 60,
-            styles: { fontSize: 7, cellPadding: 3 },
-            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
-            margin: { left: 20, right: 20 },
+        cursorY = drawSummaryCard({
+            doc,
+            cursorY,
+            pageWidth,
+            margin,
+            contentWidth,
+            recordCount: dataRows.length,
+            cols: 3,
+            entries: [
+                ["Date Range", `${filters.startDate} to ${filters.endDate}`],
+                ["Location", filterValue(filters.location ?? filters.locationId)],
+                ["Department", filterValue(filters.department ?? filters.departmentId)],
+                ["Employee", filterValue(filters.employee ?? filters.employeeId)],
+                ["Shift", filterValue(filters.shift ?? filters.shiftId)],
+                ["Sorted By", `${filters.sortColumn || "Full Name"} (${sortOrderLabel})`],
+            ],
         });
 
-        const dateRange = `${filters.startDate}_to_${filters.endDate}`;
-        doc.save(`Timesheet_${dateRange}.pdf`);
+        cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
 
+        const styles = adaptiveTableStyles(headers.length);
+        autoTable(doc, {
+            startY: cursorY,
+            head: [headers],
+            body: dataRows,
+            theme: "grid",
+            ...styles,
+            margin: { left: margin, right: margin },
+        });
+
+        drawFooter(doc, { margin, pageWidth });
+
+        const dateRangeFile = `${filters.startDate}_to_${filters.endDate}`;
+        doc.save(`Timesheet_${dateRangeFile}.pdf`);
         return { success: true };
     } catch (error) {
         console.error("PDF Export Error:", error);

@@ -274,12 +274,6 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
       return
     }
 
-    // Download All (option 3) - not allowed for single print
-    if (filters.downloadOption === "3") {
-      showToast("'Download All' is not available for single user print. Please use Application Used or Browser History.")
-      return
-    }
-
     const res = await printSingleUserReport({
       employeeId,
       downloadOption: filters.downloadOption,
@@ -288,18 +282,35 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
     })
 
     if (res.code === 200 && res.data) {
-      const type = filters.downloadOption === "1" ? "application" : "browser"
-      const hasData =
-        type === "application"
-          ? res.data.application_used?.length > 0
-          : res.data.browser_history?.length > 0
+      // Map download option → PDF "type" understood by exportReportPDF.
+      // Option 3 (Download All) emits two PDFs (Application + Browser).
+      const type =
+        filters.downloadOption === "1"
+          ? "application"
+          : filters.downloadOption === "2"
+          ? "browser"
+          : "all"
 
-      if (!hasData) {
-        showToast(`No ${type === "application" ? "application" : "browser"} data found for ${employeeName}`)
+      const hasApp = (res.data.application_used?.length || 0) > 0
+      const hasBrowser = (res.data.browser_history?.length || 0) > 0
+
+      if (type === "application" && !hasApp) {
+        showToast(`No application data found for ${employeeName}`)
+        return
+      }
+      if (type === "browser" && !hasBrowser) {
+        showToast(`No browser data found for ${employeeName}`)
+        return
+      }
+      if (type === "all" && !hasApp && !hasBrowser) {
+        showToast(`No report data found for ${employeeName}`)
         return
       }
 
-      const ok = exportReportPDF(res.data, type, employeeName)
+      const ok = await exportReportPDF(res.data, type, employeeName, {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      })
       if (!ok) showToast("Failed to generate PDF. Please try again.")
     } else {
       showToast(res.msg || "Failed to get report data")

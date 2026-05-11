@@ -44,7 +44,21 @@ function AmChartsPieChart({ data }) {
     series.slices.template.setAll({
       stroke: am5.color(0xffffff),
       strokeWidth: 2,
-      tooltipText: "{category}: {value}%",
+      tooltipText: "[#ffffff]{category}: {value}%[/]",
+    });
+
+    // Force the tooltip label to render white regardless of the auto
+    // contrast logic amCharts derives from the slice fill.
+    if (series.get("tooltip")) {
+      series.get("tooltip").label.setAll({ fill: am5.color(0xffffff) });
+      series.get("tooltip").set("autoTextColor", false);
+    }
+    series.slices.template.events.on("pointerover", (ev) => {
+      const tooltip = ev.target.getTooltip();
+      if (tooltip) {
+        tooltip.label.setAll({ fill: am5.color(0xffffff) });
+        tooltip.set("autoTextColor", false);
+      }
     });
 
     series.data.setAll(data);

@@ -1,8 +1,14 @@
 import apiService from "@/services/api.service";
 import moment from "moment-timezone";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    createBrandedPdf,
+    drawSummaryCard,
+    drawSectionHeading,
+    adaptiveTableStyles,
+    drawFooter,
+} from "@/utils/pdfBrand";
 
 /**
  * Table + Chart data API
@@ -241,7 +247,7 @@ const exportCSV = async ({ startDate, endDate, locationId, departmentId, employe
     XLSX.writeFile(wb, `Productivity_Report.xlsx`);
 };
 
-/** Export as PDF — using jsPDF + autoTable (matching timesheet pattern) */
+/** Export as PDF — branded with EmpMonitor header, summary card and footer. */
 const exportPDF = async ({ startDate, endDate, locationId, departmentId, employeeId, rows: existingRows } = {}) => {
     const rows = existingRows || await fetchAllRowsForExport({ startDate, endDate, locationId, departmentId, employeeId });
     if (!rows.length) return;
@@ -251,45 +257,44 @@ const exportPDF = async ({ startDate, endDate, locationId, departmentId, employe
         EXPORT_HEADERS.map(({ key }) => row[key] ?? "-")
     );
 
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+        await createBrandedPdf({ title: "Productivity Report" });
+    let cursorY = startY;
 
-    const totalPagesExp = "{total_pages_count_string}";
+    const filterValue = (raw) => {
+        if (raw == null || raw === "" || raw === "all" || raw === "0") return "All";
+        return String(raw);
+    };
 
-    doc.setFontSize(14);
-    doc.text("Productivity Report", 40, 30);
-    doc.setFontSize(9);
-    doc.text(`${startDate} to ${endDate}`, 40, 45);
-
-    autoTable(doc, {
-        head: [headers],
-        body: bodyData,
-        startY: 60,
-        theme: "grid",
-        styles: { fontSize: 7, cellPadding: 3 },
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        margin: { left: 20, right: 20 },
-        columnStyles: {
-            0: { cellWidth: 65 },
-            1: { cellWidth: 60 },
-            2: { cellWidth: 60 },
-            3: { cellWidth: 60 },
-            4: { cellWidth: 80 },
-            5: { cellWidth: 75 },
-            6: { cellWidth: 55 },
-            7: { cellWidth: 55 },
-        },
-        didDrawPage: (data) => {
-            const str = "Page " + data.pageNumber + " of " + totalPagesExp;
-            doc.setFontSize(8);
-            doc.text(str, 40, doc.internal.pageSize.height - 10);
-        }
+    cursorY = drawSummaryCard({
+        doc,
+        cursorY,
+        pageWidth,
+        margin,
+        contentWidth,
+        recordCount: rows.length,
+        cols: 3,
+        entries: [
+            ["Date Range", `${startDate} to ${endDate}`],
+            ["Location", filterValue(locationId)],
+            ["Department", filterValue(departmentId)],
+            ["Employee", filterValue(employeeId)],
+        ],
     });
 
-    if (typeof doc.putTotalPages === "function") {
-        doc.putTotalPages(totalPagesExp);
-    }
+    cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
 
+    const styles = adaptiveTableStyles(headers.length);
+    autoTable(doc, {
+        startY: cursorY,
+        head: [headers],
+        body: bodyData,
+        theme: "grid",
+        ...styles,
+        margin: { left: margin, right: margin },
+    });
+
+    drawFooter(doc, { margin, pageWidth });
     doc.save(`Productivity_Report_${startDate}_to_${endDate}.pdf`);
 };
 

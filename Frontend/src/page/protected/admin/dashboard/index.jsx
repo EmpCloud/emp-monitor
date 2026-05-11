@@ -290,9 +290,11 @@ const Dashboard = () => {
         }),
       ]);
 
-      // Give React a tick to commit the new data into the cards so
-      // html2canvas captures the right visuals.
-      await new Promise((r) => setTimeout(r, 350));
+      // Let React commit the new data into the cards (two animation
+      // frames is enough — was a 350ms blanket wait before).
+      await new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r))
+      );
 
       // Read fresh store state (the local closures above were captured
       // before the fetches resolved).
@@ -347,18 +349,25 @@ const Dashboard = () => {
         { title: "Absent Employees",                      key: "absentEmp",     subtitle: "Employees marked absent for today." },
         { title: "Suspended Employees",                   key: "suspendedEmp",  subtitle: "Employees whose accounts are suspended." },
       ];
-      const rosterModules = ROSTERS.map(({ title, subtitle, key }) => ({
-        title,
-        subtitle,
-        target: null, // text-only; no card to screenshot
-        data: Array.isArray(statsLists?.[key]) ? statsLists[key] : [],
-        meta: {
-          "Date Generated": today,
-          Bucket: title.split(" — ")[0],
-          Count: Array.isArray(statsLists?.[key]) ? String(statsLists[key].length) : "0",
-        },
-        columns: ROSTER_COLUMNS,
-      }));
+      const rosterModules = ROSTERS
+        .map(({ title, subtitle, key }) => {
+          const list = Array.isArray(statsLists?.[key]) ? statsLists[key] : [];
+          return list.length > 0
+            ? {
+                title,
+                subtitle,
+                target: null, // text-only; no card to screenshot
+                data: list,
+                meta: {
+                  "Date Generated": today,
+                  Bucket: title.split(" — ")[0],
+                  Count: String(list.length),
+                },
+                columns: ROSTER_COLUMNS,
+              }
+            : null;
+        })
+        .filter(Boolean);
 
       const modules = [
         {

@@ -1,8 +1,14 @@
 import apiService from "@/services/api.service";
 import moment from "moment-timezone";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    createBrandedPdf,
+    drawSummaryCard,
+    drawSectionHeading,
+    adaptiveTableStyles,
+    drawFooter,
+} from "@/utils/pdfBrand";
 
 const TIMEZONE = "Asia/Kolkata";
 
@@ -513,108 +519,148 @@ const BROWSER_HEADERS = [
     "Domain", "Category",
 ];
 
-const exportReportPDF = (reportData, type, employeeName = "") => {
+const buildAppBody = (appData) =>
+    appData.map((app) => [
+        app.employee_name || "-",
+        capitalize(app.location || "-"),
+        app.department || "-",
+        capitalize((app.app_name || "").replace(".exe", "")),
+        moment(app.start_time).tz(app.timezone).format("DD-MM-YYYY"),
+        moment(app.start_time).tz(app.timezone).format("HH:mm:ss"),
+        moment(app.end_time).tz(app.timezone).format("DD-MM-YYYY"),
+        moment(app.end_time).tz(app.timezone).format("HH:mm:ss"),
+        formatDuration(app.active_seconds),
+        formatDuration(app.idle_seconds),
+        formatDuration(app.total_duration),
+        app.status === 1 ? "Productive" : app.status === 2 ? "Non Productive" : "Neutral",
+    ]);
+
+const buildBrowserBody = (browserData) =>
+    browserData.map((hist) => [
+        hist.employee_name || "-",
+        capitalize(hist.location || "-"),
+        hist.department || "-",
+        capitalize(hist.browser_name || "-"),
+        moment(hist.start_time).tz(hist.timezone).format("DD-MM-YYYY"),
+        moment(hist.start_time).tz(hist.timezone).format("HH:mm:ss"),
+        moment(hist.end_time).tz(hist.timezone).format("DD-MM-YYYY"),
+        moment(hist.end_time).tz(hist.timezone).format("HH:mm:ss"),
+        formatDuration(hist.active_seconds),
+        formatDuration(hist.idle_seconds),
+        formatDuration(hist.total_duration),
+        hist.domain_name || hist.url || "-",
+        hist.status === 1 ? "Productive" : hist.status === 2 ? "Non Productive" : "Neutral",
+    ]);
+
+const buildBrandedReportPdf = async ({ title, employeeName, summaryEntries, headers, body }) => {
+    const { doc, pageWidth, margin, contentWidth, cursorY: startY } =
+        await createBrandedPdf({ title });
+    let cursorY = startY;
+
+    cursorY = drawSummaryCard({
+        doc,
+        cursorY,
+        pageWidth,
+        margin,
+        contentWidth,
+        recordCount: body.length,
+        cols: employeeName ? 3 : 2,
+        entries: summaryEntries,
+    });
+
+    cursorY = drawSectionHeading(doc, "Detailed Records", margin, cursorY);
+
+    const styles = adaptiveTableStyles(headers.length);
+    autoTable(doc, {
+        startY: cursorY,
+        head: [headers],
+        body,
+        theme: "grid",
+        ...styles,
+        margin: { left: margin, right: margin },
+    });
+
+    drawFooter(doc, { margin, pageWidth });
+    return doc;
+};
+
+const exportReportPDF = async (reportData, type, employeeName = "", opts = {}) => {
     try {
-        const doc = new jsPDF({ orientation: "landscape", compress: true });
-        doc.setFontSize(14);
-        const totalPagesExp = "{total_pages_count_string}";
+        const { startDate, endDate } = opts || {};
+        const today = new Date().toLocaleDateString();
+        const baseEntries = (extraType) => {
+            const entries = [
+                ["Date Generated", today],
+                ["Report Type", extraType],
+            ];
+            if (employeeName) entries.unshift(["Employee", employeeName]);
+            if (startDate && endDate) entries.push(["From Date", startDate], ["To Date", endDate]);
+            else if (startDate) entries.push(["From Date", startDate]);
+            else if (endDate) entries.push(["To Date", endDate]);
+            return entries;
+        };
 
-        if (type === "application" || type === "all") {
-            const appData = reportData.application_used || [];
-            if (appData.length) {
-                doc.text("Application Used Report", 15, 20);
-                const body = appData.map((app) => [
-                    app.employee_name || "-",
-                    capitalize(app.location || "-"),
-                    app.department || "-",
-                    capitalize((app.app_name || "").replace(".exe", "")),
-                    moment(app.start_time).tz(app.timezone).format("DD-MM-YYYY"),
-                    moment(app.start_time).tz(app.timezone).format("HH:mm:ss"),
-                    moment(app.end_time).tz(app.timezone).format("DD-MM-YYYY"),
-                    moment(app.end_time).tz(app.timezone).format("HH:mm:ss"),
-                    formatDuration(app.active_seconds),
-                    formatDuration(app.idle_seconds),
-                    formatDuration(app.total_duration),
-                    app.status === 1 ? "Productive" : app.status === 2 ? "Non Productive" : "Neutral",
-                ]);
+        const appData = reportData?.application_used || [];
+        const browserData = reportData?.browser_history || [];
 
-                autoTable(doc, {
-                    head: [APP_HEADERS],
-                    body,
-                    startY: 30,
-                    theme: "grid",
-                    styles: { fontSize: 6, cellPadding: 2 },
-                    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-                    alternateRowStyles: { fillColor: [248, 250, 252] },
-                    didDrawPage: (data) => {
-                        doc.setFontSize(8);
-                        doc.text(
-                            "Page " + data.pageNumber + " of " + totalPagesExp,
-                            15,
-                            doc.internal.pageSize.height - 10
-                        );
-                    },
+        const hasApp = (type === "application" || type === "all") && appData.length > 0;
+        const hasBrowser = (type === "browser" || type === "all") && browserData.length > 0;
+
+        // "Download All" produces two separate PDFs so each report keeps
+        // a clean branded structure (cover band + summary + table).
+        if (type === "all") {
+            if (hasApp) {
+                const doc = await buildBrandedReportPdf({
+                    title: "Application Used Report",
+                    employeeName,
+                    summaryEntries: baseEntries("Application Used"),
+                    headers: APP_HEADERS,
+                    body: buildAppBody(appData),
                 });
-
-                if (type === "all" && reportData.browser_history?.length) {
-                    doc.addPage();
-                }
+                const prefix = employeeName ? `${employeeName}_` : "";
+                doc.save(`${prefix}Application_Used.pdf`);
             }
-        }
-
-        if (type === "browser" || type === "all") {
-            const browserData = reportData.browser_history || [];
-            if (browserData.length) {
-                doc.text("Browser History Report", 15, 20);
-                const body = browserData.map((hist) => [
-                    hist.employee_name || "-",
-                    capitalize(hist.location || "-"),
-                    hist.department || "-",
-                    capitalize(hist.browser_name || "-"),
-                    moment(hist.start_time).tz(hist.timezone).format("DD-MM-YYYY"),
-                    moment(hist.start_time).tz(hist.timezone).format("HH:mm:ss"),
-                    moment(hist.end_time).tz(hist.timezone).format("DD-MM-YYYY"),
-                    moment(hist.end_time).tz(hist.timezone).format("HH:mm:ss"),
-                    formatDuration(hist.active_seconds),
-                    formatDuration(hist.idle_seconds),
-                    formatDuration(hist.total_duration),
-                    hist.domain_name || hist.url || "-",
-                    hist.status === 1 ? "Productive" : hist.status === 2 ? "Non Productive" : "Neutral",
-                ]);
-
-                autoTable(doc, {
-                    head: [BROWSER_HEADERS],
-                    body,
-                    startY: 30,
-                    theme: "grid",
-                    styles: { fontSize: 6, cellPadding: 2 },
-                    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
-                    alternateRowStyles: { fillColor: [248, 250, 252] },
-                    didDrawPage: (data) => {
-                        doc.setFontSize(8);
-                        doc.text(
-                            "Page " + data.pageNumber + " of " + totalPagesExp,
-                            15,
-                            doc.internal.pageSize.height - 10
-                        );
-                    },
+            if (hasBrowser) {
+                const doc = await buildBrandedReportPdf({
+                    title: "Browser History Report",
+                    employeeName,
+                    summaryEntries: baseEntries("Browser History"),
+                    headers: BROWSER_HEADERS,
+                    body: buildBrowserBody(browserData),
                 });
+                const prefix = employeeName ? `${employeeName}_` : "";
+                doc.save(`${prefix}Browser_History.pdf`);
             }
+            if (!hasApp && !hasBrowser) return false;
+            return true;
         }
 
-        if (typeof doc.putTotalPages === "function") {
-            doc.putTotalPages(totalPagesExp);
+        // Single-type export
+        if (hasApp) {
+            const doc = await buildBrandedReportPdf({
+                title: "Application Used Report",
+                employeeName,
+                summaryEntries: baseEntries("Application Used"),
+                headers: APP_HEADERS,
+                body: buildAppBody(appData),
+            });
+            const prefix = employeeName ? `${employeeName}_` : "";
+            doc.save(`${prefix}Application_Used.pdf`);
+            return true;
         }
-
-        const prefix = employeeName ? `${employeeName}_` : "";
-        const suffix =
-            type === "application"
-                ? "Application_Used"
-                : type === "browser"
-                ? "Browser_History"
-                : "All_Reports";
-        doc.save(`${prefix}${suffix}.pdf`);
-        return true;
+        if (hasBrowser) {
+            const doc = await buildBrandedReportPdf({
+                title: "Browser History Report",
+                employeeName,
+                summaryEntries: baseEntries("Browser History"),
+                headers: BROWSER_HEADERS,
+                body: buildBrowserBody(browserData),
+            });
+            const prefix = employeeName ? `${employeeName}_` : "";
+            doc.save(`${prefix}Browser_History.pdf`);
+            return true;
+        }
+        return false;
     } catch (error) {
         console.error("PDF Export Error:", error);
         return false;
