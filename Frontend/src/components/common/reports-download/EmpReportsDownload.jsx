@@ -621,7 +621,11 @@ const EmpReportsDownload = ({ useStore = _defaultStore }) => {
                   className={`text-xs ${
                     row.status === 1
                       ? "text-slate-600"
-                      : "text-white bg-amber-600"
+                      // Suspended / inactive — soft amber chip that keeps
+                      // good contrast in both normal and hover states
+                      // (the previous text-white + bg-amber-600 lost the
+                      // text the moment hover faded the row to muted).
+                      : "text-amber-900 bg-amber-50 hover:bg-amber-100"
                   }`}
                 >
                   <TableCell>

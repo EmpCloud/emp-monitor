@@ -5,9 +5,7 @@ import {
     Plus,
     Pencil,
     Trash2,
-    Download,
     FileText,
-    FileSpreadsheet,
     Loader2,
     ArrowUpDown,
     ChevronDown,
@@ -76,51 +74,6 @@ const ContentBadges = ({ content }) => {
                     {t(key)}
                 </span>
             ))}
-        </div>
-    );
-};
-
-// ─── Export Dropdown ─────────────────────────────────────────────────────────
-
-const ExportDropdown = () => {
-    const { t } = useTranslation();
-    const [open, setOpen] = useState(false);
-    const exportCsv = useAutoEmailReportStore((s) => s.exportCsv);
-    const exportPdf = useAutoEmailReportStore((s) => s.exportPdf);
-
-    return (
-        <div className="relative">
-            <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg border-slate-200 text-xs gap-1.5"
-                onClick={() => setOpen(!open)}
-            >
-                <Download className="w-3.5 h-3.5" />
-                {t("export")}
-                <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
-            </Button>
-            {open && (
-                <>
-                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute right-0 z-20 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[140px] py-1">
-                        <button
-                            onClick={() => { exportPdf(); setOpen(false); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                            <FileText className="w-3.5 h-3.5 text-red-500" />
-                            {t("emailReport.exportPdf")}
-                        </button>
-                        <button
-                            onClick={() => { exportCsv(); setOpen(false); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
-                            {t("emailReport.exportExcel")}
-                        </button>
-                    </div>
-                </>
-            )}
         </div>
     );
 };
@@ -233,7 +186,6 @@ export default function EmpAutoEmailReport() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <ExportDropdown />
                     <Button
                         size="lg"
                         className="rounded-xl px-6 text-xs font-semibold shadow-md shadow-blue-200 bg-gradient-to-r from-[#42A5F5] to-[#5C6BC0] hover:shadow-lg transition-all"
