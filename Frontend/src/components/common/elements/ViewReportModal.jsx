@@ -283,8 +283,8 @@ const ViewReportModal = ({
               <span className="text-xs text-slate-500">{t("entries")}</span>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
-              <div className="relative w-full max-w-xs">
+            <div className="flex items-center gap-2 ml-auto flex-wrap sm:flex-nowrap justify-end">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder={t("search")}
@@ -297,11 +297,11 @@ const ViewReportModal = ({
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={!filtered.length || loading}
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 title="Download as PDF"
               >
                 <FileText className="w-4 h-4" />
-                PDF
+                Download PDF
               </button>
             </div>
           </div>
