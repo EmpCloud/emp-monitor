@@ -8,8 +8,29 @@ import {
   Maximize2,
   ChartNoAxesColumn,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Input } from "@/components/ui/input";
 import EmpInsightsLogo from "../../../assets/employee/employees_real_time_insights.svg";
+import logoUrl from "@/assets/emp.png";
+
+let cachedLogo = null;
+const loadLogo = async () => {
+  if (cachedLogo) return cachedLogo;
+  try {
+    const res = await fetch(logoUrl);
+    const blob = await res.blob();
+    cachedLogo = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onloadend = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    return cachedLogo;
+  } catch {
+    return null;
+  }
+};
 
 const MOCK_EMPLOYEES = Array.from({ length: 12 }, (_, i) => ({
   id: i + 1,
@@ -39,25 +60,84 @@ const EmpRealtimeInsights = () => {
   const [showMaxTooltip, setShowMaxTooltip] = useState(false);
   const [selectedId, setSelectedId] = useState(2);
 
+  // Right icon → open the full employee profile in a new tab
   const handleAnalytics = (emp) => {
-    navigate(`${routeBase}/get-employee-details?id=${emp.id}`, { state: { employee: emp } });
+    navigate(`${routeBase}/get-employee-details?id=${emp.id}`, {
+      state: { employee: emp },
+    });
   };
 
-  const handleDownloadReport = () => {
-    const headers = ["Name", "Email", "Productivity"];
-    const rows = filteredEmployees.map((e) =>
-      [e.name, e.email, e.productivity].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")
+  // Left icon → download a per-employee Real-Time Insights PDF
+  const handleDownloadReport = async (emp) => {
+    if (!emp) return;
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+
+    const logo = await loadLogo();
+    if (logo) doc.addImage(logo, "PNG", margin, 24, 110, 35);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Real-Time Insights Report", pageWidth - margin, 38, { align: "right" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated ${new Date().toLocaleString()}`, pageWidth - margin, 54, {
+      align: "right",
+    });
+
+    doc.setDrawColor(37, 99, 235);
+    doc.setLineWidth(2);
+    doc.line(0, 84, pageWidth, 84);
+
+    let y = 110;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42);
+    doc.text(emp.name || "Employee", margin, y);
+    y += 6;
+    doc.setDrawColor(37, 99, 235);
+    doc.setLineWidth(1.5);
+    doc.line(margin, y, margin + 60, y);
+    y += 26;
+
+    autoTable(doc, {
+      startY: y,
+      head: [],
+      body: [
+        ["Employee Email", emp.email || "-"],
+        ["Productivity", emp.productivity || "-"],
+        ["Status", emp.description || "-"],
+        ["Captured At", new Date().toLocaleString()],
+      ],
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 8, textColor: [51, 65, 85] },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 160, textColor: [30, 41, 59] },
+      },
+      margin: { left: margin, right: margin },
+    });
+
+    const ph = doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      "EmpMonitor • Your Workforce Productivity Compass",
+      margin,
+      ph - 16
     );
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `realtime_insights_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.text("Page 1 of 1", pageWidth - margin, ph - 16, { align: "right" });
+
+    const slug = String(emp.name || "employee")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    doc.save(
+      `realtime-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`
+    );
   };
 
   const filteredEmployees = MOCK_EMPLOYEES.filter((emp) =>
@@ -293,7 +373,7 @@ const EmpRealtimeInsights = () => {
                     <button
                       type="button"
                       onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => { e.stopPropagation(); handleDownloadReport(); }}
+                      onClick={(e) => { e.stopPropagation(); handleDownloadReport(emp); }}
                       className="flex items-center justify-center p-1 rounded hover:bg-white/15 cursor-pointer transition-colors"
                       title="Download Report"
                       aria-label="Download Report"
