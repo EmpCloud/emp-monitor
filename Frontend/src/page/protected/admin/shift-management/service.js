@@ -37,13 +37,21 @@ const parseShiftData = (shift) => {
         }
     }
 
-    // Filter out days with status === false
+    // Flatten the API's shift-day map into one entry per weekday.
+    // Some shifts come back with multiple active days joined into a
+    // single key (e.g. `{"mon,tue,wed,thu,fri": {status, time}}`),
+    // which previously rendered as one giant pill in the Days column.
     const activeDays = {};
     if (dayData && typeof dayData === "object") {
-        Object.entries(dayData).forEach(([day, value]) => {
-            if (value?.status !== false) {
+        Object.entries(dayData).forEach(([dayKey, value]) => {
+            if (value?.status === false) return;
+            const keys = String(dayKey)
+                .split(",")
+                .map((d) => d.trim().toLowerCase())
+                .filter(Boolean);
+            keys.forEach((day) => {
                 activeDays[day] = value;
-            }
+            });
         });
     }
 
