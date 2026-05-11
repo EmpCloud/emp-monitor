@@ -103,9 +103,11 @@ function buildSlots(payload) {
 
 export default function ScreenRecordingTab({ employee }) {
   const { t } = useTranslation();
+  const nowHour = new Date().getHours();
+  const nextHour = (nowHour + 1) % 24;
   const [date, setDate]         = useState(moment().format("YYYY-MM-DD"));
-  const [fromTime, setFromTime] = useState("00");
-  const [toTime, setToTime]     = useState("23");
+  const [fromTime, setFromTime] = useState(String(nowHour).padStart(2, "0"));
+  const [toTime, setToTime]     = useState(String(nextHour).padStart(2, "0"));
   const [slots, setSlots]       = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading]   = useState(false);

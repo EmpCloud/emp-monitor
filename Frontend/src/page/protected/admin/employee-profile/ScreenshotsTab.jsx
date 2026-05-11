@@ -190,9 +190,11 @@ function ScreenshotModal({ open, onOpenChange, screenshot, allScreenshots }) {
 
 export default function ScreenshotsTab({ employee }) {
   const { t } = useTranslation();
+  const nowHour = new Date().getHours();
+  const nextHour = (nowHour + 1) % 24;
   const [date, setDate]         = useState(moment().format("YYYY-MM-DD"));
-  const [fromTime, setFromTime] = useState("00:00");
-  const [toTime, setToTime]     = useState("23:00");
+  const [fromTime, setFromTime] = useState(`${String(nowHour).padStart(2, "0")}:00`);
+  const [toTime, setToTime]     = useState(`${String(nextHour).padStart(2, "0")}:00`);
   const [buckets, setBuckets]   = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading]   = useState(false);
