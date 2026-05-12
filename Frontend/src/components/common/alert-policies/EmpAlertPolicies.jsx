@@ -331,11 +331,25 @@ const EmpAlertPolicies = () => {
                                         <AppliesToCell appliesTo={row.appliesTo} />
                                     </td>
                                     <td className="px-4 py-4">
-                                        {row.recipients.map((r, i) => (
-                                            <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200 mr-1 mb-1">
-                                                {r.email || "-"}
-                                            </span>
-                                        ))}
+                                        {row.recipients.map((r, i) => {
+                                            // Backend (NotificationRulesModel) hydrates each row to
+                                            // { user_id, name, email }. Some user records have no
+                                            // a_email (desktop-agent auto-created accounts in particular),
+                                            // so falling back straight to "-" hid the name even when it
+                                            // was present. Prefer the name; fall back to email; only
+                                            // show "-" when neither exists.
+                                            const display = (r.name && r.name.trim()) || r.email || "-";
+                                            const tooltip = r.name && r.email ? `${r.name} <${r.email}>` : display;
+                                            return (
+                                                <span
+                                                    key={i}
+                                                    title={tooltip}
+                                                    className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200 mr-1 mb-1"
+                                                >
+                                                    {display}
+                                                </span>
+                                            );
+                                        })}
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex items-center justify-center gap-2">
