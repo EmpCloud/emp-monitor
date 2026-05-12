@@ -299,14 +299,24 @@ const EmpRolesPermission = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white">
-                                {roles.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={colSpanCount} className="text-center text-sm text-gray-400 py-10">
-                                            {search ? t("roles.noRolesMatch") : t("roles.noRolesFound")}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    roles.map((role) => (
+                                {(() => {
+                                    const q = (search || "").trim().toLowerCase();
+                                    const visibleRoles = q
+                                        ? roles.filter((r) =>
+                                            String(r?.name || "").toLowerCase().includes(q)
+                                            || String(r?.description || "").toLowerCase().includes(q)
+                                        )
+                                        : roles;
+                                    if (visibleRoles.length === 0) {
+                                        return (
+                                            <tr>
+                                                <td colSpan={colSpanCount} className="text-center text-sm text-gray-400 py-10">
+                                                    {search ? t("roles.noRolesMatch") : t("roles.noRolesFound")}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                    return visibleRoles.map((role) => (
                                         <tr
                                             key={role.id}
                                             className="border-b border-slate-100 last:border-b-0 text-xs text-slate-600 hover:bg-slate-50/40 transition-colors"
@@ -355,8 +365,8 @@ const EmpRolesPermission = () => {
                                                 <ActionButtons role={role} />
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ));
+                                })()}
                             </tbody>
                         </table>
                     </div>

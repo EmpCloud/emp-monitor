@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api.service';
 import { extractSSOToken, useAuthStore } from '../lib/auth-store';
@@ -36,9 +36,16 @@ export default function SSOGate({ children }) {
   });
   const [ready, setReady] = useState(!ssoToken); // if no SSO token, render immediately
   const [error, setError] = useState(null);
+  // Guard so the SSO exchange only fires once for the lifetime of the
+  // gate. Without this, useEffect's dependency array (which includes
+  // `navigate` and the session setters) can cause the effect to re-run
+  // on subsequent route changes, and each re-run navigates the user
+  // back to /admin/dashboard.
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    if (!ssoToken) return;
+    if (!ssoToken || ranRef.current) return;
+    ranRef.current = true;
 
     let cancelled = false;
 

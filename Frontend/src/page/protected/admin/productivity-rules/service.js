@@ -97,26 +97,42 @@ export const getProductivityRankings = async ({
 
         if (data?.code === 200) {
             const isActivity = filteredValue === "1";
-            const items = isActivity ? data.data : data.data?.categories || [];
+            // When categoryId is set the request hits /category-web-apps,
+            // which returns `data: [...]` (a flat array) and the items
+            // shape mirrors the activity list (application_id, status,
+            // pre_request, etc.). Treat that case the same as activity
+            // mode so the modal actually populates.
+            const isCategoryDrilldown = categoryId !== "0";
+            const isAppShape = isActivity || isCategoryDrilldown;
+
+            let items;
+            if (isAppShape) {
+                items = Array.isArray(data.data)
+                    ? data.data
+                    : data.data?.docs || data.data?.items || [];
+            } else {
+                items = data.data?.categories || [];
+            }
 
             const rows = items.map((item) => {
                 let itemName = item.name || "";
                 if (itemName.includes(".exe")) {
                     itemName = itemName.replace(".exe", "");
                 }
-                if (isActivity && item.type !== 2) {
+                if (isAppShape && item.type !== 2) {
                     itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
-                } else if (!isActivity) {
+                } else if (!isAppShape) {
                     itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
                 }
 
                 return {
-                    id: isActivity ? item.application_id : item._id,
+                    id: isAppShape ? item.application_id : item._id,
                     name: itemName,
                     type: item.type,
                     status: item.status,
                     preRequest: item.pre_request || 0,
-                    departmentRules: (isActivity ? item.department_rules : item.department_rule) || [],
+                    departmentRules:
+                        (isAppShape ? item.department_rules : item.department_rule) || [],
                     domainCount: item.domain_count || 0,
                     createdAt: item.createdAt,
                     updatedAt: item.updatedAt,
@@ -124,7 +140,9 @@ export const getProductivityRankings = async ({
             });
 
             let totalCount;
-            if (isActivity) {
+            if (isCategoryDrilldown) {
+                totalCount = typeof data.total === "number" ? data.total : items.length;
+            } else if (isActivity) {
                 totalCount = Array.isArray(data.total) ? data.total[0]?.total : data.total;
             } else {
                 totalCount = data.data?.totalCount || 0;

@@ -323,13 +323,32 @@ const getAllUsers = async ({ locationIds = [], departmentIds = [] } = {}) => {
     }
 };
 
+// The backend has shipped multiple response shapes for these endpoints
+// (sometimes `code: 200`, sometimes `code: 201`, sometimes no `code`
+// field at all but a clean 2xx HTTP response). Strict equality on
+// `code === 200` was rejecting valid saves and the UI showed an error
+// even though the rule was persisted. Treat any 2xx-ish payload as
+// success, and only fall back to failure when the body explicitly
+// signals a non-2xx code (or axios threw, which only happens on a
+// network/server error).
+const isApiSuccess = (data) => {
+    if (data == null) return true;
+    if (data.success === false) return false;
+    if (typeof data.code === "number") return data.code >= 200 && data.code < 300;
+    if (typeof data.code === "string" && /^\d+$/.test(data.code)) {
+        const n = Number(data.code);
+        return n >= 200 && n < 300;
+    }
+    return true;
+};
+
 // Controller: AlertsController@createAlertRule
 // Backend: POST /alerts-and-notifications
 const createRule = async (ruleData) => {
     try {
         const { data } = await apiService.apiInstance.post("/alerts-and-notifications", ruleData);
         return {
-            success: data?.code === 200,
+            success: isApiSuccess(data),
             message: data?.message || data?.msg || (data?.code === 403 ? "Duplicate alert rule" : ""),
             nameError: data?.name,
         };
@@ -344,7 +363,7 @@ const updateRule = async (ruleData) => {
     try {
         const { data } = await apiService.apiInstance.put("/alerts-and-notifications", ruleData);
         return {
-            success: data?.code === 200,
+            success: isApiSuccess(data),
             message: data?.message || data?.msg || "",
         };
     } catch {
