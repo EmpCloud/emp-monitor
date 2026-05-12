@@ -917,7 +917,7 @@ class AuthService {
         return res.status(400).json({ code: 400, error: 'Bad Request', message: 'Invalid SSO token', data: null });
       }
 
-      const { sub: cloudUserId, org_id, email, first_name, last_name, role: cloudRole } = decoded;
+      const { sub: cloudUserId, org_id, email, first_name, last_name, role: cloudRole, permissions: cloudPermissions } = decoded;
       console.log('SSO: decoded token - userId:', cloudUserId, 'email:', email, 'orgId:', org_id, 'role:', cloudRole);
 
       const empcloudDb = getEmpCloudPool();
@@ -931,8 +931,21 @@ class AuthService {
         manager: 'Manager',
         employee: 'Employee',
       };
-      const monitorRoleName = roleMap[cloudRole] || 'Employee';
-      const isAdminRole = ['super_admin', 'org_admin', 'hr_admin'].includes(cloudRole);
+      // A custom EmpCloud role (base role = "employee") that carries every
+      // monitor:* permission should sign in here as Admin too -- EmpCloud's
+      // dashboard banner already gates on the same check, so the SSO target
+      // must agree or the user lands on /employee/dashboard despite having
+      // org-wide monitoring rights.
+      const grantedPerms = Array.isArray(cloudPermissions) ? cloudPermissions : [];
+      const MONITOR_ADMIN_PERMS = [
+        'monitor:view_own',
+        'monitor:view_team',
+        'monitor:view_all',
+        'monitor:manage_settings',
+      ];
+      const hasFullMonitorPerms = MONITOR_ADMIN_PERMS.every((p) => grantedPerms.includes(p));
+      const isAdminRole = ['super_admin', 'org_admin', 'hr_admin'].includes(cloudRole) || hasFullMonitorPerms;
+      const monitorRoleName = isAdminRole ? 'Admin' : (roleMap[cloudRole] || 'Employee');
 
       // ─── Fetch license/subscription data from EmpCloud DB ───
       let licenseData = { total_seats: 100, used_seats: 0, begin_date: null, expire_date: null, status: 'active' };
