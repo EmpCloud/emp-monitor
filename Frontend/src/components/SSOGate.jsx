@@ -47,14 +47,16 @@ export default function SSOGate({ children }) {
     if (!ssoToken || ranRef.current) return;
     ranRef.current = true;
 
-    let cancelled = false;
-
+    // No `cancelled` flag / cleanup — the ranRef guard above already
+    // makes this a one-shot. Adding the cancelled gate caused React's
+    // effect-cleanup (StrictMode / re-render) to abort the in-flight
+    // SSO Promise after the network call succeeded, so the user got
+    // stuck on the spinner even though the backend signed them in.
     (async () => {
       try {
         // Use authInstance (same axios instance as the working login flows)
         // to ensure consistent headers, CORS, and baseURL behavior
         const res = await apiService.authInstance.post('/auth/sso', { token: ssoToken });
-        if (cancelled) return;
 
         const {
           data: accessToken,
@@ -133,7 +135,6 @@ export default function SSOGate({ children }) {
           : '/non-admin/dashboard';
         navigate(dest, { replace: true });
       } catch (err) {
-        if (cancelled) return;
         console.error('SSO login failed:', err);
         // Log details to help diagnose — network errors have no response
         if (err.response) {
@@ -145,13 +146,9 @@ export default function SSOGate({ children }) {
           err.response?.data?.message || 'SSO login failed. Please log in manually.'
         );
       } finally {
-        if (!cancelled) setReady(true);
+        setReady(true);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, [ssoToken, login, navigate, setAdmin, setNonAdmin, setEmployee]);
 
   if (!ready) {
