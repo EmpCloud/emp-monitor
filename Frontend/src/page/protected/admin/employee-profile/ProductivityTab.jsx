@@ -5,7 +5,6 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import {
   Clock, Activity, TrendingUp, TrendingDown, Minus, BarChart3,
-  Monitor, Search, Lock, Layers,
 } from "lucide-react";
 import { fetchProductivity } from "./service";
 import { secToHMS } from "@/lib/dateTimeUtils";
@@ -58,13 +57,6 @@ function TimelineBar({ days }) {
             {t(item.key)}
           </span>
         ))}
-        <div className="ml-auto flex items-center gap-2">
-          {[Monitor, Search, Lock, Layers].map((Icon, i) => (
-            <button key={i} className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
-              <Icon size={15} />
-            </button>
-          ))}
-        </div>
       </div>
 
       <div>
