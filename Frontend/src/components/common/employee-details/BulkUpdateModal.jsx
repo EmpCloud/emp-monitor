@@ -32,7 +32,9 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
       });
       onSuccess?.();
     } else {
-      setResult({ type: "error", msg: res?.msg || t("emp_bulk_update_failed") });
+      // Backend returns { code, message, error, data } — prefer the human
+      // message; fall back to the generic translated string only if missing.
+      setResult({ type: "error", msg: res?.message || res?.msg || t("emp_bulk_update_failed") });
     }
   };
 

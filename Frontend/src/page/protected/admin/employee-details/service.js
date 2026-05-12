@@ -183,8 +183,11 @@ export const bulkRegisterEmployees = async (file) => {
     });
     return data ?? null;
   } catch (error) {
+    // Axios throws on 4xx/5xx — pass the server's structured error body
+    // through so the modal can surface the real message instead of a
+    // generic "Bulk register failed" fallback.
     console.error("Employee Details: bulkRegisterEmployees error", error);
-    return null;
+    return error?.response?.data ?? { code: 500, message: error?.message };
   }
 };
 
@@ -197,8 +200,11 @@ export const bulkUpdateEmployees = async (file) => {
     });
     return data ?? null;
   } catch (error) {
+    // Axios throws on 4xx/5xx — pass the server's structured error body
+    // through so the modal can surface the real message instead of a
+    // generic "Bulk update failed" fallback.
     console.error("Employee Details: bulkUpdateEmployees error", error);
-    return null;
+    return error?.response?.data ?? { code: 500, message: error?.message };
   }
 };
 
