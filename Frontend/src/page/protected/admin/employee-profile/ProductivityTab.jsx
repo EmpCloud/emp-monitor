@@ -22,7 +22,10 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor, ring, ringColor
     <div className={`flex items-center justify-between gap-3 bg-white rounded-2xl border shadow-sm px-4 py-3.5 min-w-0 ${ring ? `border-2 ${ringColor || "border-rose-400"}` : "border-gray-100"}`}>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] text-gray-400 font-medium truncate">{label}</p>
-        <p className="text-[15px] font-bold text-gray-800 mt-1.5 border border-gray-200 rounded-lg px-3 py-1 tabular-nums truncate">
+        <p
+          className="text-sm font-bold text-gray-800 mt-1.5 border border-gray-200 rounded-lg px-2 py-1 tabular-nums whitespace-nowrap"
+          title={String(value)}
+        >
           {value}
         </p>
       </div>
@@ -247,7 +250,7 @@ export default function ProductivityTab({ employee, startDate, endDate }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {statCards.map((card) => (
           <StatCard key={card.label} {...card} />
         ))}
