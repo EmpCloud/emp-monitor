@@ -66,6 +66,28 @@ const toArray = (val) => {
 };
 
 /**
+ * Server-side Joi requires `tracking.fixed.<day>.time.start` and `.end` to be
+ * non-empty HH:MM strings whenever the day key is present. Legacy employee
+ * rows can contain empty time fields, which would otherwise fail validation
+ * on save even when the user is on `unlimited` mode. Drop any day entry
+ * whose start/end isn't a valid HH:MM string.
+ */
+const sanitizeFixedDays = (fixed) => {
+  if (!fixed || typeof fixed !== "object") return {};
+  const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const out = {};
+  for (const [day, val] of Object.entries(fixed)) {
+    if (!val || typeof val !== "object") continue;
+    const start = val.time?.start;
+    const end = val.time?.end;
+    if (typeof start === "string" && TIME.test(start) && typeof end === "string" && TIME.test(end)) {
+      out[day] = val;
+    }
+  }
+  return out;
+};
+
+/**
  * Parse API response into component-friendly state.
  */
 export const parseTrackSettings = (apiData) => {
@@ -214,7 +236,10 @@ export const buildSavePayload = ({ employeeId, state, trackingData }) => {
     timesheetIdleTime: state.timesheetIdleTime,
     breakInMinute: state.breakInMinute,
     trackingMode: state.trackingMode,
-    tracking: trackingData ?? state.tracking,
+    tracking: (() => {
+      const t = trackingData ?? state.tracking ?? {};
+      return { ...t, fixed: sanitizeFixedDays(t.fixed) };
+    })(),
     work_hour_billing: {
       is_enabled: state.billingEnabled ? 1 : 0,
       billing_based_on: state.billingBasedOn || "office_hours",
