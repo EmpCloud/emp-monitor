@@ -174,6 +174,27 @@ export const fetchAssignedManagersForEmployee = async (employeeId) => {
   }
 };
 
+/**
+ * If axios has no `error.response`, the request never got an HTTP reply —
+ * usually one of:
+ *   - Chromium ERR_UPLOAD_FILE_CHANGED (the picked file changed on disk
+ *     since the user selected it, e.g. they re-saved the XLSX in Excel
+ *     after a previous failed upload — the stale File handle is rejected
+ *     by the browser before the request leaves)
+ *   - genuine network drop / DNS / CORS
+ * In both cases axios reports a useless "Network Error" string. Return a
+ * sentinel code -1 so the modal can both surface an actionable message
+ * AND clear its file picker for the next attempt.
+ */
+const handleBulkUploadError = (error) => {
+  if (error?.response?.data) return error.response.data;
+  return {
+    code: -1,
+    message:
+      "Could not reach the server. The selected file may have changed on disk — please re-select it and try again.",
+  };
+};
+
 export const bulkRegisterEmployees = async (file) => {
   try {
     const fd = new FormData();
@@ -183,11 +204,8 @@ export const bulkRegisterEmployees = async (file) => {
     });
     return data ?? null;
   } catch (error) {
-    // Axios throws on 4xx/5xx — pass the server's structured error body
-    // through so the modal can surface the real message instead of a
-    // generic "Bulk register failed" fallback.
     console.error("Employee Details: bulkRegisterEmployees error", error);
-    return error?.response?.data ?? { code: 500, message: error?.message };
+    return handleBulkUploadError(error);
   }
 };
 
@@ -200,11 +218,8 @@ export const bulkUpdateEmployees = async (file) => {
     });
     return data ?? null;
   } catch (error) {
-    // Axios throws on 4xx/5xx — pass the server's structured error body
-    // through so the modal can surface the real message instead of a
-    // generic "Bulk update failed" fallback.
     console.error("Employee Details: bulkUpdateEmployees error", error);
-    return error?.response?.data ?? { code: 500, message: error?.message };
+    return handleBulkUploadError(error);
   }
 };
 

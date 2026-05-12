@@ -34,6 +34,13 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
       // Backend returns { code, message, error, data } — prefer the human
       // message; fall back to the generic translated string only if missing.
       setResult({ type: "error", msg: res?.message || res?.msg || t("emp_bulk_registration_failed") });
+      // code === -1 → browser-level upload abort (commonly Chromium's
+      // ERR_UPLOAD_FILE_CHANGED, which happens if the user edits and re-saves
+      // the picked XLSX between attempts). Force a fresh selection.
+      if (res?.code === -1) {
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     }
   };
 
