@@ -70,7 +70,10 @@ const toArray = (val) => {
  */
 export const parseTrackSettings = (apiData) => {
   const d = apiData?.data ?? apiData ?? {};
-  const rules = d.rules ?? d;
+  // GET /settings/get-emp-setting-trac returns the row with the rules JSON in
+  // `custom_tracking_rule`. Older payloads used `rules`, and tests sometimes
+  // pass the rules object directly — keep all three working.
+  const rules = d.custom_tracking_rule ?? d.rules ?? d;
 
   // Parse rules if it's a JSON string
   const r = typeof rules === "string" ? JSON.parse(rules) : rules;
