@@ -17,6 +17,7 @@ const { AnnouncementModel } = require('../../announcements/announcement.model');
 
 const config = require('../../../../../../config/config');
 const AuthBlocker = require('../AuthBlocker.json');
+const { mirrorMonitorUserToEmpCloud } = require('../../../../utils/helpers/EmpCloudUserSync');
 const AgentAuthList = require('./AgentAuthList.js');
 
 const hourToSeconds = (hours) => {
@@ -890,6 +891,22 @@ class AuthService {
                         /**Assign employee based on location and department assigned to respective role */
                         eventEmitter.emit('register', { employee_id: employeeCreatedData.insertId, organization_id: organizationId, role_id: empRoleId, department_id, location_id });
                         res.json({ code: 200, error: null, data: { email: tempEmail }, message: 'Employee successfully created' });
+                        // Mirror the user into EmpCloud so the HRMS directory and
+                        // every cross-module read (payroll, leave, attendance grid)
+                        // sees them too. Fire-and-forget: failure here must not
+                        // affect the agent which already got its 200.
+                        mirrorMonitorUserToEmpCloud({
+                            monitorOrgId: organizationId,
+                            monitorUserId: userCreatedData.insertId,
+                            firstName: firstname,
+                            lastName: lastname,
+                            email: a_email && a_email.length ? a_email : tempEmail,
+                            contactNumber: contact_number,
+                            address: address,
+                            empCode: username,
+                        }).catch((err) => {
+                            Logger.error(`EmpCloud user mirror failed for ${tempEmail}: ${err && err.message ? err.message : err}`);
+                        });
                         if (process.env.SPECIAL_ORGANIZATION_ID == organizationId && manager) {
                             manager = manager.substring(manager.lastIndexOf("CN=") + 3, manager.indexOf(",")).trim();
                             manager = manager.split(' ');
