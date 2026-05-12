@@ -78,18 +78,23 @@ export default function BulkUpdateModal({ open, onOpenChange, onSuccess }) {
                 setDownloading(true);
                 try {
                   const employees = await fetchEmployeeList();
-                  const headers = ["First Name", "Last Name", "Full Name", "UserName", "Email",
-                    "Employee ID", "Employee Unique ID", "Last Login", "Location", "Department",
-                    "Role"];
+                  // Header text must exactly match the backend's column map at
+                  // Backend/admin/src/utils/helpers/LanguageTranslate.js
+                  // (bulkRegAndUpdate.en) — case-sensitive. Previously this
+                  // shipped "Employee ID" and "Employee Unique ID", which the
+                  // backend reads as "Employee Code" and "Employee Unique Id",
+                  // so every uploaded row had EmployeeCode/EmployeeUniqueId
+                  // undefined and Joi 400'd with "EmployeeCode is not provided
+                  // for some users." (see #198).
+                  const headers = ["First Name", "Last Name", "Email",
+                    "Employee Code", "Employee Unique Id", "Location",
+                    "Department", "Role"];
                   const rows = employees.map((emp) => [
                     emp.first_name || emp.name || "",
                     emp.last_name || "",
-                    emp.full_name || "",
-                    emp.username || "",
                     emp.email || "",
                     emp.emp_code || "",
                     emp.employee_unique_id || "",
-                    emp.employee_updated_at || "",
                     emp.location || "",
                     emp.department || "",
                     emp.role || (Array.isArray(emp.roles) && emp.roles[0]?.role) || "",
