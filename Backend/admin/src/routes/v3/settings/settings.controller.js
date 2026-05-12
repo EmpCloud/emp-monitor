@@ -429,9 +429,13 @@ class Settings {
                 employee[0].custom_tracking_rule.tracking = { [trackingMode]: employee[0].custom_tracking_rule.tracking[trackingMode], ...tracking };
             }
             delete employee[0].password;
-            if (process.env?.CUSTOM_BULK_WEB_BLOCKING?.split(',')?.includes(String(organization_id))){
-                delete employee[0].custom_tracking_rule.tracking.domain.websiteBlockList;
-            }
+            // NOTE: previously stripped `tracking.domain.websiteBlockList` for orgs
+            // in CUSTOM_BULK_WEB_BLOCKING so the per-employee list wouldn't show
+            // alongside the group-level bulk list. But save() still accepted the
+            // field and the UI still rendered it, so users could add entries that
+            // would silently disappear on reload (see #201). The group-level
+            // /group-web-blocking flow overwrites per-employee rules on its own
+            // sync, so leaving the field intact is both safe and consistent.
             return res.json({ code: 200, data: employee[0], message: settingMessages.find(x => x.id === "6")[language] || settingMessages.find(x => x.id === "6")["en"], error: null });
         } catch (err) {
             Logger.error(`-V3---error-----${err}------${__filename}----`);
