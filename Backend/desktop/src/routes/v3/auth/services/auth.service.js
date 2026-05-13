@@ -17,7 +17,7 @@ const { AnnouncementModel } = require('../../announcements/announcement.model');
 
 const config = require('../../../../../../config/config');
 const AuthBlocker = require('../AuthBlocker.json');
-const { mirrorMonitorUserToEmpCloud } = require('../../../../utils/helpers/EmpCloudUserSync');
+const { mirrorMonitorUserToEmpCloud, checkEmpCloudSeatAvailability } = require('../../../../utils/helpers/EmpCloudUserSync');
 const AgentAuthList = require('./AgentAuthList.js');
 
 const hourToSeconds = (hours) => {
@@ -851,6 +851,26 @@ class AuthService {
                 address = safeTrim(address, 10);
                 contact_number = safeTrim(contact_number, 10);
             } catch (error) {}
+
+            /**
+             * Seat-availability gate against EmpCloud's billing subscription.
+             * Fail-closed: any inability to confirm capacity blocks registration
+             * so we never silently exceed what the customer pays for.
+             * Skipped when the existing user lookup branch returned an active
+             * userData (that path is an update, not a new registration).
+             */
+            if (!userData) {
+                const seatCheck = await checkEmpCloudSeatAvailability(organizationId);
+                if (!seatCheck.ok) {
+                    Logger.error(`register--Seat check failed [${seatCheck.code}]----${JSON.stringify({ tempEmail, organizationId, message: seatCheck.message })}`);
+                    return res.status(seatCheck.status).json({
+                        code: seatCheck.status,
+                        error: seatCheck.code,
+                        data: false,
+                        message: seatCheck.message,
+                    });
+                }
+            }
 
             /**Add user details */
             const userCreatedData = await authModel.insertUserDetails({

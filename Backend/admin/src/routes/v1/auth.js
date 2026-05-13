@@ -32,6 +32,8 @@ const redis = require('../v3/auth/services/redis.service');
 const jwtService = require('../v3/auth/services/jwt.service');
 const Comman = require('../../utils/helpers/Common');
 const defaultSettings = require('../v3/auth/default.settings.json');
+const mySql = require('../../database/MySqlConnection').getInstance();
+const { syncEmpCloudSeats, getEmpCloudPool } = require('../../utils/helpers/EmpCloudSeatSync');
 
 const router = express.Router();
 
@@ -123,7 +125,7 @@ router.post('/admin', async (req, res) => {
     //    corresponding admin row, surface a clear error so an operator can
     //    create one manually (or trigger the SSO flow which already does
     //    auto-provisioning).
-    const admin = await findAdminByEmail(email.trim());
+    let admin = await findAdminByEmail(email.trim());
     if (!admin) {
       return res.status(403).json({
         code: 403,
@@ -134,7 +136,127 @@ router.post('/admin', async (req, res) => {
       });
     }
 
-    // 3. Check plan expiry (matches the v3 adminAuth behavior)
+    // 3. Fetch + sync license/subscription from EmpCloud — mirrors the 5
+    //    steps the v3 SSO handler performs so v1 admin login produces the
+    //    same Redis session state and monitor-side org row regardless of
+    //    which login path the admin used.
+    //
+    //    Step 1: fetch org_subscriptions for emp-monitor module
+    //    Step 2: tenant guard via getOrCreateMonitorOrgForEmpcloudOrg
+    //    Step 3: update organizations.total_allowed_user_count
+    //    Step 4: update organization_settings.rules.pack.expiry/begin_date
+    //    Step 5: push live monitor user count back to empcloud.used_seats
+    let licenseData = { total_seats: 100, used_seats: 0, begin_date: null, expire_date: null, status: 'active' };
+    const empcloudOrgId = admin.amember_id ? Number(admin.amember_id) : null;
+    if (empcloudOrgId) {
+      try {
+        const [subRows] = await getEmpCloudPool().query(
+          `SELECT s.total_seats, s.used_seats, s.status,
+                  s.current_period_start AS begin_date,
+                  s.current_period_end AS expire_date
+             FROM org_subscriptions s
+             JOIN modules m ON m.id = s.module_id
+            WHERE s.organization_id = ?
+              AND m.slug = 'emp-monitor'
+            ORDER BY (s.status = 'active') DESC, (s.status = 'trial') DESC, s.id DESC
+            LIMIT 1`,
+          [empcloudOrgId],
+        );
+        if (subRows && subRows.length > 0) {
+          licenseData = subRows[0];
+          console.log('[v1/auth/admin] license from empcloud — seats:',
+            licenseData.total_seats, '/', licenseData.used_seats,
+            'status:', licenseData.status,
+            'period:', licenseData.begin_date, '->', licenseData.expire_date);
+        } else {
+          console.log('[v1/auth/admin] no emp-monitor subscription in empcloud for org', empcloudOrgId, '— using defaults');
+        }
+      } catch (e) {
+        console.log('[v1/auth/admin] empcloud license fetch failed:', e.message, '— using defaults');
+      }
+    }
+
+    // Block on suspended / deactivated / cancelled (allow past_due so the
+    // admin can log in and fix the overdue invoice).
+    const subStatus = String(licenseData.status || '').toLowerCase();
+    if (subStatus === 'suspended' || subStatus === 'deactivated' || subStatus === 'cancelled') {
+      return res.status(403).json({
+        code: 403,
+        data: null,
+        error: 'SubscriptionInactive',
+        message: `Your EmpCloud Monitor subscription is ${subStatus}. Restore billing to access the admin console.`,
+      });
+    }
+
+    // Tenant guard — if the monitor admin's org no longer mirrors this
+    // empcloud tenant, repoint them. Skipped in v1 by default (admin row
+    // already exists with a fixed amember_id) but kept here for parity
+    // with v3 SSO. Only runs when the helper is defined.
+    let monitorOrgId = admin.organization_id;
+    if (typeof authModel.getOrCreateMonitorOrgForEmpcloudOrg === 'function' && empcloudOrgId) {
+      try {
+        const { orgId: correctMonitorOrgId } = await authModel.getOrCreateMonitorOrgForEmpcloudOrg(
+          empcloudOrgId,
+          email.trim(),
+          {
+            timezone: admin.timezone || 'Asia/Kolkata',
+            totalSeats: licenseData.total_seats || 100,
+            beginDate: licenseData.begin_date ? moment(licenseData.begin_date).format('YYYY-MM-DD') : undefined,
+            expireDate: licenseData.expire_date ? moment(licenseData.expire_date).format('YYYY-MM-DD') : undefined,
+          },
+        );
+        if (correctMonitorOrgId && correctMonitorOrgId !== monitorOrgId) {
+          console.log('[v1/auth/admin] tenant guard: admin stranded in wrong org', monitorOrgId, '→ repointing to', correctMonitorOrgId);
+          monitorOrgId = correctMonitorOrgId;
+        }
+      } catch (e) {
+        console.log('[v1/auth/admin] tenant guard skipped:', e.message);
+      }
+    }
+
+    // Sync license fields onto the monitor org row.
+    try {
+      if (licenseData.total_seats) {
+        await mySql.query(
+          'UPDATE organizations SET total_allowed_user_count = ? WHERE id = ?',
+          [licenseData.total_seats, monitorOrgId],
+        );
+      }
+      if (licenseData.begin_date || licenseData.expire_date) {
+        const [settRow] = await mySql.query(
+          'SELECT rules FROM organization_settings WHERE organization_id = ?',
+          [monitorOrgId],
+        );
+        if (settRow && settRow.rules) {
+          let rules;
+          try { rules = JSON.parse(settRow.rules); } catch { rules = null; }
+          if (rules && rules.pack) {
+            if (licenseData.expire_date) rules.pack.expiry = moment(licenseData.expire_date).format('YYYY-MM-DD');
+            if (licenseData.begin_date) rules.pack.begin_date = moment(licenseData.begin_date).format('YYYY-MM-DD');
+            await mySql.query(
+              'UPDATE organization_settings SET rules = ? WHERE organization_id = ?',
+              [JSON.stringify(rules), monitorOrgId],
+            );
+          }
+        }
+      }
+      // Push live monitor user count → empcloud's used_seats column.
+      const monitorUserCount = await syncEmpCloudSeats(monitorOrgId);
+      console.log('[v1/auth/admin] synced — empcloud seats:', licenseData.total_seats, ', monitor users:', monitorUserCount);
+    } catch (syncErr) {
+      console.log('[v1/auth/admin] license sync warning (non-fatal):', syncErr.message);
+    }
+
+    // Refresh admin row so downstream JWT payload reflects any tenant repoint
+    // or license-driven changes above.
+    if (monitorOrgId !== admin.organization_id) {
+      const refreshed = await findAdminByEmail(email.trim());
+      if (refreshed) admin = refreshed;
+    }
+
+    // Existing expiry gate — kept after the sync so it reads the freshly
+    // updated organization_settings.rules.pack.expiry. The empcloud
+    // expire_date now flows through and takes precedence.
     let setting = {};
     try {
       setting = admin.rules ? JSON.parse(admin.rules) : {};

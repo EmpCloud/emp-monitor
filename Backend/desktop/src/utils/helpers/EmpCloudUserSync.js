@@ -146,4 +146,110 @@ async function mirrorMonitorUserToEmpCloud(params) {
     }
 }
 
-module.exports = { mirrorMonitorUserToEmpCloud, getEmpCloudPool };
+// Check that the monitor org's empcloud subscription has seat capacity for
+// one more user. Returns a result object so the caller can map to HTTP
+// status codes without duplicating policy.
+//
+//   { ok: true,  totalSeats, usedSeats, status }
+//   { ok: false, code: 'NO_BRIDGE',         status: 503, message: '...' }   // monitor org has no amember_id
+//   { ok: false, code: 'EMPCLOUD_DOWN',     status: 503, message: '...' }   // upstream DB unreachable
+//   { ok: false, code: 'NO_SUBSCRIPTION',   status: 503, message: '...' }   // no emp-monitor sub row found
+//   { ok: false, code: 'SUSPENDED',         status: 403, message: '...' }   // billing suspended/deactivated
+//   { ok: false, code: 'SEAT_LIMIT',        status: 403, message: '...' }   // already at total_seats
+//
+// Fail-closed policy: any inability to confirm seat availability blocks
+// registration. The caller surfaces the message to the agent so the customer
+// admin can resolve (top up seats / pay invoice / fix bridge).
+async function checkEmpCloudSeatAvailability(monitorOrgId) {
+    const orgId = Number(monitorOrgId);
+    if (!orgId) {
+        return { ok: false, code: 'NO_BRIDGE', status: 503, message: 'Monitor org not found.' };
+    }
+
+    const empcloudOrgId = await resolveEmpCloudOrgId(orgId);
+    if (!empcloudOrgId) {
+        return {
+            ok: false,
+            code: 'NO_BRIDGE',
+            status: 503,
+            message: 'This organization is not linked to an EmpCloud subscription. Contact your administrator.',
+        };
+    }
+
+    let subRow;
+    try {
+        const [rows] = await getEmpCloudPool().query(
+            `SELECT s.total_seats, s.used_seats, s.status
+               FROM org_subscriptions s
+               JOIN modules m ON m.id = s.module_id
+              WHERE s.organization_id = ?
+                AND m.slug = 'emp-monitor'
+              ORDER BY (s.status = 'active') DESC, (s.status = 'trial') DESC, s.id DESC
+              LIMIT 1`,
+            [empcloudOrgId],
+        );
+        subRow = rows && rows[0];
+    } catch (e) {
+        console.log('checkEmpCloudSeatAvailability: empcloud DB error for monitor org', orgId, ':', e.message);
+        return {
+            ok: false,
+            code: 'EMPCLOUD_DOWN',
+            status: 503,
+            message: 'Subscription check temporarily unavailable. Please retry shortly.',
+        };
+    }
+
+    if (!subRow) {
+        return {
+            ok: false,
+            code: 'NO_SUBSCRIPTION',
+            status: 503,
+            message: 'No active EmpCloud Monitor subscription found for this organization. Contact your administrator.',
+        };
+    }
+
+    const subStatus = String(subRow.status || '').toLowerCase();
+    if (subStatus === 'suspended' || subStatus === 'deactivated' || subStatus === 'cancelled') {
+        return {
+            ok: false,
+            code: 'SUSPENDED',
+            status: 403,
+            message: `Your EmpCloud Monitor subscription is ${subStatus}. Restore billing to add users.`,
+        };
+    }
+
+    const totalSeats = Number(subRow.total_seats || 0);
+    // Use the live count in the monitor DB rather than the cached used_seats
+    // on org_subscriptions — that column lags until syncEmpCloudSeats runs.
+    let currentCount;
+    try {
+        const [countRow] = await mySql.query(
+            'SELECT COUNT(*) AS c FROM employees WHERE organization_id = ?',
+            [orgId],
+        );
+        currentCount = countRow ? Number(countRow.c) : 0;
+    } catch (e) {
+        console.log('checkEmpCloudSeatAvailability: monitor count failed for org', orgId, ':', e.message);
+        return {
+            ok: false,
+            code: 'EMPCLOUD_DOWN',
+            status: 503,
+            message: 'Subscription check temporarily unavailable. Please retry shortly.',
+        };
+    }
+
+    if (totalSeats > 0 && currentCount >= totalSeats) {
+        return {
+            ok: false,
+            code: 'SEAT_LIMIT',
+            status: 403,
+            message: `Seat limit reached (${currentCount}/${totalSeats}). Contact your administrator to upgrade.`,
+            totalSeats,
+            usedSeats: currentCount,
+        };
+    }
+
+    return { ok: true, totalSeats, usedSeats: currentCount, status: subStatus };
+}
+
+module.exports = { mirrorMonitorUserToEmpCloud, getEmpCloudPool, checkEmpCloudSeatAvailability };
