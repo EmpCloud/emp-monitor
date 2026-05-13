@@ -1,7 +1,6 @@
 const common = require('../common');
 const jobsCommon = require('../../jobsCommon');
 const EmployeeModel = require('../../../../routes/v3/employee/Employee.model');
-const { info } = require('nodemailer-mock/lib/messages');
 const { alert } = require('../../../../utils/helpers/LanguageTranslate');
 
 const delayedJob = common.delayedJobs('DWT', 'DWTLessJob');

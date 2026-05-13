@@ -1,6 +1,15 @@
 'use strict';
 if (process.env.IS_DEBUGGING) console.log(__filename);
 
+const Joi = require('joi');
+if (typeof Joi.validate !== 'function') {
+    Joi.validate = (value, schema, options) => schema.validate(value, options);
+}
+const HapiJoi = require('@hapi/joi');
+if (typeof HapiJoi.validate !== 'function') {
+    HapiJoi.validate = (value, schema, options) => schema.validate(value, options);
+}
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');

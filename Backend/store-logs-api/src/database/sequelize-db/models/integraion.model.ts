@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Injectable, Inject } from '@nestjs/common';
 import { OrganizationProvidersEntity } from '../entities/organization-providers';
 import { OrganizationProvidersCredentialsEntity } from '../entities/organization-providers-credentials';

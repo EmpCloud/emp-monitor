@@ -11,7 +11,7 @@ export class DropboxUtils implements StorageUtilInterface {
     private main: string;
     private type: string;
     private date: string;
-    private redisClient: Redis.Redis;
+    private redisClient: Redis;
 
     constructor() {
         // Initialize Redis client directly

@@ -8,7 +8,6 @@ import moment = require('moment-timezone');
 import { UserActivityDataMongoModel } from 'src/database/mongoose-db/models/user-activity-data.model';
 import { ResponseHelperService } from 'src/common/helper/response.helper.service';
 import { validateActivityDataSchema } from '../validation/user-activity.validation';
-import { NestEventEmitter } from 'nest-event';
 import { Logger } from '../../../../common/errlogger/logger';
 import configFile from "../../../../../../config/config.js";
 
@@ -17,7 +16,6 @@ export class ActivityService {
     constructor(
         private readonly userActivityDataMongoModel: UserActivityDataMongoModel,
         private readonly responseHelperService: ResponseHelperService,
-        private readonly emitter: NestEventEmitter,
         private readonly logger: Logger,
     ) { }
 
@@ -153,7 +151,6 @@ export class ActivityService {
             // Insert in mongo db with bulk insertion mongoose api
             try {
                 const result: any = await this.userActivityDataMongoModel.insert(finalData);
-                this.emitter.emit('data-receieved-for-logs', result, userData, ip);
                 return this.responseHelperService.sendResponse(200, 'Data saved', null, { inserted: result.length });
             } catch (error) {
                 // this.logger.logger.error(`-------------${JSON.stringify(error)}`);

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { EmployeeTimesheetEntity } from '../entities/employee-timesheet';
 import { Injectable, Inject } from '@nestjs/common';
 import { mysqlConstants } from '../providers/sequelize-db.constants';

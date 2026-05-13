@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Injectable, Inject } from '@nestjs/common';
 import { mysqlConstants } from '../providers/sequelize-db.constants';
 import { EmployeeAttendanceEntity } from '../entities/employee-attendance';

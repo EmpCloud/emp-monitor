@@ -43,6 +43,8 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
   const [builds, setBuilds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [setupMessage, setSetupMessage] = useState(null);
+  const [missingBuildModes, setMissingBuildModes] = useState([]);
   const [downloadingId, setDownloadingId] = useState(null);
 
   const AGENT_TYPES = [
@@ -89,7 +91,10 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
     setError(null);
     try {
       const res = await apiService.apiInstance.get("/organization-build/build");
-      setBuilds(res.data?.data?.builds || []);
+      const payload = res.data?.data || {};
+      setBuilds(payload.builds || []);
+      setSetupMessage(payload.setupMessage || null);
+      setMissingBuildModes(payload.missingBuildModes || []);
     } catch (err) {
       setError(t("agentFetchError"));
     } finally {
@@ -120,6 +125,7 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
     setSelectedAgent(null);
     setSelectedPlatform(null);
     setError(null);
+    setSetupMessage(null);
     onClose?.();
   };
 
@@ -145,6 +151,9 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
   if (!open) return null;
 
   const activeAgentType = AGENT_TYPES.find((a) => a.id === selectedAgent);
+  const activeAgentNeedsSetup = activeAgentType
+    ? missingBuildModes.includes(activeAgentType.mode)
+    : false;
 
   // Filter builds by the selected agent's mode
   const filteredBuilds = activeAgentType
@@ -204,6 +213,12 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
               {error && (
                 <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
                   {error}
+                </div>
+              )}
+
+              {!loading && !error && setupMessage && (
+                <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-700">
+                  {setupMessage}
                 </div>
               )}
 
@@ -295,9 +310,11 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-400">
-                    {t("agentNoBuildsForType")}
-                  </p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    {activeAgentNeedsSetup && setupMessage
+                      ? setupMessage
+                      : t("agentNoBuildsForType")}
+                  </div>
                 )}
               </div>
 
@@ -332,9 +349,11 @@ const AgentDownloadOverlay = ({ open, onClose }) => {
               )}
 
               {selectedPlatform && currentBuilds.length === 0 && (
-                <p className="text-sm text-slate-400">
-                  {t("agentNoBuildsForPlatform")}
-                </p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  {activeAgentNeedsSetup && setupMessage
+                    ? setupMessage
+                    : t("agentNoBuildsForPlatform")}
+                </div>
               )}
             </div>
           </div>

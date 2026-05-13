@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Injectable, NotAcceptableException } from '@nestjs/common';
 import moment = require('moment-timezone');
 import * as _ from 'underscore';

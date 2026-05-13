@@ -22,7 +22,7 @@ import { OnedriveUtils } from '../utils/one-drive.utils';
 import { SFtpUtils } from '../utils/SFTP.utils';
 import { DropboxUtils } from '../utils/dropbox.utils';
 import { WebDavUtils } from '../utils/WebDav.utils';
-import { RedisService } from '@liaoliaots/nestjs-redis';
+import { RedisService } from 'src/common/helper/redis.helper.service';
 import configFile from "../../../../../../config/config.js";
 
 @Injectable()
@@ -143,14 +143,14 @@ export class ScreenRecordService {
     let storage = null;
     let dbStorageData = null;
     try {
-        let getScrnStorageData = await this.redisService.getOrThrow().get(`${userData.organization_id}_storage_creds`);
+        let getScrnStorageData = await this.redisService.getClient().get(`${userData.organization_id}_storage_creds`);
         if(getScrnStorageData) {
             dbStorageData = JSON.parse(getScrnStorageData);
         }
         else {
             dbStorageData = await this.integrationModel.findOne(userData.organization_id);
             if (dbStorageData?.organizationproviders?.orgProCreds?.is_expired === 1) return this.endRequest(400, 'Storage access failed, please check your credentials.', files);
-            await this.redisService.getOrThrow().set(`${userData.organization_id}_storage_creds`, JSON.stringify(dbStorageData), 'EX', 28800);
+            await this.redisService.getClient().set(`${userData.organization_id}_storage_creds`, JSON.stringify(dbStorageData), 'EX', 28800);
         }
         storage = JSON.parse(dbStorageData.organizationproviders.orgProCreds.creds);
     } catch (error) {
@@ -209,7 +209,7 @@ export class ScreenRecordService {
     if (this.hasNonUploadedFiles(files)) {
       const retryTimeoutSeconds =
         Number(process.env.RETRY_TIMEOUT_SECONDS) || 5;
-      await new Promise(resolve =>
+      await new Promise<void>(resolve =>
         setTimeout(() => resolve(), retryTimeoutSeconds * 1000),
       );
       await this.uploadToCloud(ProviderClass, storage, files, userData.email);
