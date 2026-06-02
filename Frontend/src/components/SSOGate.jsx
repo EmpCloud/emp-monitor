@@ -30,10 +30,7 @@ export default function SSOGate({ children }) {
   const navigate = useNavigate();
 
   // Extract once on mount — never re-run (token already stripped from URL)
-  const [ssoToken] = useState(() => {
-    const token = extractSSOToken();
-    return token;
-  });
+  const [{ token: ssoToken, returnUrl: ssoReturnUrl }] = useState(() => extractSSOToken());
   const [ready, setReady] = useState(!ssoToken); // if no SSO token, render immediately
   const [error, setError] = useState(null);
 
@@ -108,16 +105,16 @@ export default function SSOGate({ children }) {
         // Also set the bare token (used by some API interceptors)
         localStorage.setItem('token', accessToken);
 
-        // Remember where to return to in EMP Cloud.
-        // For empmonitor.empcloud.com → empcloud.com (strip the empmonitor subdomain).
-        // For other hosts (localhost, custom domains) leave unchanged.
-        const host = window.location.host;
-        const empCloudHost = /^empmonitor\./i.test(host)
-          ? host.replace(/^empmonitor\./i, '')
-          : host;
+        // Remember where to return to in EMP Cloud for the "EMP Cloud" back
+        // link. Use the return_url EmpCloud passed in the SSO query string —
+        // it points at the real dashboard. Do NOT reconstruct it by stripping
+        // the host: empmonitor.empcloud.com → empcloud.com lands on the
+        // WordPress marketing site (wp-login), not the dashboard. Mirror the
+        // proven emp-payroll SSO behavior.
+        localStorage.setItem('sso_source', 'empcloud');
         localStorage.setItem(
           'empcloud_return_url',
-          `${window.location.protocol}//${empCloudHost}/dashboard`,
+          ssoReturnUrl || 'https://app.empcloud.com/',
         );
 
         // Navigate based on role. Use a full-page reload (not React
@@ -149,7 +146,7 @@ export default function SSOGate({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [ssoToken, login, navigate, setAdmin, setNonAdmin, setEmployee]);
+  }, [ssoToken, ssoReturnUrl, login, navigate, setAdmin, setNonAdmin, setEmployee]);
 
   if (!ready) {
     return (
