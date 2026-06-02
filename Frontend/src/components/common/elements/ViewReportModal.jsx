@@ -79,6 +79,15 @@ const COLUMNS = {
     col("name", "Name"),
     col("value", "Usage %", { className: "text-blue-500 font-semibold", isPercent: true }),
   ],
+  // Plain roster list — for absent/suspended/offline/enrolled employees who
+  // have no activity to fetch. Renders the bucket rows directly via staticData.
+  employee_list: [
+    col("name", "Employee"),
+    col("emp_code", "Emp Code", { aliases: ["empCode"] }),
+    col("email", "Email", { aliases: ["a_email"] }),
+    col("location", "Location", { aliases: ["location_name"] }),
+    col("department", "Department", { aliases: ["department_name"] }),
+  ],
 };
 
 // Name has multiple possible source fields

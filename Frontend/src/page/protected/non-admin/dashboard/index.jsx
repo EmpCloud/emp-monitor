@@ -234,7 +234,7 @@ const NonAdminDashboard = () => {
         </div>
 
         <div className="xl:col-span-3 col-span-12">
-          <EmpAi />
+          <EmpAi useStore={useNonAdminDashboardStore} />
         </div>
 
         {/* Productive / Non-Productive — gated by employee_insights_view */}

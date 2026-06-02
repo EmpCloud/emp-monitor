@@ -66,6 +66,7 @@ const Dashboard = () => {
 
   const {
     stats,
+    statsLists,
     activitySnapshot,
     activityBreakdown,
     webUsage,
@@ -120,6 +121,39 @@ const Dashboard = () => {
       by: opts.by || "today",
     });
   }, []);
+
+  // Open an EMP-AI insight card in the dashboard's ViewReportModal instead of
+  // navigating away. The card's `modal.dataset` names a store slice; resolve it
+  // to the actual rows here. web/app slices store the list under `.today`;
+  // statsLists buckets and the *Employees arrays are already plain lists.
+  const handleOpenInsight = useCallback((card) => {
+    const m = card?.modal;
+    if (!m) return;
+    const SOURCES = {
+      absentEmp: statsLists?.absentEmp,
+      idleEmps: statsLists?.idleEmps,
+      offlineEmp: statsLists?.offlineEmp,
+      onlineEmps: statsLists?.onlineEmps,
+      registeredEmp: statsLists?.registeredEmp,
+      suspendedEmp: statsLists?.suspendedEmp,
+      productiveEmployees,
+      unproductiveEmployees,
+      nonActiveEmployees,
+      activeEmployees,
+      locationPerformance: locationPerformance?.rows,
+      departmentPerformance: departmentPerformance?.rows,
+      webUsage: webUsage?.today,
+      appUsage: appUsage?.today,
+    };
+    const data = Array.isArray(SOURCES[m.dataset]) ? SOURCES[m.dataset] : [];
+    if (m.mode === "employee_activity") {
+      // Activity columns are fetched per-employee from the ids in `employees`.
+      openViewReport(m.title, { mode: "employee_activity", employees: data });
+    } else {
+      // employee_list / timesheet / web_app all render staticData directly.
+      openViewReport(m.title, { mode: m.mode, staticData: data });
+    }
+  }, [statsLists, productiveEmployees, unproductiveEmployees, nonActiveEmployees, activeEmployees, locationPerformance, departmentPerformance, webUsage, appUsage, openViewReport]);
 
   useEffect(() => {
     loadDashboard();
@@ -607,7 +641,7 @@ const Dashboard = () => {
         </div>
 
         <div className="xl:col-span-3 col-span-12">
-          <EmpAi />
+          <EmpAi onOpenInsight={handleOpenInsight} />
         </div>
 
         {/* Productive */}
