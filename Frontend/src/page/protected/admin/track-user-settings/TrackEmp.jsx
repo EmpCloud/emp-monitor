@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Settings, Info, Camera, Shield, Cpu, DollarSign, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Settings, Info, Camera, Shield, Cpu, X, Loader2 } from "lucide-react";
 import { fetchEmployeeInfo } from "../employee-profile/service";
 import { fetchUserTrackSettings, fetchSettingsOptions, fetchGroups, saveUserTrackSettings, parseTrackSettings, buildSavePayload } from "./service";
 import { Button } from "@/components/ui/button";
@@ -526,41 +526,6 @@ export default function TrackEmp() {
               </Section>
             </div>
           </div>
-
-          {/* Work Hours Billing */}
-          <Section title={t("track_work_hours_billing")} icon={<DollarSign size={14} className="text-emerald-500" />}>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-semibold text-gray-700">{t("track_enable_work_hours_billing")}</span>
-              <Toggle checked={settings.billingEnabled} onChange={(v) => set("billingEnabled", v)} />
-            </div>
-            {settings.billingEnabled && (
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">{t("track_billing_based_on")}</label>
-                  <CustomSelect placeholder="Select" items={[
-                    { label: t("track_office_hours"), value: "office_hours" }, { label: t("track_active_hours"), value: "active_hours" },
-                    { label: t("track_total_hours"), value: "total_hours" }, { label: t("track_productive_hours"), value: "productive_hours" },
-                  ]} selected={settings.billingBasedOn} onChange={(v) => set("billingBasedOn", v)} width />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">{t("track_amount_per_hours")}</label>
-                  <Input type="number" value={settings.amountPerHour} onChange={(e) => set("amountPerHour", e.target.value)} className="h-10 rounded-lg border-slate-200 text-[13px]" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">{t("track_currency")}</label>
-                  <CustomSelect placeholder="Select" items={[
-                    { label: "INR ₹", value: "INR" }, { label: "USD $", value: "USD" }, { label: "EUR €", value: "EUR" },
-                  ]} selected={settings.currency} onChange={(v) => set("currency", v)} width />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-500">{t("track_invoice_duration")}</label>
-                  <CustomSelect placeholder="Select" items={[
-                    { label: t("track_weekly"), value: "weekly" }, { label: t("track_bi_weekly"), value: "biweekly" }, { label: t("track_monthly"), value: "monthly" },
-                  ]} selected={settings.invoiceDuration} onChange={(v) => set("invoiceDuration", v)} width />
-                </div>
-              </div>
-            )}
-          </Section>
 
           {/* Break / Idle / Min Time + Tracking Scenario */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
