@@ -116,10 +116,21 @@ const formatSecondsToMinutes = (value) => {
     return `${m}:${String(s).padStart(2, "0")}`;
 };
 
-const formatUtcToTimezone = (utcString, timezone) => {
+const formatUtcToTimezone = (utcString, timezone, attendanceDate) => {
     if (!utcString) return "-";
     const m = moment.utc(utcString).tz(timezone || "Asia/Kolkata");
     if (!m.isValid()) return "-";
+    // No-activity rows carry a placeholder start/end of local midnight (stored
+    // as e.g. 18:30:00Z for IST). Converting that to the employee timezone
+    // rolls the DATE to the next day (e.g. 03-06 instead of 02-06). The
+    // attendance `date` field is the source of truth for the day, so anchor the
+    // displayed date to it while keeping the timezone-converted time-of-day.
+    if (attendanceDate) {
+        const d = moment(attendanceDate, "YYYY-MM-DD", true);
+        if (d.isValid() && d.format("YYYY-MM-DD") !== m.format("YYYY-MM-DD")) {
+            return `${d.format("DD-MM-YYYY")} / ${m.format("HH:mm:ss")}`;
+        }
+    }
     return m.format("DD-MM-YYYY / HH:mm:ss");
 };
 
@@ -138,8 +149,8 @@ const mapEmployeeRow = (emp) => {
         department: emp.department || "-",
         shift: emp.shift_name || "-",
         computerName: emp.computer_name || "-",
-        clockIn: formatUtcToTimezone(emp.start_time, tz),
-        clockOut: formatUtcToTimezone(emp.end_time, tz),
+        clockIn: formatUtcToTimezone(emp.start_time, tz, emp.date),
+        clockOut: formatUtcToTimezone(emp.end_time, tz, emp.date),
         totalTime: formatSecondsToHMS(emp.total_time),
         officeTime: formatSecondsToHMS(emp.office_time),
         activeTime: formatSecondsToHMS(emp.computer_activities_time),
