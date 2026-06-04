@@ -31,15 +31,19 @@ class TimeSheetModel {
             AND ea.date BETWEEN ? AND ?
         `;
 
-        if (~~location_id) {
+        // NOTE: use Number(x) > 0, NOT ~~x. The `~~` operator truncates to a
+        // 32-bit signed int, so any id above 2^31-1 (employees/locations are
+        // bigint(20) UNSIGNED) overflows — often to 0 — which silently drops
+        // the filter and returns every row. That broke the employee filter.
+        if (Number(location_id) > 0) {
             query += ' AND e.location_id = ?';
             params.push(location_id);
         }
-        if (~~employee_id) {
+        if (Number(employee_id) > 0) {
             query += ' AND e.id = ?';
             params.push(employee_id);
         }
-        if (~~department_id) {
+        if (Number(department_id) > 0) {
             query += ' AND e.department_id = ?';
             params.push(department_id);
         }
@@ -77,15 +81,19 @@ class TimeSheetModel {
             WHERE e.organization_id = ? AND ea.date BETWEEN ? AND ?`;
 
 
-        if (~~location_id) {
+        // NOTE: use Number(x) > 0, NOT ~~x. The `~~` operator truncates to a
+        // 32-bit signed int, so any id above 2^31-1 (employees/locations are
+        // bigint(20) UNSIGNED) overflows — often to 0 — which silently drops
+        // the filter and returns every row. That broke the employee filter.
+        if (Number(location_id) > 0) {
             query += ' AND e.location_id = ?';
             params.push(location_id);
         }
-        if (~~employee_id) {
+        if (Number(employee_id) > 0) {
             query += ' AND e.id = ?';
             params.push(employee_id);
         }
-        if (~~department_id) {
+        if (Number(department_id) > 0) {
             query += ' AND e.department_id = ?';
             params.push(department_id);
         }
@@ -153,11 +161,11 @@ class TimeSheetModel {
                 AND e.id IN (?)
         `;
 
-        if (~~location_id) {
+        if (Number(location_id) > 0) {
             query += ' AND e.location_id = ?';
             params.push(location_id);
         }
-        if (~~department_id) {
+        if (Number(department_id) > 0) {
             query += ' AND e.department_id = ?';
             params.push(department_id);
         }
@@ -183,9 +191,9 @@ class TimeSheetModel {
 
         if (employee_avg == true || avg == true) {
             const match = { organization_id };
-            if (~~location_id) match.location_id = location_id;
-            if (~~department_id) match.department_id = department_id;
-            if (~~employee_id) match.employee_id = { $eq: employee_id };
+            if (Number(location_id) > 0) match.location_id = location_id;
+            if (Number(department_id) > 0) match.department_id = department_id;
+            if (Number(employee_id) > 0) match.employee_id = { $eq: employee_id };
             if (start_date && end_date) match.yyyymmdd = {
                 $gte: parseInt(start_date.split('-').join('')),
                 $lte: parseInt(end_date.split('-').join(''))
@@ -246,9 +254,9 @@ class TimeSheetModel {
                 yyyymmdd: { $gte: ~~(start_date.split('-').join('')), $lte: ~~(end_date.split('-').join('')) },
                 organization_id
             };
-            if (~~location_id) query.location_id = location_id;
-            if (~~department_id) query.department_id = department_id;
-            if (~~employee_id) query.employee_id = employee_id;
+            if (Number(location_id) > 0) query.location_id = location_id;
+            if (Number(department_id) > 0) query.department_id = department_id;
+            if (Number(employee_id) > 0) query.employee_id = employee_id;
             return EmpProductivityModel
                 .find(query)
                 .select('productive_duration non_productive_duration neutral_duration idle_duration break_duration employee_id date offline_time')
@@ -275,8 +283,8 @@ class TimeSheetModel {
         end_date, skip, limit, column, order, employee_ids, productive_hours
     }) {
         const match = { organization_id };
-        if (~~location_id) match.location_id = location_id;
-        if (~~department_id) match.department_id = department_id;
+        if (Number(location_id) > 0) match.location_id = location_id;
+        if (Number(department_id) > 0) match.department_id = department_id;
         if (empids.length > 0) match.employee_id = { $in: empids };
         if (employee_ids.length > 0) match.employee_id = { $in: employee_ids };
         if (employee_id !== parseInt(0)) match.employee_id = employee_id;
@@ -324,8 +332,8 @@ class TimeSheetModel {
     }) {
 
         const match = { organization_id };
-        if (~~location_id) match.location_id = location_id;
-        if (~~department_id) match.department_id = department_id;
+        if (Number(location_id) > 0) match.location_id = location_id;
+        if (Number(department_id) > 0) match.department_id = department_id;
         if (empids.length > 0) match.employee_id = { $in: empids };
         if (employee_ids.length > 0) match.employee_id = { $in: employee_ids };
         if (employee_id !== parseInt(0)) match.employee_id = employee_id;
@@ -343,8 +351,8 @@ class TimeSheetModel {
 
         if (employee_avg == true || avg == true) {
             let match = {};
-            if (~~location_id) match.location_id = location_id;
-            if (~~department_id) match.department_id = department_id;
+            if (Number(location_id) > 0) match.location_id = location_id;
+            if (Number(department_id) > 0) match.department_id = department_id;
             if (employee_ids.length > 0) match.employee_id = { $in: employee_ids };
             if (start_date && end_date) match.yyyymmdd = {
                 $gte: parseInt(start_date.split('-').join('')),
@@ -407,8 +415,8 @@ class TimeSheetModel {
                 employee_id: { $in: employee_ids },
                 yyyymmdd: { $gte: parseInt(start_date.split('-').join('')), $lte: parseInt(end_date.split('-').join('')) },
             };
-            if (~~location_id) query.location_id = location_id;
-            if (~~department_id) query.department_id = department_id;
+            if (Number(location_id) > 0) query.location_id = location_id;
+            if (Number(department_id) > 0) query.department_id = department_id;
             return EmpProductivityModel
                 .find(query)
                 .select(
@@ -511,19 +519,19 @@ class TimeSheetModel {
         query += manager_id ? `INNER JOIN assigned_employees ae ON ae.employee_id=e.id ` : ""
         query += ` WHERE e.organization_id = ? AND u.status= ?  `
 
-        if (~~location_id) {
+        if (Number(location_id) > 0) {
             query += ' AND e.location_id = ?';
             params.push(location_id);
         }
-        if (~~department_id) {
+        if (Number(department_id) > 0) {
             query += ' AND e.department_id = ?';
             params.push(department_id);
         }
-        if (~~employee_id) {
+        if (Number(employee_id) > 0) {
             query += ' AND e.id = ?';
             params.push(employee_id);
         }
-        if (~~manager_id) {
+        if (Number(manager_id) > 0) {
             query += ' AND ae.to_assigned_id = ? AND ae.role_id=?';
             params.push(manager_id, role_id);
         }
