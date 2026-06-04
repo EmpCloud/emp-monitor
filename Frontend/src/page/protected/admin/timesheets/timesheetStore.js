@@ -12,7 +12,6 @@ import {
 } from "./service";
 
 const today = moment().format("YYYY-MM-DD");
-const sevenDaysAgo = moment().subtract(6, "days").format("YYYY-MM-DD");
 
 // Default visible columns in the table
 const DEFAULT_VISIBLE_COLUMNS = [
@@ -69,7 +68,7 @@ export const useTimesheetStore = create((set, get) => ({
         department: "all",
         employee: "all",
         shift: "all",
-        startDate: sevenDaysAgo,
+        startDate: today,
         endDate: today,
         search: "",
     },
