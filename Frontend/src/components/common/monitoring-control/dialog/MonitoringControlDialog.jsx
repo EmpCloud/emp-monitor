@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next";
-import { Settings, ChevronDown, ChevronRight } from "lucide-react"
+import { Settings, ChevronDown, ChevronRight, Sliders, X } from "lucide-react"
 import Swal from "sweetalert2"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,12 +17,22 @@ import useMonitoringControlStore from "@/page/protected/admin/monitoring-control
 
 // ─── Toggle Row Component ────────────────────────────────────────────────────
 
-const ToggleRow = ({ label, name, value, onChange }) => {
+const ToggleRow = ({ label, name, value, onChange, hasAdvanced, onAdvancedClick }) => {
     const { t } = useTranslation();
     return (
     <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
         <span className="text-sm text-slate-700">{label}</span>
         <div className="flex items-center gap-3">
+            {hasAdvanced && (
+                <button
+                    type="button"
+                    onClick={onAdvancedClick}
+                    className="inline-flex items-center gap-1 rounded-md border border-blue-200 px-2 py-1 text-[11px] font-medium text-blue-600 hover:bg-blue-50"
+                >
+                    <Sliders size={12} />
+                    {t("track_advanced_settings")}
+                </button>
+            )}
             <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                     type="radio"
@@ -45,6 +55,88 @@ const ToggleRow = ({ label, name, value, onChange }) => {
             </label>
         </div>
     </div>
+    );
+}
+
+// appBlockList comes back from the backend as a comma-joined string (legacy
+// contract), but websiteBlockList/excludeWebsiteList are arrays. Normalize any
+// of those to an array for the TagInput.
+const toArray = (v) => {
+    if (Array.isArray(v)) return v
+    if (typeof v === "string") return v.split(",").map((s) => s.trim()).filter(Boolean)
+    return []
+}
+
+// ─── Validation (mirrors legacy SettingsController::updateAdvancedWebGroups) ──
+// Website: strip protocol, prepend www. if missing, require a domain-shaped value.
+const normalizeUrl = (raw) => {
+    let u = String(raw).trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "")
+    if (u && !/^www\./i.test(u)) u = `www.${u}`
+    return u
+}
+// Must contain a dot and only URL-safe characters (legacy pattern is dot-anchored).
+const isValidUrl = (raw) => {
+    const u = normalizeUrl(raw)
+    return /\./.test(u) && /^[-a-z0-9+&@#/%?=~_|!:,.;]+$/i.test(u)
+}
+// App names: letters, digits, dot, space, comma, parentheses (legacy regex).
+const isValidAppName = (raw) => /^[a-zA-Z0-9. ()]+$/.test(String(raw).trim())
+
+// ─── Tag Input (chip list) — mirrors the per-user Advanced Settings modal ─────
+
+// `validate` (optional): (raw) => ({ ok, value?, error? }). Rejects bad entries
+// with an inline message; may normalize the accepted value (e.g. add www.).
+const TagInput = ({ value = [], onChange, placeholder, validate }) => {
+    const [input, setInput] = useState("");
+    const [error, setError] = useState("");
+
+    const commit = () => {
+        const raw = input.trim().replace(/,$/, "");
+        if (!raw) return;
+        let toAdd = raw;
+        if (validate) {
+            const res = validate(raw);
+            if (!res.ok) { setError(res.error || "Invalid entry"); return; }
+            toAdd = res.value ?? raw;
+        }
+        if (value.includes(toAdd)) {
+            setError("Already added");
+        } else {
+            onChange([...value, toAdd]);
+            setError("");
+        }
+        setInput("");
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            commit();
+        }
+    };
+    const remove = (idx) => onChange(value.filter((_, i) => i !== idx));
+    return (
+        <div>
+            <div className={`border rounded-lg p-2 bg-white min-h-[40px] ${error ? "border-red-300" : "border-gray-200"}`}>
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                    {value.map((tag, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-0.5 rounded-md border border-blue-200">
+                            {tag}
+                            <button type="button" onClick={() => remove(idx)} className="text-blue-400 hover:text-red-500"><X size={10} /></button>
+                        </span>
+                    ))}
+                </div>
+                <input
+                    value={input}
+                    onChange={(e) => { setInput(e.target.value); if (error) setError(""); }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={commit}
+                    placeholder={value.length === 0 ? placeholder : ""}
+                    className="w-full text-[12px] border-0 outline-none bg-transparent py-0.5"
+                />
+            </div>
+            {error && <p className="mt-1 text-[10px] font-medium text-red-500">{error}</p>}
+        </div>
     );
 }
 
@@ -123,6 +215,7 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
         : [{ value: "5", label: "5 min" }]
 
     const [rules, setRules] = useState(null)
+    const [advancedPanel, setAdvancedPanel] = useState(null) // "web_usage" | "screenshots" | null
     const [activeTrackingTab, setActiveTrackingTab] = useState("unlimited")
     const [networkRows, setNetworkRows] = useState([{ networkName: "", ipAddress: "", officeNetwork: false }])
     const [geoRows, setGeoRows] = useState([{ location: "", lat: "", lon: "", distance: "" }])
@@ -245,6 +338,24 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
         trackData.screen_record_when_website_visit = updatedRules.screen_record_when_website_visit || []
         trackData.screenshot_exclude_websites = updatedRules.screenshot_exclude_websites || []
         trackData.screenshot_exclude_application = updatedRules.screenshot_exclude_application || []
+
+        // Web Usage advanced settings (block lists + flag) — carried in tracking.domain
+        // to match the legacy group contract (SettingsController::updateAdvancedWebGroups):
+        //  - websiteBlockList / excludeWebsiteList are arrays
+        //  - appBlockList is a COMMA-JOINED STRING (legacy reads it back via .split(","))
+        // login_from_other_system is intentionally NOT sent: it is a per-user-only field
+        // in the legacy app; the group backend does not handle it.
+        const appList = updatedRules.tracking?.domain?.appBlockList
+        trackData.tracking = {
+            ...trackData.tracking,
+            domain: {
+                ...(trackData.tracking?.domain || {}),
+                websiteBlockList: updatedRules.tracking?.domain?.websiteBlockList || [],
+                excludeWebsiteList: updatedRules.tracking?.domain?.excludeWebsiteList || [],
+                appBlockList: Array.isArray(appList) ? appList.join(",") : (appList || ""),
+            },
+        }
+        trackData.disable_access_all_websites = updatedRules.disable_access_all_websites || "0"
         trackData.file_upload_detection = updatedRules.features?.file_upload_detection || "0"
         trackData.file_upload_blocking = updatedRules.features?.file_upload_blocking || "0"
         trackData.print_detection = updatedRules.features?.print_detection || "0"
@@ -286,13 +397,26 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                 showConfirmButton: false,
             })
         } else {
+            let msg
             if (res.code === 205) {
-                setErrors({ general: "Please select at least one day for Fixed tracking" })
+                msg = "Please select at least one day for Fixed tracking"
+                setErrors({ general: msg })
             } else if (res.code === 207) {
+                msg = res.message
                 setErrors({ network: res.message })
             } else {
-                setErrors({ general: typeof res.message === "string" ? res.message : "Failed to save settings" })
+                msg = typeof res.message === "string" ? res.message : "Failed to save settings"
+                setErrors({ general: msg })
             }
+            Swal.fire({
+                icon: "error",
+                title: "Couldn't save settings",
+                text: msg,
+                toast: true,
+                position: "top-end",
+                timer: 3500,
+                showConfirmButton: false,
+            })
         }
     }
 
@@ -387,12 +511,16 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                 name="web_usage"
                                 value={rules.features?.web_usage}
                                 onChange={(v) => updateRule("features.web_usage", v)}
+                                hasAdvanced
+                                onAdvancedClick={() => setAdvancedPanel("web_usage")}
                             />
                             <ToggleRow
                                 label="Screenshots"
                                 name="screenshots"
                                 value={rules.features?.screenshots}
                                 onChange={(v) => updateRule("features.screenshots", v)}
+                                hasAdvanced
+                                onAdvancedClick={() => setAdvancedPanel("screenshots")}
                             />
                             <ToggleRow
                                 label="Screen Recording"
@@ -816,6 +944,127 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             {saving ? t("common.saving") : t("monitoring.saveSettings")}
                         </Button>
                     </div>
+
+                    {/* ─── Advanced Settings panel (Web Usage / Screenshots) ───
+                        These map to the same raw rule fields the per-user page uses;
+                        edits live on `rules` and persist with the rest on Save. */}
+                    {advancedPanel && (
+                        <div
+                            className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center"
+                            onClick={() => setAdvancedPanel(null)}
+                        >
+                            <div
+                                className="bg-white rounded-2xl shadow-2xl w-[min(560px,92vw)] max-h-[85vh] overflow-y-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-[15px] font-bold text-gray-800">
+                                        {advancedPanel === "web_usage" ? "Web Usage Tracking" : "Screenshots"}: {t("track_advanced_settings")}
+                                    </h3>
+                                    <button
+                                        onClick={() => setAdvancedPanel(null)}
+                                        className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+
+                                <div className="px-6 py-5 space-y-5">
+                                    {advancedPanel === "web_usage" && (
+                                        <>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[12px] font-bold text-gray-700">{t("track_block_websites")}</label>
+                                                <TagInput
+                                                    value={toArray(rules.tracking?.domain?.websiteBlockList)}
+                                                    onChange={(v) => updateRule("tracking.domain.websiteBlockList", v)}
+                                                    placeholder={t("track_type_website_url")}
+                                                    validate={(raw) => isValidUrl(raw)
+                                                        ? { ok: true, value: normalizeUrl(raw) }
+                                                        : { ok: false, error: "Enter a valid website (e.g. example.com)" }}
+                                                />
+                                                <p className="text-[10px] text-gray-400">{t("track_add_website_urls_block")}</p>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[12px] font-bold text-gray-700">{t("track_block_applications")}</label>
+                                                <TagInput
+                                                    value={toArray(rules.tracking?.domain?.appBlockList)}
+                                                    onChange={(v) => updateRule("tracking.domain.appBlockList", v)}
+                                                    placeholder={t("track_type_app_name")}
+                                                    validate={(raw) => isValidAppName(raw)
+                                                        ? { ok: true }
+                                                        : { ok: false, error: "Only letters, numbers, spaces, . and () are allowed" }}
+                                                />
+                                                <p className="text-[10px] text-gray-400">{t("track_add_app_names_block")}</p>
+                                            </div>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={String(rules.disable_access_all_websites) === "1"}
+                                                    onChange={(e) => updateRule("disable_access_all_websites", e.target.checked ? "1" : "0")}
+                                                    className="w-4 h-4 rounded accent-blue-500"
+                                                />
+                                                <span className="text-[12px] font-medium text-gray-700">{t("track_disable_all_websites")}</span>
+                                            </label>
+                                            {String(rules.disable_access_all_websites) === "1" && (
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[12px] font-bold text-gray-700">{t("track_exclude_websites")}</label>
+                                                    <TagInput
+                                                        value={toArray(rules.tracking?.domain?.excludeWebsiteList)}
+                                                        onChange={(v) => updateRule("tracking.domain.excludeWebsiteList", v)}
+                                                        placeholder={t("track_type_website_exclude")}
+                                                        validate={(raw) => isValidUrl(raw)
+                                                            ? { ok: true, value: normalizeUrl(raw) }
+                                                            : { ok: false, error: "Enter a valid website (e.g. example.com)" }}
+                                                    />
+                                                </div>
+                                            )}
+                                            {/* Note: "Allow login from other system" is intentionally omitted —
+                                                it is a per-user-only setting in the legacy app and is not part
+                                                of the group/default advanced web contract. */}
+                                        </>
+                                    )}
+
+                                    {advancedPanel === "screenshots" && (
+                                        <div className="space-y-1.5">
+                                            <label className="text-[12px] font-bold text-gray-700">{t("track_enable_screen_record_visit")}</label>
+                                            <TagInput
+                                                value={toArray(rules.screen_record_when_website_visit)}
+                                                onChange={(v) => updateRule("screen_record_when_website_visit", v)}
+                                                placeholder={t("track_type_website_url")}
+                                                validate={(raw) => isValidUrl(raw)
+                                                    ? { ok: true, value: normalizeUrl(raw) }
+                                                    : { ok: false, error: "Enter a valid website (e.g. example.com)" }}
+                                            />
+                                            <p className="text-[10px] text-gray-400">{t("track_screen_record_visit_desc")}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200">
+                                    <p className="text-[11px] text-gray-400">Changes apply when you click Save Settings.</p>
+                                    <Button
+                                        onClick={() => {
+                                            setAdvancedPanel(null)
+                                            Swal.fire({
+                                                icon: "success",
+                                                title: advancedPanel === "web_usage"
+                                                    ? "Web usage advanced settings updated"
+                                                    : "Screenshot advanced settings updated",
+                                                text: "Click Save Settings to apply.",
+                                                toast: true,
+                                                position: "top-end",
+                                                timer: 2500,
+                                                showConfirmButton: false,
+                                            })
+                                        }}
+                                        className="h-9 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold"
+                                    >
+                                        Done
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
