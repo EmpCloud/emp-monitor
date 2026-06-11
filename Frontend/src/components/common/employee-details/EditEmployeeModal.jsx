@@ -39,7 +39,11 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
       set("firstName",     d.name ?? d.first_name ?? "");
       set("lastName",      d.last_name ?? "");
       set("email",         d.email ?? "");
-      set("password",      d.password ?? "");
+      // Leave password / confirm-password blank in edit mode. The field is
+      // labelled "New Password (leave blank to keep)" and the backend preserves
+      // the existing password when none is sent. Prefilling with the stored
+      // (encrypted) password left confirm-password blank — so the two never
+      // matched and "Passwords do not match" blocked every save (issue #226).
       // phone may be stored as "countryCode-number" (e.g. "91-9876543210")
       const rawPhone = d.phone ?? "";
       const dashIdx = rawPhone.indexOf("-");
