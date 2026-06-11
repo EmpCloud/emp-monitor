@@ -8,7 +8,7 @@ const sampleChatHistory = [
 ];
 
 const ChatsView = ({ onNewChat }) => (
-  <div className="flex-1 flex flex-col min-w-0 relative">
+  <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
     {/* Header */}
     <div className="flex items-center justify-between px-6 pt-14 pb-4">
       <h2 className="text-2xl font-bold text-slate-800">Chats</h2>

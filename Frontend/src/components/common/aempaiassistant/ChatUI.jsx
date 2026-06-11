@@ -246,7 +246,7 @@ const ChatUI = ({ context }) => {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 relative">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
       {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pt-14 pb-20 space-y-4">
         {isEmpty ? (
