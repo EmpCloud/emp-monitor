@@ -33,6 +33,11 @@ const formateUrl = (url) => {
     url = url.replace(new RegExp(/^http\:\/\/|^https\:\/\/|^ftp\:\/\//i), "");
     url = url.replace(new RegExp(/^www\./i), "");
     url = url.split('?')[0];
+    // Drop trailing slash(es) so "example.com/" and "example.com" normalize to
+    // the same value — otherwise the duplicate check below treats them as two
+    // different URLs and the same site can be added twice with conflicting
+    // productivity rankings.
+    url = url.replace(new RegExp(/\/+$/), "");
     return url;
 }
 class ProductivityRanking {
