@@ -21,6 +21,7 @@ import PerformanceFilter from "../../admin/dashboard/PerformanceFilter";
 import { useNonAdminDashboardStore } from "./dashboardStore";
 import useNonAdminSession from "../../../../sessions/useNonAdminSession";
 import { usePermission }  from "../../../../hooks/usePermission";
+import { isEmpAiAssistantEnabled } from "@/lib/utils";
 
 // ── PDF export helpers (shared across modules) ──────────────────────
 const fmtDuration = (sec) => {
@@ -47,6 +48,7 @@ const NonAdminDashboard = () => {
   const { t } = useTranslation();
   const { nonAdmin }   = useNonAdminSession();
   const { canView }    = usePermission(nonAdmin);
+  const showEmpAiAssistant = isEmpAiAssistantEnabled();
 
   const {
     stats,
@@ -174,7 +176,7 @@ const NonAdminDashboard = () => {
   const makeControls = ({ pdfTitle, pdfSubtitle, pdfMeta, pdfData, pdfColumns } = {}) => (
     <Customreport
       title={pdfTitle}
-      showShield
+      showShield={showEmpAiAssistant}
       showButton
       showMaximize
       showDownload
@@ -229,13 +231,15 @@ const NonAdminDashboard = () => {
           <ActivitySnapshot data={activitySnapshot} />
         </div>
 
-        <div className="xl:col-span-5 col-span-12">
+        <div className={`${showEmpAiAssistant ? "xl:col-span-5" : "xl:col-span-8"} col-span-12`}>
           <ActivityBreakDown data={activityBreakdown} />
         </div>
 
-        <div className="xl:col-span-3 col-span-12">
-          <EmpAi useStore={useNonAdminDashboardStore} />
-        </div>
+        {showEmpAiAssistant && (
+          <div className="xl:col-span-3 col-span-12">
+            <EmpAi useStore={useNonAdminDashboardStore} />
+          </div>
+        )}
 
         {/* Productive / Non-Productive — gated by employee_insights_view */}
         {showInsights && (

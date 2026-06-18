@@ -28,6 +28,7 @@ import PerformanceFilter from "./PerformanceFilter";
 
 import { useDashboardStore } from "./dashboardStore";
 import { generateCombinedDashboardPdf } from "@/utils/dashboardPdfExport";
+import { isEmpAiAssistantEnabled } from "@/lib/utils";
 import { FileDown, Loader2, Calendar, CalendarDays, CalendarRange } from "lucide-react";
 import {
   Dialog,
@@ -105,6 +106,7 @@ const Dashboard = () => {
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
   const [webTab, setWebTab] = useState("today");
   const [appTab, setAppTab] = useState("today");
+  const showEmpAiAssistant = isEmpAiAssistantEnabled();
 
   const openAiAssistant = useCallback((ctx) => {
     setAiContext(ctx);
@@ -636,13 +638,18 @@ const Dashboard = () => {
           <ActivitySnapshot data={activitySnapshot} />
         </div>
 
-        <div className="xl:col-span-5 col-span-12" data-pdf-section="breakdown">
+        <div
+          className={`${showEmpAiAssistant ? "xl:col-span-5" : "xl:col-span-8"} col-span-12`}
+          data-pdf-section="breakdown"
+        >
           <ActivityBreakDown data={activityBreakdown} />
         </div>
 
-        <div className="xl:col-span-3 col-span-12">
-          <EmpAi onOpenInsight={handleOpenInsight} />
-        </div>
+        {showEmpAiAssistant && (
+          <div className="xl:col-span-3 col-span-12">
+            <EmpAi onOpenInsight={handleOpenInsight} />
+          </div>
+        )}
 
         {/* Productive */}
 
@@ -656,7 +663,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10productive")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -709,7 +716,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10nonproductive")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -758,7 +765,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10active")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -808,7 +815,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10nonactive")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -858,7 +865,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("locPerform")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -900,7 +907,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("deptPerform")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -943,7 +950,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10webUsage")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -976,7 +983,7 @@ const Dashboard = () => {
             report={
               <Customreport
                 title={t("top10appUsage")}
-                showShield
+                showShield={showEmpAiAssistant}
                 showButton
                 showMaximize
                 showDownload
@@ -1082,11 +1089,13 @@ const Dashboard = () => {
         by={reportModal.by}
       />
 
-      <EmpAiAssistant
-        open={aiAssistantOpen}
-        onClose={() => setAiAssistantOpen(false)}
-        context={aiContext}
-      />
+      {showEmpAiAssistant && (
+        <EmpAiAssistant
+          open={aiAssistantOpen}
+          onClose={() => setAiAssistantOpen(false)}
+          context={aiContext}
+        />
+      )}
 
     </div>
 
