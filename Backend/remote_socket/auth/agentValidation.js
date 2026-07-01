@@ -16,7 +16,7 @@ const agentValidation = async (ws, wss, parseMessage) => {
                 await redis.getUserMetaData(userData.user_id),
                 await redis.getAsync(`${userData.user_id}_agent_request`)
             ]);
-            if (userMetaData.code = 200 && userMetaData.data) {
+            if (userMetaData.code === 200 && userMetaData.data) {
                 let decoded = userMetaData.data;
                 return decoded;
             } else {
