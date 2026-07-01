@@ -169,7 +169,8 @@ class Validator {
             }).optional().default(null),
             status: Joi.number().valid(0, 1, 2).allow("", null),
             employee_id: Joi.number().required().default(null),
-            offlineTime: Joi.number().required().greater(0)
+            offlineTime: Joi.number().required().greater(0),
+            request_type: Joi.number().valid(0, 1, 2).optional().default(0)
         });
         return Joi.validate(params, schema);
     }
@@ -185,6 +186,7 @@ class Validator {
         const schema = Joi.object().keys({
             id: Joi.string().required(),
             status: Joi.number().valid(0, 1, 2).allow("", null),
+            request_type: Joi.number().valid(0, 1, 2).optional().default(0),
         })
         return Joi.validate(params, schema)
     }
