@@ -1,4 +1,5 @@
 import apiService from "@/services/api.service";
+import useAdminSession from "@/sessions/adminSession";
 import * as XLSX from "xlsx";
 // import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -281,10 +282,20 @@ export const getShifts = async () => {
 // ─── Build Report Payload ────────────────────────────────────────────────────
 
 export const buildReportPayload = (formData) => {
+    // "I want to receive this report too" — append the logged-in admin's own
+    // email to the recipients list (the backend only accepts a recipients array,
+    // there is no separate admin flag).
+    const recipients = [...(formData.recipients || [])];
+    if (formData.includeAdminEmail) {
+        const admin = useAdminSession.getState().admin;
+        const adminEmail = admin?.a_email || admin?.email;
+        if (adminEmail && !recipients.includes(adminEmail)) recipients.push(adminEmail);
+    }
+
     const payload = {
         name: formData.reportTitle,
         frequency: formData.frequency,
-        recipients: [formData.recipients.join(",")],
+        recipients: [recipients.join(",")],
         filter_type: parseInt(formData.filterType),
         content: {
             productivity: formData.content.productivity ? "1" : "0",
