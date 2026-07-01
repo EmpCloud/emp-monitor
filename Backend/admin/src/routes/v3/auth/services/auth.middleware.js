@@ -25,12 +25,12 @@ class AuthMiddlewareService {
             try {
                 const invalidToken = await redis.getAsync(accessToken);
                 if (invalidToken) {
-                    next(new errorHandler('Invalid token', 401));
+                    return next(new errorHandler('Invalid token', 401));
                 }
                 let userData = JSON.parse(await jwtService.verify(accessToken));
                 if (userData && userData.user_id) {
                     let userMetaData = await redis.getUserMetaData(userData.user_id);
-                    if (userMetaData.code = 200 && userMetaData.data) {
+                    if (userMetaData.code === 200 && userMetaData.data) {
                         req.decoded = userMetaData.data;
                         if (req.decoded.is_admin) req.decoded.employee_id = null;
                         next();
