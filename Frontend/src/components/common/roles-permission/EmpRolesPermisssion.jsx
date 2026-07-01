@@ -326,7 +326,7 @@ const EmpRolesPermission = () => {
                                             <td className="px-4 py-4 text-center">
                                                 <div className="flex justify-center">
                                                     <Checkbox
-                                                        checked={role.permission?.read === true || role.permission?.read === "1" || role.permission?.read === undefined}
+                                                        checked={role.permission?.read === true || role.permission?.read === "1"}
                                                         disabled={true}
                                                         className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                                                     />
