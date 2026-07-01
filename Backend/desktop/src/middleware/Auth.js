@@ -36,7 +36,7 @@ class Auth {
             let userData = await JwtAuth.verifyNew(accessToken);
             if (userData && userData.user_id) {
                 let userMetaData = await redis.getUserMetaData(userData.user_id);
-                if (userMetaData.code = 200) {
+                if (userMetaData.code === 200) {
                     req.decoded = userMetaData.data;
                     next();
                 } else {

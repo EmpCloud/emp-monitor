@@ -13,7 +13,7 @@ class AuthMiddlewareService {
             let userData = JSON.parse(await jwtService.verify(accessToken));
             if (userData && userData.user_id) {
                 let userMetaData = await redis.getUserMetaData(userData.user_id);
-                if (userMetaData.code = 200 && userMetaData.data) {
+                if (userMetaData.code === 200 && userMetaData.data) {
                     req.decoded = userMetaData.data;
                     next();
                 } else {
