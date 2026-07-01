@@ -1225,7 +1225,7 @@ const getPrevDayEmpWithShiftAndFixed = (employees, date, endTimeCheck = true, ta
         } else if (user.shift) {
             shift = timesByDate(JSON.parse(user.shift), date, user.timezone);
         }
-        if(tag == 'online', endTimeCheck == true && isAutoShift) {
+        if(tag == 'online' && endTimeCheck == true && isAutoShift) {
             users.push(user);
         }
         /**Check end time exists with shift */
@@ -1235,7 +1235,7 @@ const getPrevDayEmpWithShiftAndFixed = (employees, date, endTimeCheck = true, ta
         } else if (shift.start && endTimeCheck && tag == 'offline' && moment(user.end_time).isBetween(shift.start, shift.end) && now.isBefore(shift.end)) {
             /**for offline check */
             users.push(user);
-        } else if (shift.start && !endTimeCheck && 'idle') {
+        } else if (shift.start && !endTimeCheck && tag == 'idle') {
             /**for idle check */
             users.push(user);
         }
