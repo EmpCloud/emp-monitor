@@ -1071,8 +1071,7 @@ const addBreakDurationT = async (result, start_date, end_date, organization_id) 
                 $match: {
                     organization_id: organization_id,
                     employee_id: item.employee_id || item.id,
-                    date: { '$gte': start_date },
-                    date: { '$lte': end_date },
+                    date: { '$gte': start_date, '$lte': end_date },
                 }
             }
         ]);
