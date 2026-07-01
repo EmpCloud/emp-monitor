@@ -273,7 +273,7 @@ class DashboardModel {
 
             case 'location':
                 role_type === 'Admin'
-                    ? query = `SELECT id AS employee_id FROM employees WHERE location_id=${search_type}`
+                    ? query = `SELECT id AS employee_id FROM employees WHERE location_id=${search_data}`
                     : query = `
                         SELECT ae.employee_id
                         FROM assigned_employees     AS ae
