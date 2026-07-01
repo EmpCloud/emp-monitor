@@ -134,7 +134,7 @@ class ScreenshotController {
                     return sendResponse(res, 200, { storage: 'S3', name: user_data[0].name + ' ' + user_data[0].full_name, photo_path: user_data[0].photo_path, email: user_data[0].email, user_id: user_data[0].id, screenshot: r }, 'Screenshot data ', null);
                 })
             } else {
-                return sendResponse(res, 400, null, 'Active cloud storage not found.', err);
+                return sendResponse(res, 400, null, 'Active cloud storage not found.', null);
             }
         } catch (err) {
             console.log('============', err);
