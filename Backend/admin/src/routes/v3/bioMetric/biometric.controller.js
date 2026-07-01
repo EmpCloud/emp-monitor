@@ -293,7 +293,7 @@ class DepartmentController {
             const messageList = forgotPasswordMessages[ "en"];
 
             if (resellerDetails?.length) {
-                reseller = JSON.parse(resellerDetails.details);
+                reseller = JSON.parse(resellerDetails[0].details);
             }
             logo = reseller ? (reseller.logo || process.env.EMPLOGO) : process.env.EMPLOGO
             facebook = reseller ? (getResellerData(reseller, "facebook") || null) : process.env.FACEBOOK;

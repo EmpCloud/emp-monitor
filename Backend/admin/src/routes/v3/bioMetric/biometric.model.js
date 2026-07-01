@@ -222,11 +222,12 @@ class BiometricModel {
     }
     async getResellerDetails(email) {
         const query = `SELECT re.logo,re.details
-    FROM  
-        organizations o 
+    FROM
+        organizations o
          JOIN reseller re ON re.id= o.reseller_id
          JOIN users u ON u.id=o.user_id
-    WHERE u.email = ${email}`
+    WHERE u.email = ?`
+        return mySql.query(query, [email]);
     }
 
     async updateSecretKey(email, secretKey) {
