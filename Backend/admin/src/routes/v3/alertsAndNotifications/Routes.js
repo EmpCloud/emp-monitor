@@ -10,15 +10,15 @@ class Routes {
     }
 
     core() {
-        // this.myRoutes.use(AuthMiddleware.adminOnly);
-
-        this.myRoutes.post('/', Controller.create);
-        this.myRoutes.put('/', Controller.update);
+        // Mutating routes are admin-only; reads stay available to authenticated
+        // managers/team-leads (they are org-scoped in the controller).
+        this.myRoutes.post('/', AuthMiddleware.adminOnly, Controller.create);
+        this.myRoutes.put('/', AuthMiddleware.adminOnly, Controller.update);
         this.myRoutes.get('/', Controller.get);
-        this.myRoutes.delete('/', Controller.delete);
+        this.myRoutes.delete('/', AuthMiddleware.adminOnly, Controller.delete);
         this.myRoutes.get('/find-by', Controller.findBy);
         this.myRoutes.get('/alerts/find-by', Controller.alertsFindBy);
-        this.myRoutes.put('/add-employee-to-rule', Controller.addAllEmpToRule);
+        this.myRoutes.put('/add-employee-to-rule', AuthMiddleware.adminOnly, Controller.addAllEmpToRule);
     }
 
     getRouters() {
