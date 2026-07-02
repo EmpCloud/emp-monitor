@@ -12,10 +12,10 @@ class ExpenseModel {
         return mySql.query(query, [organization_id]);
     }
 
-    fetchExpensesListById(expense_id) {
-        let query = `SELECT * FROM expenses 
-                     WHERE id =(?)`;
-        return mySql.query(query, [expense_id]);
+    fetchExpensesListById(expense_id, organization_id) {
+        let query = `SELECT * FROM expenses
+                     WHERE id =(?) AND organization_id =(?)`;
+        return mySql.query(query, [expense_id, organization_id]);
     }
 
     addExpense(employee_id, expense_type, bill_image, amount, purchase_date, remarks, organization_id) {
@@ -23,16 +23,16 @@ class ExpenseModel {
         return mySql.query(query, [employee_id, expense_type, bill_image, amount, purchase_date, remarks, organization_id]);
     }
 
-    updateExpense(id, employee_id, expense_type, bill_image, amount, purchase_date, remarks) {
+    updateExpense(id, employee_id, expense_type, bill_image, amount, purchase_date, remarks, organization_id) {
         let query = `UPDATE expenses SET employee_id=(?), expense_type=(?), bill_image=(?), amount=(?), purchase_date=(?), remarks=(?)
-                     WHERE id =(?)`;
-        return mySql.query(query, [employee_id, expense_type, bill_image, amount, purchase_date, remarks, id]);
+                     WHERE id =(?) AND organization_id =(?)`;
+        return mySql.query(query, [employee_id, expense_type, bill_image, amount, purchase_date, remarks, id, organization_id]);
     }
 
-    deleteExpense(expense_id) {
-        let query = `DELETE FROM expenses 
-                     WHERE id =(?)`;
-        return mySql.query(query, [expense_id]);
+    deleteExpense(expense_id, organization_id) {
+        let query = `DELETE FROM expenses
+                     WHERE id =(?) AND organization_id =(?)`;
+        return mySql.query(query, [expense_id, organization_id]);
     }
 
 }

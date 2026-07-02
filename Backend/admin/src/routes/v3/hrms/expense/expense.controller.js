@@ -39,11 +39,11 @@ class ExpenseController {
     * @returns {object} request list or error
     */
     async getExpenseById(req, res) {
-        let { language } = req.decoded;
+        let { organization_id, language } = req.decoded;
         let expense_id = req.body.expense_id;
         try {
             let expenses = [];
-            expenses = await ExpenseModel.fetchExpensesListById(expense_id)
+            expenses = await ExpenseModel.fetchExpensesListById(expense_id, organization_id)
             if (expenses.length > 0) return sendResponse(res, 200, expenses, translate(expenseMessages, "5", language), null);
 
             return sendResponse(res, 400, null, "No expenses found", null);
@@ -97,7 +97,7 @@ class ExpenseController {
     * @returns {object} updated list or error
     */
     async updateExpense(req, res) {
-        const { expense_id, language } = req.decoded;
+        const { organization_id, language } = req.decoded;
         let details = {};
         let id = req.body.id;
         try {
@@ -106,7 +106,7 @@ class ExpenseController {
 
             let { id, employee_id, expense_type, bill_image, amount, purchase_date, remarks } = value;
             details = { id, employee_id, expense_type, bill_image, amount, purchase_date, remarks };
-            const update_expenses = await ExpenseModel.updateExpense(id, employee_id, expense_type, bill_image, amount, purchase_date, remarks);
+            const update_expenses = await ExpenseModel.updateExpense(id, employee_id, expense_type, bill_image, amount, purchase_date, remarks, organization_id);
             if (update_expenses) {
                 return sendResponse(res, 200, {
                     expenses: {
