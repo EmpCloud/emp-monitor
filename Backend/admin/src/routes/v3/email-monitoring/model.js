@@ -20,7 +20,7 @@ class EmailMonitoringModel {
         if(employee_ids.length) match = { employee_id: { $in: employee_ids }, ...match };
         if(employee_id) match = { employee_id: employee_id, ...match };
         if(start_date && end_date) match = { createdAt: { $gte: new Date(start_date), $lte: new Date(end_date) }, ...match }; // start date is dd-mm-yyyy need to format it for db query 
-        if(search) match = { $or: [{ from: { $regex: search, $options: 'i' } }, { to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }] };
+        if(search) match = { ...match, $or: [{ from: { $regex: search, $options: 'i' } }, { to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }] };
         if(type || type == 0) match = { type: type, ...match };
         return EmployeeEmailMonitoringLogsModel.aggregate([
             { $match: match },
@@ -36,7 +36,7 @@ class EmailMonitoringModel {
         if(employee_id) match = { employee_id: employee_id, ...match };
         if(start_date) match = { createdAt: { $gte: new Date(start_date) }, ...match };
         if(end_date) match = { createdAt: { $lte: new Date(end_date) }, ...match };
-        if(search) match = { $or: [{ from: { $regex: search, $options: 'i' } }, { to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }] };
+        if(search) match = { ...match, $or: [{ from: { $regex: search, $options: 'i' } }, { to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }] };
         if(type || type == 0) match = { type: type, ...match };
         return EmployeeEmailMonitoringLogsModel.countDocuments(match);
     }
