@@ -31,11 +31,10 @@ class AdminDashboardModel {
         });
     }
 
-    findProject({ _id }) {
-        return ProjectSchemaModel.findOne({
-            _id: _id,
-            is_deleted: false,
-        });
+    findProject({ _id, organization_id }) {
+        const filter = { _id: _id, is_deleted: false };
+        if (organization_id) filter.organization_id = organization_id;
+        return ProjectSchemaModel.findOne(filter);
     }
 
     updatedProject({ organization_id, title, description, created_by, _id, assigned_non_admin_users, assigned_users, start_date, end_date }) {
@@ -314,11 +313,10 @@ class AdminDashboardModel {
         return new TaskSchemaModel(data).save()
     }
 
-    findTaskById({ _id }) {
-        return TaskSchemaModel.findOne({
-            _id: new mongoose.Types.ObjectId(_id),
-            is_deleted: false
-        });
+    findTaskById({ _id, organization_id }) {
+        const filter = { _id: new mongoose.Types.ObjectId(_id), is_deleted: false };
+        if (organization_id) filter.organization_id = organization_id;
+        return TaskSchemaModel.findOne(filter);
     }
 
     fetchProjectTask({ skip, limit, search, organization_id, project_id, folder_id, employee_id = null }) {
