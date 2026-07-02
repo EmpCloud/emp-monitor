@@ -1,4 +1,5 @@
 import apiService from "@/services/api.service";
+import { sanitizeTrackDataPayload } from "@/utils/trackData";
 
 // ─── Groups CRUD ────────────────────────────────────────────────────────────
 
@@ -72,7 +73,9 @@ export const getSettingsOptions = async () => {
 
 export const updateMonitoringControl = async (payload) => {
     try {
-        const { data } = await apiService.apiInstance.post("/organization/update-feature-new", payload);
+        // Normalize the round-tripped tracking shape (networkBased / projectBased /
+        // geoLocation) to what the write validation accepts. See @/utils/trackData.
+        const { data } = await apiService.apiInstance.post("/organization/update-feature-new", sanitizeTrackDataPayload(payload));
         return data;
     } catch (error) {
         console.error("Groups: updateMonitoringControl Error:", error);

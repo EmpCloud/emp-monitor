@@ -7,6 +7,7 @@ import { fetchUserTrackSettings, fetchSettingsOptions, fetchGroups, saveUserTrac
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CustomSelect from "@/components/common/elements/CustomSelect";
+import { isOnPremise } from "@/lib/utils";
 import {
   UnlimitedTab,
   FixedTab,
@@ -389,17 +390,26 @@ export default function TrackEmp() {
                 <FeatureRow label={t("track_screenshots")} value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
                 <FeatureRow label={t("track_screen_recording")} value={settings.features.screenRecording} onChange={(v) => set("features.screenRecording", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_screen_recording_with_voice")} value={settings.features.screenRecordingWithVoice} onChange={(v) => set("features.screenRecordingWithVoice", v)} infoIcon showAdvancedColumn />
-                <FeatureRow label={t("track_file_upload_detection")} value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
-                <FeatureRow label={t("track_file_upload_blocking")} value={settings.features.fileUploadBlocking} onChange={(v) => set("features.fileUploadBlocking", v)} showAdvancedColumn />
-                <FeatureRow label={t("track_print_blocking")} value={settings.features.printBlocking} onChange={(v) => set("features.printBlocking", v)} showAdvancedColumn />
-                <FeatureRow label={t("track_print_detection")} value={settings.features.printDetection} onChange={(v) => set("features.printDetection", v)} showAdvancedColumn />
+                {/* Cloud-only features — hidden on on-premise deployments */}
+                {!isOnPremise() && (
+                  <>
+                    <FeatureRow label={t("track_file_upload_detection")} value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
+                    <FeatureRow label={t("track_file_upload_blocking")} value={settings.features.fileUploadBlocking} onChange={(v) => set("features.fileUploadBlocking", v)} showAdvancedColumn />
+                    <FeatureRow label={t("track_print_blocking")} value={settings.features.printBlocking} onChange={(v) => set("features.printBlocking", v)} showAdvancedColumn />
+                    <FeatureRow label={t("track_print_detection")} value={settings.features.printDetection} onChange={(v) => set("features.printDetection", v)} showAdvancedColumn />
+                  </>
+                )}
                 <FeatureRow label={t("track_manual_clock_in_and_out")} value={settings.features.manualClockInOut} onChange={(v) => set("features.manualClockInOut", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_usb_blocking")} value={settings.features.usbBlocking} onChange={(v) => set("features.usbBlocking", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_attendance_override")} value={settings.features.attendanceOverride} onChange={(v) => set("features.attendanceOverride", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_system_lock")} value={settings.features.systemLock} onChange={(v) => set("features.systemLock", v)} showAdvancedColumn />
-                <FeatureRow label={t("track_geo_location_logs")} value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
+                {!isOnPremise() && (
+                  <FeatureRow label={t("track_geo_location_logs")} value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
+                )}
                 <FeatureRow label={t("track_screen_casting")} value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
-                <FeatureRow label={t("track_webcam_cast")} value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
+                {!isOnPremise() && (
+                  <FeatureRow label={t("track_webcam_cast")} value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
+                )}
               </div>
               {advancedPanel && (
                 <div className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center" onClick={() => setAdvancedPanel(null)}>

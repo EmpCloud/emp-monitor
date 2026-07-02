@@ -105,13 +105,13 @@ const sendExternalReport = new cronJobs(
 sendExternalReport.start();
 
 /* Check Late Login based on Shift */
-const checkShiftBasedLateLogin = new cronJobs(
-    ConfigFile.CUSTOM_AUTO_EMAIL_LATE_LOGIN_CRONJOBS_TIME_CRON,
-    checkLateLoginBasedOnShift,
-    () => console.log("---------------------End for Check Late Login based on Shift---------------------"),
-    false,
-    "Asia/Kolkata"
-);
+// const checkShiftBasedLateLogin = new cronJobs(
+//     ConfigFile.CUSTOM_AUTO_EMAIL_LATE_LOGIN_CRONJOBS_TIME_CRON,
+//     checkLateLoginBasedOnShift,
+//     () => console.log("---------------------End for Check Late Login based on Shift---------------------"),
+//     false,
+//     "Asia/Kolkata"
+// );
 // checkShiftBasedLateLogin.start();
 
 /* To check and send mail to organization whose storage credentials are expired */

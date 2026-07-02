@@ -112,26 +112,6 @@ const getMenuItems = (t, { showAddonFeatures = false } = {}) => [
       { title: t("sidebar_alert_notification"), url: "/admin/behaviour/alertnotification" },
     ],
   },
-  {
-    title: t("sidebar_mobile_task"),
-    icon: Smartphone,
-    children: [
-      { title: t("sidebar_clients_users"), url: "/admin/mobiletask/clientuser" },
-      { title: t("sidebar_task_details"), url: "/admin/mobiletask/task" },
-      { title: t("sidebar_geo_location"), url: "/admin/mobiletask/geolocation" },
-    ],
-  },
-  {
-    title: t("reseller"),
-    icon: Store,
-    children: [
-      { title: t("dashboard"), url: "/admin/reseller/dashboard" },
-      { title: t("settings"), url: "/admin/reseller/settings" },
-    ],
-  },
-  ...(showAddonFeatures
-    ? [{ title: "Addon Features", url: "/admin/addon-features", icon: ToggleRight }]
-    : []),
 ];
 
 const normalizeResellerStats = (payload = {}) => {

@@ -1,4 +1,5 @@
 import apiService from "@/services/api.service";
+import { sanitizeTrackDataPayload } from "@/utils/trackData";
 
 /**
  * GET employee tracking settings
@@ -36,7 +37,9 @@ export const fetchSettingsOptions = async () => {
  */
 export const saveUserTrackSettings = async (payload) => {
   try {
-    const { data } = await apiService.apiInstance.post("/settings/user-tracking-setting", payload);
+    // Normalize the round-tripped tracking shape (networkBased / projectBased /
+    // geoLocation) to what the write validation accepts. See @/utils/trackData.
+    const { data } = await apiService.apiInstance.post("/settings/user-tracking-setting", sanitizeTrackDataPayload(payload));
     return data;
   } catch (error) {
     console.error("TrackUserSettings: save error", error);

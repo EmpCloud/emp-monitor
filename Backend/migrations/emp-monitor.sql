@@ -1438,6 +1438,7 @@ CREATE TABLE IF NOT EXISTS `organization_provider_credentials` (
   `creds` text NOT NULL,
   `status` int(11) NOT NULL DEFAULT 0,
   `is_expired` int(5) DEFAULT 0,
+  `note` varchar(500) DEFAULT NULL,
   `created_by` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),

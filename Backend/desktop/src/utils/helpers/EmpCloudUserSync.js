@@ -10,6 +10,18 @@
 const mysql2 = require('mysql2/promise');
 const mySql = require('../../database/MySqlConnection').getInstance();
 
+// EmpCloud integration is opt-in. It is active only when its database
+// connection is configured via env (EMPCLOUD_DB_HOST / _USER / _NAME). On
+// standalone / on-premise deployments these are absent, so the seat-availability
+// gate and the user mirror are skipped instead of blocking agent registration.
+const EMPCLOUD_REQUIRED_ENV = ['EMPCLOUD_DB_HOST', 'EMPCLOUD_DB_USER', 'EMPCLOUD_DB_NAME'];
+function isEmpCloudConfigured() {
+    return EMPCLOUD_REQUIRED_ENV.every((key) => {
+        const value = process.env[key];
+        return typeof value === 'string' && value.trim() !== '';
+    });
+}
+
 let empcloudPool;
 function getEmpCloudPool() {
     if (!empcloudPool) {
@@ -62,6 +74,8 @@ async function resolveEmpCloudOrgId(monitorOrgId) {
 // params: { monitorOrgId, monitorUserId, firstName, lastName, email,
 //           contactNumber, address, empCode }
 async function mirrorMonitorUserToEmpCloud(params) {
+    // EmpCloud not configured (e.g. on-premise) -> nothing to mirror.
+    if (!isEmpCloudConfigured()) return false;
     const monitorOrgId = Number(params.monitorOrgId);
     const monitorUserId = Number(params.monitorUserId);
     const email = params.email ? String(params.email).trim() : '';
@@ -161,6 +175,11 @@ async function mirrorMonitorUserToEmpCloud(params) {
 // registration. The caller surfaces the message to the agent so the customer
 // admin can resolve (top up seats / pay invoice / fix bridge).
 async function checkEmpCloudSeatAvailability(monitorOrgId) {
+    // EmpCloud not configured (e.g. on-premise) -> skip the seat gate so
+    // registration proceeds normally instead of failing closed.
+    if (!isEmpCloudConfigured()) {
+        return { ok: true, skipped: true, status: 'disabled' };
+    }
     const orgId = Number(monitorOrgId);
     if (!orgId) {
         return { ok: false, code: 'NO_BRIDGE', status: 503, message: 'Monitor org not found.' };
@@ -252,4 +271,4 @@ async function checkEmpCloudSeatAvailability(monitorOrgId) {
     return { ok: true, totalSeats, usedSeats: currentCount, status: subStatus };
 }
 
-module.exports = { mirrorMonitorUserToEmpCloud, getEmpCloudPool, checkEmpCloudSeatAvailability };
+module.exports = { mirrorMonitorUserToEmpCloud, getEmpCloudPool, checkEmpCloudSeatAvailability, isEmpCloudConfigured };

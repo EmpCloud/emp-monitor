@@ -11,3 +11,7 @@ vendor
 .env.production
 *.pem
 *.key
+*.log
+*-audit.json
+audit.json
+package-lock.json
