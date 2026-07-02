@@ -950,7 +950,7 @@ _
             non_productive_duration: { $sum: '$non_productive_duration' },
             neutral_duration: { $sum: '$neutral_duration' },
             idle_duration: { $sum: '$idle_duration' },
-            break_duration: { $sum: '$ break_duration' },
+            break_duration: { $sum: '$break_duration' },
             count: { $sum: 1 }
         };
         if (!organization_id) {
