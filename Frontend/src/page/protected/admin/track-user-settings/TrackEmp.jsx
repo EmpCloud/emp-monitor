@@ -597,7 +597,14 @@ export default function TrackEmp() {
                   </button>
                 ))}
               </div>
-              <ActiveScenario />
+              <ActiveScenario
+                {...(trackingScenario === "geo"
+                  ? {
+                      value: settings.tracking?.geoLocation ?? [],
+                      onChange: (list) => set("tracking.geoLocation", list),
+                    }
+                  : {})}
+              />
             </div>
           </div>
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Briefcase, MapPin, Search } from "lucide-react";
+import { Briefcase, MapPin, Search, Trash2 } from "lucide-react";
 
 /* ── Day colors (matching reference: cyan for weekdays, rose for Saturday, red for Sunday) ── */
 const DAYS = [
@@ -278,20 +278,97 @@ export function NetworkBasedTab() {
 }
 
 /* ── GEO Location Tab ── */
-export function GeoLocationTab() {
+export function GeoLocationTab({ value = [], onChange }) {
   const { t } = useTranslation();
   const [location, setLocation] = useState("");
   const [latLng, setLatLng] = useState("");
   const [range, setRange] = useState("");
+  const [error, setError] = useState("");
+
+  const locations = Array.isArray(value) ? value : [];
+
+  const resetForm = () => {
+    setLocation("");
+    setLatLng("");
+    setRange("");
+    setError("");
+  };
+
+  const handleAdd = () => {
+    const name = location.trim();
+    const coords = latLng.trim();
+    const rangeVal = range.trim();
+
+    if (!name) return setError(t("track_enter_location"));
+    if (!coords) return setError(t("track_enter_lat_lng"));
+
+    // Accept "lat, lng" (comma) — split and validate both are numbers.
+    const parts = coords.split(",").map((p) => p.trim());
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+    if (parts.length !== 2 || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return setError(t("track_enter_lat_lng"));
+    }
+    const radius = parseFloat(rangeVal);
+    if (rangeVal && Number.isNaN(radius)) return setError(t("track_enter_range"));
+
+    const entry = {
+      location: name,
+      latitude: String(lat),
+      longitude: String(lng),
+      range: rangeVal ? String(radius) : "",
+    };
+    onChange?.([...locations, entry]);
+    resetForm();
+  };
+
+  const handleRemove = (idx) => {
+    onChange?.(locations.filter((_, i) => i !== idx));
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5">
       <div className="flex items-center gap-3">
         <h4 className="text-base font-bold text-gray-800">{t("track_geo_location_title")}</h4>
-        <Button className="h-8 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold">
+        <Button
+          type="button"
+          onClick={handleAdd}
+          className="h-8 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold"
+        >
           {t("track_add_new_location")}
         </Button>
       </div>
+
+      {/* Added locations */}
+      {locations.length > 0 && (
+        <div className="space-y-2">
+          {locations.map((loc, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+            >
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 min-w-0">
+                <span className="font-medium text-gray-800 truncate">{loc.location}</span>
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <MapPin size={11} className="text-gray-400" />
+                  {loc.latitude}, {loc.longitude}
+                </span>
+                {loc.range && (
+                  <span className="text-xs text-gray-500">{t("track_range_mts")}: {loc.range}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemove(idx)}
+                title={t("track_advanced_settings") ? "Remove" : "Remove"}
+                className="shrink-0 w-7 h-7 rounded-md text-red-500 hover:bg-red-50 flex items-center justify-center"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
@@ -299,7 +376,7 @@ export function GeoLocationTab() {
           <Input
             placeholder={t("track_enter_location")}
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => { setLocation(e.target.value); setError(""); }}
             className="h-10 rounded-lg border-gray-200 text-sm"
           />
         </div>
@@ -310,7 +387,7 @@ export function GeoLocationTab() {
           <Input
             placeholder={t("track_enter_lat_lng")}
             value={latLng}
-            onChange={(e) => setLatLng(e.target.value)}
+            onChange={(e) => { setLatLng(e.target.value); setError(""); }}
             className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
           />
         </div>
@@ -319,13 +396,20 @@ export function GeoLocationTab() {
           <Input
             placeholder={t("track_enter_range")}
             value={range}
-            onChange={(e) => setRange(e.target.value)}
+            onChange={(e) => { setRange(e.target.value); setError(""); }}
             className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
           />
         </div>
       </div>
 
-      <Button variant="outline" className="h-9 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold border-0">
+      {error && <p className="text-xs text-red-500">{error}</p>}
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleAdd}
+        className="h-9 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold border-0"
+      >
         {t("track_add_new_location")}
       </Button>
     </div>
