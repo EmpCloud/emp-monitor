@@ -1460,5 +1460,9 @@
   "reseller.pngOnly": "PNG فقط. الحد الأقصى",
   "reseller.imageTooLarge": "الصورة كبيرة جداً",
   "reseller.maxDimensions": "الأبعاد القصوى",
-  "reseller.error": "خطأ"
+  "reseller.error": "خطأ",
+  "track_latitude": "خط العرض :",
+  "track_longitude": "خط الطول :",
+  "track_enter_latitude": "أدخل خط العرض",
+  "track_enter_longitude": "أدخل خط الطول"
 }

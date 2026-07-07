@@ -1455,5 +1455,9 @@
   "reseller.pngOnly": "Hanya PNG. Maks",
   "reseller.imageTooLarge": "Gambar terlalu besar",
   "reseller.maxDimensions": "Dimensi maksimal",
-  "reseller.error": "Kesalahan"
+  "reseller.error": "Kesalahan",
+  "track_latitude": "Lintang :",
+  "track_longitude": "Bujur :",
+  "track_enter_latitude": "Masukkan Lintang",
+  "track_enter_longitude": "Masukkan Bujur"
 }

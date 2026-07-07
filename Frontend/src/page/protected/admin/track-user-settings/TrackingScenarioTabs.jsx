@@ -281,7 +281,8 @@ export function NetworkBasedTab() {
 export function GeoLocationTab({ value = [], onChange }) {
   const { t } = useTranslation();
   const [location, setLocation] = useState("");
-  const [latLng, setLatLng] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [range, setRange] = useState("");
   const [error, setError] = useState("");
 
@@ -289,25 +290,28 @@ export function GeoLocationTab({ value = [], onChange }) {
 
   const resetForm = () => {
     setLocation("");
-    setLatLng("");
+    setLatitude("");
+    setLongitude("");
     setRange("");
     setError("");
   };
 
   const handleAdd = () => {
     const name = location.trim();
-    const coords = latLng.trim();
+    const latStr = latitude.trim();
+    const lngStr = longitude.trim();
     const rangeVal = range.trim();
 
     if (!name) return setError(t("track_enter_location"));
-    if (!coords) return setError(t("track_enter_lat_lng"));
+    if (!latStr || !lngStr) return setError(t("track_enter_lat_lng"));
 
-    // Accept "lat, lng" (comma) — split and validate both are numbers.
-    const parts = coords.split(",").map((p) => p.trim());
-    const lat = parseFloat(parts[0]);
-    const lng = parseFloat(parts[1]);
-    if (parts.length !== 2 || Number.isNaN(lat) || Number.isNaN(lng)) {
-      return setError(t("track_enter_lat_lng"));
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+    if (Number.isNaN(lat) || lat < -90 || lat > 90) {
+      return setError(t("track_enter_latitude"));
+    }
+    if (Number.isNaN(lng) || lng < -180 || lng > 180) {
+      return setError(t("track_enter_longitude"));
     }
     const radius = parseFloat(rangeVal);
     if (rangeVal && Number.isNaN(radius)) return setError(t("track_enter_range"));
@@ -370,7 +374,7 @@ export function GeoLocationTab({ value = [], onChange }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">{t("track_location")}</label>
           <Input
@@ -382,18 +386,33 @@ export function GeoLocationTab({ value = [], onChange }) {
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
-            {t("track_lat_lng")} <MapPin size={12} className="text-gray-400" />
+            {t("track_latitude")} <MapPin size={12} className="text-gray-400" />
           </label>
           <Input
-            placeholder={t("track_enter_lat_lng")}
-            value={latLng}
-            onChange={(e) => { setLatLng(e.target.value); setError(""); }}
+            type="number"
+            step="any"
+            placeholder={t("track_enter_latitude")}
+            value={latitude}
+            onChange={(e) => { setLatitude(e.target.value); setError(""); }}
+            className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">{t("track_longitude")}</label>
+          <Input
+            type="number"
+            step="any"
+            placeholder={t("track_enter_longitude")}
+            value={longitude}
+            onChange={(e) => { setLongitude(e.target.value); setError(""); }}
             className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm"
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">{t("track_range_mts")}</label>
           <Input
+            type="number"
+            step="any"
             placeholder={t("track_enter_range")}
             value={range}
             onChange={(e) => { setRange(e.target.value); setError(""); }}

@@ -1455,5 +1455,9 @@
   "reseller.pngOnly": "PNG uniquement. Max",
   "reseller.imageTooLarge": "Image trop grande",
   "reseller.maxDimensions": "Dimensions maximales",
-  "reseller.error": "Erreur"
+  "reseller.error": "Erreur",
+  "track_latitude": "Latitude :",
+  "track_longitude": "Longitude :",
+  "track_enter_latitude": "Entrez la latitude",
+  "track_enter_longitude": "Entrez la longitude"
 }
