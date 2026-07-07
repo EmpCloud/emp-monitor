@@ -1464,5 +1464,6 @@
   "track_latitude": "خط العرض :",
   "track_longitude": "خط الطول :",
   "track_enter_latitude": "أدخل خط العرض",
-  "track_enter_longitude": "أدخل خط الطول"
+  "track_enter_longitude": "أدخل خط الطول",
+  "track_fixed_apply_hint": "يرجى تعيين أوقات بداية ونهاية المناوبة عن طريق اختيار أي يوم"
 }

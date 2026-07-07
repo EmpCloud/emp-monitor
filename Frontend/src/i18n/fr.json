@@ -1459,5 +1459,6 @@
   "track_latitude": "Latitude :",
   "track_longitude": "Longitude :",
   "track_enter_latitude": "Entrez la latitude",
-  "track_enter_longitude": "Entrez la longitude"
+  "track_enter_longitude": "Entrez la longitude",
+  "track_fixed_apply_hint": "Veuillez définir les heures de début et de fin de poste en sélectionnant un jour"
 }

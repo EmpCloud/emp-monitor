@@ -1459,5 +1459,6 @@
   "track_latitude": "Latitud :",
   "track_longitude": "Longitud :",
   "track_enter_latitude": "Ingrese Latitud",
-  "track_enter_longitude": "Ingrese Longitud"
+  "track_enter_longitude": "Ingrese Longitud",
+  "track_fixed_apply_hint": "Por favor, establezca las horas de inicio y fin del turno seleccionando cualquier día"
 }

@@ -59,6 +59,7 @@ export function UnlimitedTab() {
 /* ── Fixed Tab ── */
 export function FixedTab({ value = {}, onChange }) {
   const { t } = useTranslation();
+  const [applyError, setApplyError] = useState("");
 
   // A day is "on" if it has an entry in the saved `fixed` object; its times come
   // from fixed[day].time. Backend/write shape: { <Day>: { time: { start, end } } }.
@@ -84,19 +85,26 @@ export function FixedTab({ value = {}, onChange }) {
   };
 
   const updateShift = (idx, field, val) => {
+    setApplyError("");
     const nextShifts = shifts.map((s, i) => (i === idx ? { ...s, [field]: val } : s));
     emit(workingDays, nextShifts);
   };
 
   const toggleDay = (day) => {
+    setApplyError("");
     emit({ ...workingDays, [day]: !workingDays[day] }, shifts);
   };
 
   const applyToAll = () => {
-    const first = shifts.find((s) => workingDays[s.day]);
-    if (!first) return;
+    // Need a selected day that already has both start and end set to copy from.
+    const source = shifts.find((s) => workingDays[s.day] && s.start && s.end);
+    if (!source) {
+      setApplyError(t("track_fixed_apply_hint"));
+      return;
+    }
+    setApplyError("");
     const nextShifts = shifts.map((s) =>
-      workingDays[s.day] ? { ...s, start: first.start, end: first.end } : s
+      workingDays[s.day] ? { ...s, start: source.start, end: source.end } : s
     );
     emit(workingDays, nextShifts);
   };
@@ -106,6 +114,7 @@ export function FixedTab({ value = {}, onChange }) {
       <div>
         <h4 className="text-base font-bold text-gray-800">{t("track_select_working_days_timings")}</h4>
         <p className="text-xs text-gray-400 mt-0.5">{t("track_fixed_hours_desc")}</p>
+        {applyError && <p className="text-sm text-red-500 mt-2">{applyError}</p>}
       </div>
 
       <div className="bg-[#F8FAFC] border border-gray-100 rounded-3xl p-6">

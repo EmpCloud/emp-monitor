@@ -1459,5 +1459,6 @@
   "track_latitude": "Latitude :",
   "track_longitude": "Longitude :",
   "track_enter_latitude": "Enter Latitude",
-  "track_enter_longitude": "Enter Longitude"
+  "track_enter_longitude": "Enter Longitude",
+  "track_fixed_apply_hint": "Please, set the start and end shift times by selecting any one day"
 }

@@ -1459,5 +1459,6 @@
   "track_latitude": "Lintang :",
   "track_longitude": "Bujur :",
   "track_enter_latitude": "Masukkan Lintang",
-  "track_enter_longitude": "Masukkan Bujur"
+  "track_enter_longitude": "Masukkan Bujur",
+  "track_fixed_apply_hint": "Silakan atur waktu mulai dan akhir shift dengan memilih salah satu hari"
 }
