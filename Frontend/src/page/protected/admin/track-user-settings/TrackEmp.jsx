@@ -603,7 +603,12 @@ export default function TrackEmp() {
                       value: settings.tracking?.geoLocation ?? [],
                       onChange: (list) => set("tracking.geoLocation", list),
                     }
-                  : {})}
+                  : trackingScenario === "network"
+                    ? {
+                        value: settings.tracking?.networkBased ?? [],
+                        onChange: (list) => set("tracking.networkBased", list),
+                      }
+                    : {})}
               />
             </div>
           </div>

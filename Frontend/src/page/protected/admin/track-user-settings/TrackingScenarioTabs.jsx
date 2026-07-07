@@ -217,20 +217,82 @@ export function ClientBasedTab() {
 }
 
 /* ── Network Based Tab ── */
-export function NetworkBasedTab() {
+export function NetworkBasedTab({ value = [], onChange }) {
   const { t } = useTranslation();
   const [networkName, setNetworkName] = useState("");
   const [ipAddress, setIpAddress] = useState("");
+  const [officeNetwork, setOfficeNetwork] = useState(true);
+  const [error, setError] = useState("");
+
+  const networks = Array.isArray(value) ? value : [];
+
+  const resetForm = () => {
+    setNetworkName("");
+    setIpAddress("");
+    setOfficeNetwork(true);
+    setError("");
+  };
+
+  const handleAdd = () => {
+    const name = networkName.trim();
+    const ip = ipAddress.trim();
+
+    if (!name) return setError(t("track_enter_network_name"));
+    if (!ip) return setError(t("track_enter_ip_address"));
+
+    // Write schema (see @/utils/trackData): { networkName, ipAddress, officeNetwork }.
+    const entry = { networkName: name, ipAddress: ip, officeNetwork };
+    onChange?.([...networks, entry]);
+    resetForm();
+  };
+
+  const handleRemove = (idx) => {
+    onChange?.(networks.filter((_, i) => i !== idx));
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-8 space-y-6">
       {/* Title + Button */}
       <div className="flex flex-wrap items-center gap-4">
         <h4 className="text-lg font-bold text-gray-800">{t("track_specific_network")}</h4>
-        <Button className="h-8 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold">
+        <Button
+          type="button"
+          onClick={handleAdd}
+          className="h-8 px-5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold"
+        >
           {t("track_add_new_location")}
         </Button>
       </div>
+
+      {/* Added networks */}
+      {networks.length > 0 && (
+        <div className="space-y-2">
+          {networks.map((n, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+            >
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 min-w-0">
+                <span className="font-medium text-gray-800 truncate">{n.networkName}</span>
+                <span className="text-xs text-gray-500">{n.ipAddress}</span>
+                {n.officeNetwork && (
+                  <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    {t("track_office_network")}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemove(idx)}
+                title="Remove"
+                className="shrink-0 w-7 h-7 rounded-md text-red-500 hover:bg-red-50 flex items-center justify-center"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Form fields + Office Network in a 2-column layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -240,7 +302,7 @@ export function NetworkBasedTab() {
           <Input
             placeholder={t("track_enter_network_name")}
             value={networkName}
-            onChange={(e) => setNetworkName(e.target.value)}
+            onChange={(e) => { setNetworkName(e.target.value); setError(""); }}
             className="h-10 rounded-xl border-gray-200 text-sm"
           />
         </div>
@@ -251,21 +313,33 @@ export function NetworkBasedTab() {
           <Input
             placeholder={t("track_enter_ip_address")}
             value={ipAddress}
-            onChange={(e) => setIpAddress(e.target.value)}
+            onChange={(e) => { setIpAddress(e.target.value); setError(""); }}
             className="h-10 rounded-xl border-gray-200 text-sm"
           />
         </div>
 
-        {/* Office Network pill */}
+        {/* Office Network toggle */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg">
-            <span className="w-4 h-4 rounded-sm flex items-center justify-center shrink-0 bg-white/30">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <button
+            type="button"
+            onClick={() => setOfficeNetwork((v) => !v)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              officeNetwork ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <span
+              className={`w-4 h-4 rounded-sm flex items-center justify-center shrink-0 ${
+                officeNetwork ? "bg-white/30" : "border border-gray-400"
+              }`}
+            >
+              {officeNetwork && (
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
             </span>
             <span className="text-[13px] font-semibold">{t("track_office_network")}</span>
-          </div>
+          </button>
         </div>
 
         {/* Note */}
@@ -273,6 +347,8 @@ export function NetworkBasedTab() {
           <span className="text-[12px] text-gray-500">{t("track_office_network_note")}</span>
         </div>
       </div>
+
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
 }
