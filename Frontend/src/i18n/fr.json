@@ -1455,5 +1455,13 @@
   "reseller.pngOnly": "PNG uniquement. Max",
   "reseller.imageTooLarge": "Image trop grande",
   "reseller.maxDimensions": "Dimensions maximales",
-  "reseller.error": "Erreur"
+  "reseller.error": "Erreur",
+  "realtimeInsightsTitle": "Aperçus en Temps Réel",
+  "realtimeInsightsEmployees": "De l'Employé",
+  "realtimeInsightsSubtitle": "Une analyse en temps réel de l'employé. Chaque seconde compte dans le suivi",
+  "productivityTracker": "Suivi de productivité",
+  "statusLive": "En direct",
+  "statusDisconnected": "Déconnecté",
+  "appLabel": "Application",
+  "analytics": "Analytique"
 }

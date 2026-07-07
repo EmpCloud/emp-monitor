@@ -1,6 +1,8 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 function ProductivitySlider({ minValue, maxValue, onMinChange, onMaxChange }) {
+    const { t } = useTranslation();
     const handleMinChange = useCallback(
         (e) => {
             const val = Math.min(Number(e.target.value), maxValue - 1);
@@ -20,7 +22,7 @@ function ProductivitySlider({ minValue, maxValue, onMinChange, onMaxChange }) {
     return (
         <div className="flex-1 max-w-md">
             <label className="block text-sm font-medium text-slate-700 mb-2">
-                Productivity tracker
+                {t("productivityTracker")}
             </label>
             <div className="relative pt-8">
                 {/* Min tooltip */}

@@ -1455,5 +1455,13 @@
   "reseller.pngOnly": "Hanya PNG. Maks",
   "reseller.imageTooLarge": "Gambar terlalu besar",
   "reseller.maxDimensions": "Dimensi maksimal",
-  "reseller.error": "Kesalahan"
+  "reseller.error": "Kesalahan",
+  "realtimeInsightsTitle": "Wawasan Waktu Nyata",
+  "realtimeInsightsEmployees": "Karyawan",
+  "realtimeInsightsSubtitle": "Analisis karyawan secara waktu nyata. Setiap detik penting dalam pelacakan",
+  "productivityTracker": "Pelacak Produktivitas",
+  "statusLive": "Langsung",
+  "statusDisconnected": "Terputus",
+  "appLabel": "Aplikasi",
+  "analytics": "Analitik"
 }

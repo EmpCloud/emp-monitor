@@ -1460,5 +1460,13 @@
   "reseller.pngOnly": "PNG فقط. الحد الأقصى",
   "reseller.imageTooLarge": "الصورة كبيرة جداً",
   "reseller.maxDimensions": "الأبعاد القصوى",
-  "reseller.error": "خطأ"
+  "reseller.error": "خطأ",
+  "realtimeInsightsTitle": "رؤى في الوقت الفعلي",
+  "realtimeInsightsEmployees": "الموظف",
+  "realtimeInsightsSubtitle": "تحليل فوري للموظف. كل ثانية مهمة في التتبع",
+  "productivityTracker": "متتبع الإنتاجية",
+  "statusLive": "مباشر",
+  "statusDisconnected": "غير متصل",
+  "appLabel": "تطبيق",
+  "analytics": "التحليلات"
 }

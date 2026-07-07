@@ -1,5 +1,6 @@
 import React, { useCallback } from "react"
 import { BarChart3, Download, MapPin } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 const avatarColors = [
     "bg-blue-500",
@@ -27,6 +28,7 @@ const statusColorMap = {
 }
 
 function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx }) {
+    const { t } = useTranslation()
     const activity = emp.activity
 
     const handleClick = useCallback(() => onSelect(emp.id), [onSelect, emp.id])
@@ -73,7 +75,7 @@ function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx 
             <div className="flex items-center justify-between mb-2">
                 <div>
                     <span className="text-[11px] text-slate-500">
-                        Productivity :{" "}
+                        {t("productivity")} :{" "}
                     </span>
                     <span className="text-[11px] font-bold text-slate-800">
                         {emp.productivity}
@@ -87,22 +89,22 @@ function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx 
             {/* Timesheet Hours */}
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mb-2">
                 <p className="text-[10px] text-slate-500">
-                    <span className="font-semibold">Office:</span>{" "}
+                    <span className="font-semibold">{t("office")}:</span>{" "}
                     <span className="text-slate-700">{emp.officeHours}</span>
                 </p>
                 <p className="text-[10px] text-slate-500">
-                    <span className="font-semibold">Active:</span>{" "}
+                    <span className="font-semibold">{t("actives")}:</span>{" "}
                     <span className="text-slate-700">{emp.activeHours}</span>
                 </p>
                 <p className="text-[10px] text-slate-500">
-                    <span className="font-semibold">Idle:</span>{" "}
+                    <span className="font-semibold">{t("idles")}:</span>{" "}
                     <span className="text-slate-700">{emp.idleHours}</span>
                 </p>
             </div>
 
             {/* Email */}
             <div className="mb-2">
-                <span className="text-[11px] text-slate-500">Email : </span>
+                <span className="text-[11px] text-slate-500">{t("email")} : </span>
                 <span className="text-[11px] text-slate-600">
                     {emp.email}
                 </span>
@@ -113,19 +115,19 @@ function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx 
                 <div className="mb-3 space-y-0.5">
                     {activity.title && (
                         <p className="text-[11px] text-slate-600">
-                            <span className="font-semibold text-slate-500">Title: </span>
+                            <span className="font-semibold text-slate-500">{t("title")}: </span>
                             {getSubstring(activity.title)}
                         </p>
                     )}
                     {activity.appName && (
                         <p className="text-[11px] text-slate-600">
-                            <span className="font-semibold text-slate-500">App: </span>
+                            <span className="font-semibold text-slate-500">{t("appLabel")}: </span>
                             {getSubstring(activity.appName)}
                         </p>
                     )}
                     {activity.currentUrl && (
                         <p className="text-[11px] text-slate-600">
-                            <span className="font-semibold text-slate-500">URL: </span>
+                            <span className="font-semibold text-slate-500">{t("url")}: </span>
                             <a
                                 href={activity.currentUrl}
                                 target="_blank"
@@ -142,10 +144,10 @@ function EmployeeCard({ emp, isSelected, onSelect, onAnalytics, onDownload, idx 
 
             {/* Footer icons */}
             <div className="flex items-center gap-2 border-t border-slate-100 pt-2.5">
-                <button onClick={(e) => { e.stopPropagation(); onDownload?.(emp); }} title="Download" className="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onDownload?.(emp); }} title={t("downloads")} className="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center transition-colors">
                     <Download className="w-3 h-3 text-emerald-600" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); onAnalytics?.(emp); }} title="Analytics" className="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onAnalytics?.(emp); }} title={t("analytics")} className="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors">
                     <BarChart3 className="w-3 h-3 text-blue-500" />
                 </button>
                 {activity?.latitude && activity?.longitude && (

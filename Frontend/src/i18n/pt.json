@@ -1455,5 +1455,13 @@
   "reseller.pngOnly": "Apenas PNG. Máx",
   "reseller.imageTooLarge": "Imagem muito grande",
   "reseller.maxDimensions": "Dimensões máximas",
-  "reseller.error": "Erro"
+  "reseller.error": "Erro",
+  "realtimeInsightsTitle": "Insights em Tempo Real",
+  "realtimeInsightsEmployees": "Do Funcionário",
+  "realtimeInsightsSubtitle": "Uma análise em tempo real do funcionário. Cada segundo conta no rastreamento",
+  "productivityTracker": "Rastreador de produtividade",
+  "statusLive": "Ao vivo",
+  "statusDisconnected": "Desconectado",
+  "appLabel": "Aplicativo",
+  "analytics": "Análises"
 }
