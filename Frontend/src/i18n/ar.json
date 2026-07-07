@@ -1465,5 +1465,13 @@
   "track_longitude": "خط الطول :",
   "track_enter_latitude": "أدخل خط العرض",
   "track_enter_longitude": "أدخل خط الطول",
-  "track_fixed_apply_hint": "يرجى تعيين أوقات بداية ونهاية المناوبة عن طريق اختيار أي يوم"
+  "track_fixed_apply_hint": "يرجى تعيين أوقات بداية ونهاية المناوبة عن طريق اختيار أي يوم",
+  "realtimeInsightsTitle": "رؤى في الوقت الفعلي",
+  "realtimeInsightsEmployees": "الموظف",
+  "realtimeInsightsSubtitle": "تحليل فوري للموظف. كل ثانية مهمة في التتبع",
+  "productivityTracker": "متتبع الإنتاجية",
+  "statusLive": "مباشر",
+  "statusDisconnected": "غير متصل",
+  "appLabel": "تطبيق",
+  "analytics": "التحليلات"
 }

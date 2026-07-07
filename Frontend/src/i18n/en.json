@@ -1460,5 +1460,13 @@
   "track_longitude": "Longitude :",
   "track_enter_latitude": "Enter Latitude",
   "track_enter_longitude": "Enter Longitude",
-  "track_fixed_apply_hint": "Please, set the start and end shift times by selecting any one day"
+  "track_fixed_apply_hint": "Please, set the start and end shift times by selecting any one day",
+  "realtimeInsightsTitle": "Real Time Insights",
+  "realtimeInsightsEmployees": "Employee's",
+  "realtimeInsightsSubtitle": "A realtime analysis of employee. Every second counts in tracking",
+  "productivityTracker": "Productivity tracker",
+  "statusLive": "Live",
+  "statusDisconnected": "Disconnected",
+  "appLabel": "App",
+  "analytics": "Analytics"
 }

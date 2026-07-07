@@ -1460,5 +1460,13 @@
   "track_longitude": "Bujur :",
   "track_enter_latitude": "Masukkan Lintang",
   "track_enter_longitude": "Masukkan Bujur",
-  "track_fixed_apply_hint": "Silakan atur waktu mulai dan akhir shift dengan memilih salah satu hari"
+  "track_fixed_apply_hint": "Silakan atur waktu mulai dan akhir shift dengan memilih salah satu hari",
+  "realtimeInsightsTitle": "Wawasan Waktu Nyata",
+  "realtimeInsightsEmployees": "Karyawan",
+  "realtimeInsightsSubtitle": "Analisis karyawan secara waktu nyata. Setiap detik penting dalam pelacakan",
+  "productivityTracker": "Pelacak Produktivitas",
+  "statusLive": "Langsung",
+  "statusDisconnected": "Terputus",
+  "appLabel": "Aplikasi",
+  "analytics": "Analitik"
 }

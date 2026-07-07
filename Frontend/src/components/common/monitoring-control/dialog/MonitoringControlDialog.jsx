@@ -541,41 +541,6 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                                 value={rules.features?.screencast}
                                 onChange={(v) => updateRule("features.screencast", v)}
                             />
-                            {/* Cloud-only features — hidden on on-premise deployments */}
-                            {!isOnPremise() && (
-                                <>
-                                    <ToggleRow
-                                        label="Webcam Casting"
-                                        name="webCamCasting"
-                                        value={rules.features?.webCamCasting}
-                                        onChange={(v) => updateRule("features.webCamCasting", v)}
-                                    />
-                                    <ToggleRow
-                                        label="File Upload Detection"
-                                        name="file_upload_detection"
-                                        value={rules.features?.file_upload_detection}
-                                        onChange={(v) => updateRule("features.file_upload_detection", v)}
-                                    />
-                                    <ToggleRow
-                                        label="File Upload Blocking"
-                                        name="file_upload_blocking"
-                                        value={rules.features?.file_upload_blocking}
-                                        onChange={(v) => updateRule("features.file_upload_blocking", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Print Detection"
-                                        name="print_detection"
-                                        value={rules.features?.print_detection}
-                                        onChange={(v) => updateRule("features.print_detection", v)}
-                                    />
-                                    <ToggleRow
-                                        label="Print Blocking"
-                                        name="print_blocking"
-                                        value={rules.features?.print_blocking}
-                                        onChange={(v) => updateRule("features.print_blocking", v)}
-                                    />
-                                </>
-                            )}
                             <ToggleRow
                                 label="Manual Log Entry"
                                 name="manual_clock_in"

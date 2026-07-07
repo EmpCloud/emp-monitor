@@ -1460,5 +1460,13 @@
   "track_longitude": "Longitude :",
   "track_enter_latitude": "Insira a latitude",
   "track_enter_longitude": "Insira a longitude",
-  "track_fixed_apply_hint": "Por favor, defina os horários de início e fim do turno selecionando qualquer dia"
+  "track_fixed_apply_hint": "Por favor, defina os horários de início e fim do turno selecionando qualquer dia",
+  "realtimeInsightsTitle": "Insights em Tempo Real",
+  "realtimeInsightsEmployees": "Do Funcionário",
+  "realtimeInsightsSubtitle": "Uma análise em tempo real do funcionário. Cada segundo conta no rastreamento",
+  "productivityTracker": "Rastreador de produtividade",
+  "statusLive": "Ao vivo",
+  "statusDisconnected": "Desconectado",
+  "appLabel": "Aplicativo",
+  "analytics": "Análises"
 }

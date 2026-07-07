@@ -376,7 +376,7 @@ export default function TrackEmp() {
           </Section>
 
           {/* Tracking + DLP / Screenshots / Agent */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             <Section title={t("track_tracking_features")} icon={<Shield size={14} className="text-red-400" />}>
               <div className="bg-[#f5f7fb] rounded-xl p-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2 py-2 mb-1 bg-gray-200/60 rounded-md">
@@ -390,15 +390,6 @@ export default function TrackEmp() {
                 <FeatureRow label={t("track_screenshots")} value={settings.features.screenshots} onChange={(v) => set("features.screenshots", v)} hasAdvanced onAdvancedClick={(label) => setAdvancedPanel(advancedPanel === label ? null : label)} showAdvancedColumn />
                 <FeatureRow label={t("track_screen_recording")} value={settings.features.screenRecording} onChange={(v) => set("features.screenRecording", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_screen_recording_with_voice")} value={settings.features.screenRecordingWithVoice} onChange={(v) => set("features.screenRecordingWithVoice", v)} infoIcon showAdvancedColumn />
-                {/* Cloud-only features — hidden on on-premise deployments */}
-                {!isOnPremise() && (
-                  <>
-                    <FeatureRow label={t("track_file_upload_detection")} value={settings.features.fileUploadDetection} onChange={(v) => set("features.fileUploadDetection", v)} showAdvancedColumn />
-                    <FeatureRow label={t("track_file_upload_blocking")} value={settings.features.fileUploadBlocking} onChange={(v) => set("features.fileUploadBlocking", v)} showAdvancedColumn />
-                    <FeatureRow label={t("track_print_blocking")} value={settings.features.printBlocking} onChange={(v) => set("features.printBlocking", v)} showAdvancedColumn />
-                    <FeatureRow label={t("track_print_detection")} value={settings.features.printDetection} onChange={(v) => set("features.printDetection", v)} showAdvancedColumn />
-                  </>
-                )}
                 <FeatureRow label={t("track_manual_clock_in_and_out")} value={settings.features.manualClockInOut} onChange={(v) => set("features.manualClockInOut", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_usb_blocking")} value={settings.features.usbBlocking} onChange={(v) => set("features.usbBlocking", v)} showAdvancedColumn />
                 <FeatureRow label={t("track_attendance_override")} value={settings.features.attendanceOverride} onChange={(v) => set("features.attendanceOverride", v)} showAdvancedColumn />
@@ -407,9 +398,6 @@ export default function TrackEmp() {
                   <FeatureRow label={t("track_geo_location_logs")} value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
                 )}
                 <FeatureRow label={t("track_screen_casting")} value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
-                {!isOnPremise() && (
-                  <FeatureRow label={t("track_webcam_cast")} value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
-                )}
               </div>
               {advancedPanel && (
                 <div className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center" onClick={() => setAdvancedPanel(null)}>
@@ -488,7 +476,7 @@ export default function TrackEmp() {
               )}
             </Section>
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-6">
               {/* DLP */}
               <Section title={t("track_dlp_features")} icon={<Shield size={14} className="text-orange-400" />}>
                 <FeatureRow label={t("track_bluetooth_detection")} value={settings.dlp.bluetoothDetection} onChange={(v) => set("dlp.bluetoothDetection", v)} />
