@@ -376,7 +376,7 @@ export default function TrackEmp() {
           </Section>
 
           {/* Tracking + DLP / Screenshots / Agent */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             <Section title={t("track_tracking_features")} icon={<Shield size={14} className="text-red-400" />}>
               <div className="bg-[#f5f7fb] rounded-xl p-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2 py-2 mb-1 bg-gray-200/60 rounded-md">
