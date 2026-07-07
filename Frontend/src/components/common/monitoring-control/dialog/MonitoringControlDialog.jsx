@@ -545,12 +545,6 @@ const MonitoringControlDialog = ({ open, onOpenChange }) => {
                             {!isOnPremise() && (
                                 <>
                                     <ToggleRow
-                                        label="Webcam Casting"
-                                        name="webCamCasting"
-                                        value={rules.features?.webCamCasting}
-                                        onChange={(v) => updateRule("features.webCamCasting", v)}
-                                    />
-                                    <ToggleRow
                                         label="File Upload Detection"
                                         name="file_upload_detection"
                                         value={rules.features?.file_upload_detection}

@@ -407,9 +407,6 @@ export default function TrackEmp() {
                   <FeatureRow label={t("track_geo_location_logs")} value={settings.features.geoLocationLogs} onChange={(v) => set("features.geoLocationLogs", v)} showAdvancedColumn />
                 )}
                 <FeatureRow label={t("track_screen_casting")} value={settings.features.screenCasting} onChange={(v) => set("features.screenCasting", v)} showAdvancedColumn />
-                {!isOnPremise() && (
-                  <FeatureRow label={t("track_webcam_cast")} value={settings.features.webcamCast} onChange={(v) => set("features.webcamCast", v)} showAdvancedColumn />
-                )}
               </div>
               {advancedPanel && (
                 <div className="fixed inset-0 z-[99999] bg-slate-900/60 flex items-center justify-center" onClick={() => setAdvancedPanel(null)}>
