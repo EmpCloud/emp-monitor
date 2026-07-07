@@ -44,14 +44,14 @@ const RadioPair = ({ value, onChange }) => {
 };
 
 const Section = ({ title, icon, children }) => (
-  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
     {title && (
       <div className="flex items-center gap-2.5 px-5 py-3 border-b border-[#CAEDFF]" style={{ background: "#CAEDFF" }}>
         {icon}
         <h3 className="text-[13px] font-extrabold text-gray-800 tracking-tight">{title}</h3>
       </div>
     )}
-    <div className="px-5 py-4">{children}</div>
+    <div className="px-5 py-4 flex-1 flex flex-col justify-center">{children}</div>
   </div>
 );
 
@@ -376,7 +376,7 @@ export default function TrackEmp() {
           </Section>
 
           {/* Tracking + DLP / Screenshots / Agent */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
             <Section title={t("track_tracking_features")} icon={<Shield size={14} className="text-red-400" />}>
               <div className="bg-[#f5f7fb] rounded-xl p-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_200px_140px] gap-2 items-center px-2 py-2 mb-1 bg-gray-200/60 rounded-md">
@@ -476,7 +476,7 @@ export default function TrackEmp() {
               )}
             </Section>
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4 h-full [&>*]:flex-1">
               {/* DLP */}
               <Section title={t("track_dlp_features")} icon={<Shield size={14} className="text-orange-400" />}>
                 <FeatureRow label={t("track_bluetooth_detection")} value={settings.dlp.bluetoothDetection} onChange={(v) => set("dlp.bluetoothDetection", v)} />
