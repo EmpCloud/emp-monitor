@@ -57,30 +57,48 @@ export function UnlimitedTab() {
 }
 
 /* ── Fixed Tab ── */
-export function FixedTab() {
+export function FixedTab({ value = {}, onChange }) {
   const { t } = useTranslation();
-  const [workingDays, setWorkingDays] = useState(
-    DAYS.reduce((acc, d) => {
-      acc[d.name] = true;
-      return acc;
-    }, {})
-  );
 
-  const [shifts, setShifts] = useState(DAYS.map((d) => ({ day: d.name, start: "", end: "" })));
+  // A day is "on" if it has an entry in the saved `fixed` object; its times come
+  // from fixed[day].time. Backend/write shape: { <Day>: { time: { start, end } } }.
+  const fixed = value && typeof value === "object" ? value : {};
+  const workingDays = DAYS.reduce((acc, d) => {
+    acc[d.name] = d.name in fixed;
+    return acc;
+  }, {});
+  const shifts = DAYS.map((d) => ({
+    day: d.name,
+    start: fixed[d.name]?.time?.start ?? "",
+    end: fixed[d.name]?.time?.end ?? "",
+  }));
 
-  const updateShift = (idx, field, val) =>
-    setShifts((p) => p.map((s, i) => (i === idx ? { ...s, [field]: val } : s)));
+  // Rebuild the `fixed` object from the given days/times and push it up so the
+  // schedule actually persists on Save.
+  const emit = (nextDays, nextShifts) => {
+    const out = {};
+    nextShifts.forEach((s) => {
+      if (nextDays[s.day]) out[s.day] = { time: { start: s.start, end: s.end } };
+    });
+    onChange?.(out);
+  };
 
-  const toggleDay = (day) => setWorkingDays((p) => ({ ...p, [day]: !p[day] }));
+  const updateShift = (idx, field, val) => {
+    const nextShifts = shifts.map((s, i) => (i === idx ? { ...s, [field]: val } : s));
+    emit(workingDays, nextShifts);
+  };
+
+  const toggleDay = (day) => {
+    emit({ ...workingDays, [day]: !workingDays[day] }, shifts);
+  };
 
   const applyToAll = () => {
-    const firstIdx = shifts.findIndex((s) => workingDays[s.day]);
-    if (firstIdx < 0) return;
-    const first = shifts[firstIdx];
-
-    setShifts((p) =>
-      p.map((s) => (workingDays[s.day] ? { ...s, start: first.start, end: first.end } : s))
+    const first = shifts.find((s) => workingDays[s.day]);
+    if (!first) return;
+    const nextShifts = shifts.map((s) =>
+      workingDays[s.day] ? { ...s, start: first.start, end: first.end } : s
     );
+    emit(workingDays, nextShifts);
   };
 
   return (

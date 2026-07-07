@@ -608,7 +608,12 @@ export default function TrackEmp() {
                         value: settings.tracking?.networkBased ?? [],
                         onChange: (list) => set("tracking.networkBased", list),
                       }
-                    : {})}
+                    : trackingScenario === "fixed"
+                      ? {
+                          value: settings.tracking?.fixed ?? {},
+                          onChange: (fixed) => set("tracking.fixed", fixed),
+                        }
+                      : {})}
               />
             </div>
           </div>
