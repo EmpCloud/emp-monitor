@@ -437,7 +437,10 @@ class Controller {
 
             if (error) return sendResponse(res, 401, null, translate(organizationMessages, "2", language), error.details[0].message);
             let { reason, date, start_time, end_time, status, id, employee_id, activity_ids } = value;
-            const request = await Model.getRequestById({ id, employee_id });
+            // Scope the lookup by organization_id so an approve/decline can only
+            // touch a request in the caller's own org (prevents cross-tenant
+            // action by guessing another org's request ObjectId).
+            const request = await Model.getRequestById({ id, employee_id, organization_id });
             if (!request) return sendResponse(res, 400, null, translate(activityRequeat, "13", language), null);
             if (request.status === 1) return sendResponse(res, 400, null, translate(activityRequeat, "8", language), null);
             if (status == 1) {
@@ -467,7 +470,7 @@ class Controller {
                 if (!employeeActivities.length) return sendResponse(res, 400, null, translate(activityRequeat, "13", language), null);
             }
 
-            const updateDate = await Model.update({ activity_ids, reason, date, start_time, end_time, status, approved_by: user_id, id, activities: employeeActivities });
+            const updateDate = await Model.update({ activity_ids, reason, date, start_time, end_time, status, approved_by: user_id, id, activities: employeeActivities, organization_id });
             if (status) req.body = { ...req.body, approved_by: user_id, approver_name: first_name + " " + last_name }
             if (updateDate) return sendResponse(res, 200, req.body, translate(activityRequeat, "9", language), null);
             return sendResponse(res, 400, null, translate(activityRequeat, "19", language), null);
@@ -1009,7 +1012,7 @@ class Controller {
             const { value, error } = Validator.updateOfflineHours(req.body);
             if (error) return sendResponse(res, 401, null, translate(organizationMessages, "2", language), error.details[0].message);
             let { reason, date, status, id, employee_id, offlineTime, request_type = 0 } = value;
-            const request = await Model.getRequestById({ id, employee_id });
+            const request = await Model.getRequestById({ id, employee_id, organization_id: organizationId });
 
             if (!request) return sendResponse(res, 400, null, translate(activityRequeat, "13", language), null);
             if (request.status === 1) return sendResponse(res, 400, null, translate(activityRequeat, "8", language), null);
@@ -1037,9 +1040,9 @@ class Controller {
                 let totalOfflineTime = await this.getOfflineTime({ organizationId, employeeId: employee_id, date })
                 if (previousReqTime.length > 0) totalOfflineTime = totalOfflineTime - previousReqTime[0].totalTime
                 if (totalOfflineTime < offlineTime) return sendResponse(res, 400, null, translate(activityRequeat, "cant claim", language), null)
-                updateData = await Model.update({ reason, date, status, approved_by: user_id, id, offlineTime });
+                updateData = await Model.update({ reason, date, status, approved_by: user_id, id, offlineTime, organization_id: organizationId });
             }
-            else updateData = await Model.update({ reason, date, status, approved_by: user_id, id });
+            else updateData = await Model.update({ reason, date, status, approved_by: user_id, id, organization_id: organizationId });
 
 
 
@@ -1072,7 +1075,7 @@ class Controller {
                     });
                 }
             }
-            const request = await Model.getRequestById({ id, employee_id });
+            const request = await Model.getRequestById({ id, employee_id, organization_id: organizationId });
 
             if (!request) return sendResponse(res, 400, null, translate(activityRequeat, "13", language), null);
             if (request.status === 1) return sendResponse(res, 400, null, translate(activityRequeat, "8", language), null);
@@ -1087,9 +1090,9 @@ class Controller {
                 let totalOfflineTime = await this.getOfflineTime({ organizationId, employeeId: employee_id, date })
                 if (previousReqTime.length > 0) totalOfflineTime = totalOfflineTime - previousReqTime[0].totalTime
                 if (totalOfflineTime < offlineTime) return sendResponse(res, 400, null, translate(activityRequeat, "cant claim", language), null)
-                updateData = await Model.update({ reason, date, status, approved_by: user_id, id, offlineTime });
+                updateData = await Model.update({ reason, date, status, approved_by: user_id, id, offlineTime, organization_id: organizationId });
             }
-            else updateData = await Model.update({ reason, date, status, approved_by: user_id, id });
+            else updateData = await Model.update({ reason, date, status, approved_by: user_id, id, organization_id: organizationId });
 
             if (status) req.body = { ...req.body, approved_by: user_id, approver_name: first_name + " " + last_name }
             if (updateData) return sendResponse(res, 200, req.body, translate(activityRequeat, "9", language), null);
@@ -2139,8 +2142,21 @@ class Controller {
     }
 
     static async createAttendanceRequestForEmployeesByAdminManager (req, res, next) {
-        let { language, organization_id } = req.decoded;
+        let { language, organization_id, is_admin, permissionData = [] } = req.decoded;
         try {
+            // Authorization: creating attendance requests on behalf of other
+            // employees is a manager/admin action. Admins are always allowed;
+            // non-admins must hold the 'activity_alter_process' permission (the
+            // same permission that identifies an approver/manager and already
+            // gates the approve/decline path). Without this, any authenticated
+            // employee could raise — and via auto-approve, auto-accept —
+            // attendance claims for arbitrary coworkers in their org.
+            if (!is_admin) {
+                const canManage = permissionData.find(obj => obj.permission === 'activity_alter_process');
+                if (!canManage) {
+                    return sendResponse(res, 403, null, translate(activityRequeat, "12", language), translate(activityRequeat, "12", language));
+                }
+            }
             const { value, error } = Validator.validateAttendanceRequestForEmployeesByAdminManager(req.body);
             if (error) return sendResponse(res, 401, null, translate(organizationMessages, "2", language), error.details[0].message);
             let { start_time, end_time, from_date, to_date, reason, employee_ids, task_id } = value;
@@ -3470,7 +3486,7 @@ const multiDeclineIdle = async function ({ ids, language, user_id, reason }) {
                     return;
                 } 
             }
-            await Model.update({ status: 2, approved_by: user_id, id, activities: employeeActivities });
+            await Model.update({ status: 2, approved_by: user_id, id, activities: employeeActivities, organization_id });
             successArr.push(id);
         } catch (error) {
             Logger.error(`---multiDeclineIdle---${error}`);
@@ -3493,7 +3509,7 @@ const multiDeclineOffline = async function ({ ids, language, user_id, reason }) 
                 failedArr.push({ id, message: translate(activityRequeat, "22", language) });
                 return;
             }
-            let updateData = await Model.update({ reason, status: 2, approved_by: user_id, id });
+            let updateData = await Model.update({ reason, status: 2, approved_by: user_id, id, organization_id });
             if (updateData) successArr.push(id);
             else failedArr.push({ id, message: translate(activityRequeat, "19", language) });
         } catch (error) {

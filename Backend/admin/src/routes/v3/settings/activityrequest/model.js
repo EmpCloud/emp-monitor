@@ -260,7 +260,7 @@ class Model {
     * @param {number} status
     * @return {Promise<Object>} upadated details or error  .
     */
-    static update({ reason, date, start_time, end_time, status, approved_by, id, activities, offlineTime }) {
+    static update({ reason, date, start_time, end_time, status, approved_by, id, activities, offlineTime, organization_id }) {
         let set;
 
         if (activities) {
@@ -273,7 +273,11 @@ class Model {
         if (reason) set = { ...set, reason };
         if (offlineTime) set = { ...set, offline_time: offlineTime };
         if (status) set = { ...set, status, approved_by };
-        return ActivityRequestModel.updateOne({ _id: id }, { $set: set })
+        // Tenant isolation: scope the write by organization_id when the caller
+        // supplies it, so an approve/decline can never mutate another org's
+        // request by guessing its ObjectId.
+        const filter = organization_id ? { _id: id, organization_id } : { _id: id };
+        return ActivityRequestModel.updateOne(filter, { $set: set })
     }
 
     static declineBreak({ reason, date, start_time, end_time, status, approved_by, id, activities, offlineTime }) {
