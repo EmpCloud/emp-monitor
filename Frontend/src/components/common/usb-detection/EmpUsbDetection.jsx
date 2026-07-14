@@ -59,18 +59,21 @@ const EmpUsbDetection = () => {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
+      {/* [&>*]:min-w-0 lets grid children shrink instead of overflowing, and the
+          xl step smooths the jump to 5 columns; each CustomSelect gets width so
+          it fills its cell (w-full) for a clean, edge-aligned filter bar. */}
+      <div className="[&>*]:min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-x-6 gap-y-4 mb-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("location")}</label>
-          <CustomSelect placeholder={t("allLocations")} items={locations} selected={filters.locationId} onChange={handleLocationChange} />
+          <CustomSelect width placeholder={t("allLocations")} items={locations} selected={filters.locationId} onChange={handleLocationChange} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("department")}</label>
-          <CustomSelect placeholder={t("allDepartments")} items={departments} selected={filters.departmentId} onChange={handleDepartmentChange} />
+          <CustomSelect width placeholder={t("allDepartments")} items={departments} selected={filters.departmentId} onChange={handleDepartmentChange} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t("employee")}</label>
-          <CustomSelect placeholder={t("allEmployees")} items={employees} selected={filters.employeeId} onChange={handleEmployeeChange} />
+          <CustomSelect width placeholder={t("allEmployees")} items={employees} selected={filters.employeeId} onChange={handleEmployeeChange} />
         </div>
         <div>
           <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1.5">
