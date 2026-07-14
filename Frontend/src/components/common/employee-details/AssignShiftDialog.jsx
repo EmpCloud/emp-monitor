@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { Clock3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ export default function AssignShiftDialog({
   userIds = [],
   shifts = [],
   onSuccess,
-  onResult,
 }) {
   const { t } = useTranslation();
   const [shiftId, setShiftId] = useState("");
@@ -36,11 +36,22 @@ export default function AssignShiftDialog({
     const res = await assignShiftToMultiple(userIds, shiftId);
     setSubmitting(false);
     if (res?.code === 200) {
-      onResult?.("success", res?.message || t("emp_shift_assigned_success"));
       onSuccess?.();
       handleOpenChange(false);
+      Swal.fire({
+        icon: "success",
+        title: t("success"),
+        text: res?.message || t("emp_shift_assigned_success"),
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } else {
-      onResult?.("error", res?.message || t("emp_shift_assign_failed"));
+      Swal.fire({
+        icon: "error",
+        title: t("error"),
+        text: res?.message || t("emp_shift_assign_failed"),
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

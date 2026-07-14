@@ -516,7 +516,6 @@ export default function EmployeeDetailsTable({
         onOpenChange={setAssignShiftOpen}
         userIds={selectedRows}
         shifts={filterData.shifts ?? []}
-        onResult={(type, msg) => showToast(type, msg)}
         onSuccess={() => { setSelectedRows([]); onRefresh?.(); }}
       />
       <AssignManagerDialog
