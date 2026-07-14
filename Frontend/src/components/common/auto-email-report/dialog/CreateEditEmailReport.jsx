@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import {
     Mail,
     Save,
@@ -101,7 +102,6 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
     const [formData, setFormData] = useState(getDefaultFormData());
     const [errors, setErrors] = useState({});
     const [filterSearch, setFilterSearch] = useState("");
-    const [alertMessage, setAlertMessage] = useState(null);
 
     const isEdit = dialogMode === "edit";
 
@@ -145,7 +145,6 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
             setFormData(getDefaultFormData());
         }
         setErrors({});
-        setAlertMessage(null);
     }, [isEdit, editReportData, open]);
 
     // ── Derived state ─────────────────────────────────────────────────────
@@ -241,20 +240,46 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
 
     // ── Submit ─────────────────────────────────────────────────────────────
     const handleSave = async () => {
-        setAlertMessage(null);
         const result = await saveReport(formData);
-        if (!result.success) {
-            setAlertMessage({ type: "error", text: result.message });
+        // saveReport already closes the dialog + refreshes the list on success,
+        // but gave no success feedback (only an inline error banner on failure).
+        // Show a proper centered SweetAlert for both outcomes.
+        if (result.success) {
+            Swal.fire({
+                icon: "success",
+                title: t("success"),
+                text: isEdit ? t("emailReport.updatedSuccess") : t("emailReport.savedSuccess"),
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: t("error"),
+                text: result.message || t("emailReport.saveFailed"),
+                confirmButtonColor: "#ef4444",
+            });
         }
     };
 
     const handleTestEmail = async () => {
-        setAlertMessage(null);
         const result = await sendTestEmailAction(formData);
-        setAlertMessage({
-            type: result.success ? "success" : "error",
-            text: result.message || (result.success ? "Test email sent!" : "Failed"),
-        });
+        if (result.success) {
+            Swal.fire({
+                icon: "success",
+                title: t("success"),
+                text: result.message || t("emailReport.testEmailSuccess"),
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: t("error"),
+                text: result.message || t("emailReport.testEmailFailed"),
+                confirmButtonColor: "#ef4444",
+            });
+        }
     };
 
     // ── Filter lists ──────────────────────────────────────────────────────
@@ -316,18 +341,6 @@ const CreateEditEmailReport = ({ open, onOpenChange }) => {
                     </div>
                 ) : (
                     <div className="px-6 py-6 space-y-6">
-                        {/* Alert */}
-                        {alertMessage && (
-                            <div className={`px-4 py-3 rounded-lg text-sm flex items-center gap-2 ${
-                                alertMessage.type === "error"
-                                    ? "bg-red-50 text-red-700 border border-red-200"
-                                    : "bg-green-50 text-green-700 border border-green-200"
-                            }`}>
-                                <Info className="w-4 h-4 shrink-0" />
-                                {alertMessage.text}
-                            </div>
-                        )}
-
                         {/* Info Banner */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-700 flex items-start gap-2">
                             <Info className="w-4 h-4 mt-0.5 shrink-0" />
