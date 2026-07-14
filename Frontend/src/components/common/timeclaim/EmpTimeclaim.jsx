@@ -740,7 +740,7 @@ const Spinner = () => (
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-const EmpTimeclaim = ({ isEmployee = false }) => {
+const EmpTimeclaim = ({ isEmployee = false, isAdmin = false }) => {
   const { t } = useTranslation();
   const REQUEST_TYPE_OPTIONS = getRequestTypeOptions(t);
   const STATUS_OPTIONS = getStatusOptions(t);
@@ -881,7 +881,9 @@ const EmpTimeclaim = ({ isEmployee = false }) => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {filters.requestType !== REQUEST_TYPES.BREAK && (
+          {/* Create Request is for employees/managers to raise claims — admins
+              only review & approve, so it's hidden on the admin page. */}
+          {!isAdmin && filters.requestType !== REQUEST_TYPES.BREAK && (
             <Button
               size="lg"
               className="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 text-xs font-semibold shadow-sm"

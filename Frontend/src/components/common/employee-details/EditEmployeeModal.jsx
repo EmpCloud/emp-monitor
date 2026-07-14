@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { UserCircle, Loader2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -16,7 +17,6 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [status, setStatus] = useState(null);
   const [originalUid, setOriginalUid] = useState("");
   const [existingPhoto, setExistingPhoto] = useState("");
 
@@ -64,47 +64,70 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
   const handleSubmit = async () => {
     if (!validate(true)) return;
     setSubmitting(true);
-    setStatus(null);
-    const fd = buildFormData({ userId: employeeId, uid: originalUid });
-    const res = await editEmployee(fd);
-    if (res?.code === 200) {
-      // /user/user-profile-update is JSON-only and preserves the existing
-      // photo_path; the picked file has to go to the dedicated multer endpoint
-      // separately so the avatar actually updates.
-      if (form.profilePicture) {
-        await uploadEmployeeProfilePic(employeeId, form.profilePicture);
-      }
-      setSubmitting(false);
-      setStatus({ type: "success", msg: t("emp_updated_successfully") });
-      onSuccess?.();
-      setTimeout(() => { onOpenChange(false); setStatus(null); }, 1200);
-    } else {
-      setSubmitting(false);
-      const errMsg = res?.error || res?.message || res?.msg || res?.data?.message || t("emp_update_failed");
-      const errLower = (errMsg || "").toLowerCase();
-      const fieldErrors = {};
-
-      if (errLower.includes("password"))       fieldErrors.password = errMsg;
-      if (errLower.includes("email"))          fieldErrors.email = errMsg;
-      if (errLower.includes("first_name") || errLower.includes("first name"))  fieldErrors.firstName = errMsg;
-      if (errLower.includes("last_name") || errLower.includes("last name"))    fieldErrors.lastName = errMsg;
-      if (errLower.includes("emp_code") || errLower.includes("employee code")) fieldErrors.employeeCode = errMsg;
-      if (errLower.includes("location"))       fieldErrors.locationId = errMsg;
-      if (errLower.includes("department"))     fieldErrors.departmentId = errMsg;
-      if (errLower.includes("role"))           fieldErrors.roleId = errMsg;
-      if (errLower.includes("phone") || errLower.includes("mobile")) fieldErrors.mobile = errMsg;
-      if (errLower.includes("timezone"))       fieldErrors.timezone = errMsg;
-
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...fieldErrors }));
+    try {
+      const fd = buildFormData({ userId: employeeId, uid: originalUid });
+      const res = await editEmployee(fd);
+      if (res?.code === 200) {
+        // /user/user-profile-update is JSON-only and preserves the existing
+        // photo_path; the picked file has to go to the dedicated multer endpoint
+        // separately so the avatar actually updates.
+        if (form.profilePicture) {
+          await uploadEmployeeProfilePic(employeeId, form.profilePicture);
+        }
+        setSubmitting(false);
+        onSuccess?.();
+        onOpenChange(false);
+        Swal.fire({
+          icon: "success",
+          title: t("success"),
+          text: t("emp_updated_successfully"),
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } else {
-        setStatus({ type: "error", msg: errMsg });
+        setSubmitting(false);
+        const errMsg = res?.error || res?.message || res?.msg || res?.data?.message || t("emp_update_failed");
+        showError(errMsg);
       }
+    } catch (err) {
+      // Network / unexpected failure — surface it rather than leaving the
+      // button spinning silently.
+      setSubmitting(false);
+      showError(err?.response?.data?.message || err?.message || t("emp_update_failed"));
     }
   };
 
+  // Map an error message onto the relevant field (so it highlights inline) and
+  // always show a swal so the user gets a clear, unmissable reason.
+  const showError = (errMsg) => {
+    const errLower = (errMsg || "").toLowerCase();
+    const fieldErrors = {};
+
+    if (errLower.includes("password"))       fieldErrors.password = errMsg;
+    if (errLower.includes("email"))          fieldErrors.email = errMsg;
+    if (errLower.includes("first_name") || errLower.includes("first name"))  fieldErrors.firstName = errMsg;
+    if (errLower.includes("last_name") || errLower.includes("last name"))    fieldErrors.lastName = errMsg;
+    if (errLower.includes("emp_code") || errLower.includes("employee code")) fieldErrors.employeeCode = errMsg;
+    if (errLower.includes("location"))       fieldErrors.locationId = errMsg;
+    if (errLower.includes("department"))     fieldErrors.departmentId = errMsg;
+    if (errLower.includes("role"))           fieldErrors.roleId = errMsg;
+    if (errLower.includes("phone") || errLower.includes("mobile")) fieldErrors.mobile = errMsg;
+    if (errLower.includes("timezone"))       fieldErrors.timezone = errMsg;
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
+    }
+
+    Swal.fire({
+      icon: "error",
+      title: t("error"),
+      text: errMsg || t("emp_update_failed"),
+      confirmButtonColor: "#ef4444",
+    });
+  };
+
   const handleClose = (open) => {
-    if (!open) { reset(); setStatus(null); setExistingPhoto(""); }
+    if (!open) { reset(); setExistingPhoto(""); }
     onOpenChange(open);
   };
 
@@ -136,23 +159,15 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
             <Loader2 size={20} className="animate-spin" /> {t("emp_loading_employee_data")}
           </div>
         ) : (
-          <>
-            {status && (
-              <div className={`mx-8 mt-4 px-4 py-2.5 rounded-xl text-[13px] font-medium ${status.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-                {status.msg}
-              </div>
-            )}
-
-            <EmployeeFormBody
-              form={form} set={set} errors={errors}
-              showPassword={showPassword} setShowPassword={setShowPassword}
-              showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
-              locations={locations} roles={roles} shifts={shifts}
-              departments={departments} deptLoading={deptLoading}
-              existingPhoto={existingPhoto}
-              isEdit
-            />
-          </>
+          <EmployeeFormBody
+            form={form} set={set} errors={errors}
+            showPassword={showPassword} setShowPassword={setShowPassword}
+            showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
+            locations={locations} roles={roles} shifts={shifts}
+            departments={departments} deptLoading={deptLoading}
+            existingPhoto={existingPhoto}
+            isEdit
+          />
         )}
 
         <DialogFooter className="px-8 pb-7 pt-2 flex flex-row items-center justify-end gap-3">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { UserCircle, Loader2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -15,55 +16,75 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState(null); // { type: "success"|"error", msg }
 
   const { form, set, reset, errors, setErrors, departments, deptLoading, validate, buildFormData } = useEmployeeForm(locations);
 
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
-    setStatus(null);
-    const res = await registerEmployee(buildFormData());
-    if (res?.code === 200) {
-      // The register endpoint is JSON-only and can't accept the picked file.
-      // The controller assigns the new employee id to req.body.user_id before
-      // echoing it back, so use that to drive the dedicated avatar upload.
-      const newUserId = res?.data?.user_id ?? res?.data?.userId;
-      if (form.profilePicture && newUserId) {
-        await uploadEmployeeProfilePic(newUserId, form.profilePicture);
-      }
-      setSubmitting(false);
-      setStatus({ type: "success", msg: t("emp_registered_successfully") });
-      reset();
-      onSuccess?.();
-      setTimeout(() => { onOpenChange(false); setStatus(null); }, 1200);
-    } else {
-      setSubmitting(false);
-      const errMsg = res?.error || res?.message || res?.msg || res?.data?.message || t("emp_registration_failed");
-      const errLower = (errMsg || "").toLowerCase();
-      const fieldErrors = {};
-
-      if (errLower.includes("password"))       fieldErrors.password = errMsg;
-      if (errLower.includes("email"))          fieldErrors.email = errMsg;
-      if (errLower.includes("first_name") || errLower.includes("first name"))  fieldErrors.firstName = errMsg;
-      if (errLower.includes("last_name") || errLower.includes("last name"))    fieldErrors.lastName = errMsg;
-      if (errLower.includes("emp_code") || errLower.includes("employee code")) fieldErrors.employeeCode = errMsg;
-      if (errLower.includes("location"))       fieldErrors.locationId = errMsg;
-      if (errLower.includes("department"))     fieldErrors.departmentId = errMsg;
-      if (errLower.includes("role"))           fieldErrors.roleId = errMsg;
-      if (errLower.includes("phone") || errLower.includes("mobile")) fieldErrors.mobile = errMsg;
-      if (errLower.includes("timezone"))       fieldErrors.timezone = errMsg;
-
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...fieldErrors }));
+    try {
+      const res = await registerEmployee(buildFormData());
+      if (res?.code === 200) {
+        // The register endpoint is JSON-only and can't accept the picked file.
+        // The controller assigns the new employee id to req.body.user_id before
+        // echoing it back, so use that to drive the dedicated avatar upload.
+        const newUserId = res?.data?.user_id ?? res?.data?.userId;
+        if (form.profilePicture && newUserId) {
+          await uploadEmployeeProfilePic(newUserId, form.profilePicture);
+        }
+        setSubmitting(false);
+        reset();
+        onSuccess?.();
+        onOpenChange(false);
+        Swal.fire({
+          icon: "success",
+          title: t("success"),
+          text: t("emp_registered_successfully"),
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } else {
-        setStatus({ type: "error", msg: errMsg });
+        setSubmitting(false);
+        const errMsg = res?.error || res?.message || res?.msg || res?.data?.message || t("emp_registration_failed");
+        showError(errMsg);
       }
+    } catch (err) {
+      setSubmitting(false);
+      showError(err?.response?.data?.message || err?.message || t("emp_registration_failed"));
     }
   };
 
+  // Map an error message onto the relevant field (so it highlights inline) and
+  // always show a swal so the user gets a clear, unmissable reason.
+  const showError = (errMsg) => {
+    const errLower = (errMsg || "").toLowerCase();
+    const fieldErrors = {};
+
+    if (errLower.includes("password"))       fieldErrors.password = errMsg;
+    if (errLower.includes("email"))          fieldErrors.email = errMsg;
+    if (errLower.includes("first_name") || errLower.includes("first name"))  fieldErrors.firstName = errMsg;
+    if (errLower.includes("last_name") || errLower.includes("last name"))    fieldErrors.lastName = errMsg;
+    if (errLower.includes("emp_code") || errLower.includes("employee code")) fieldErrors.employeeCode = errMsg;
+    if (errLower.includes("location"))       fieldErrors.locationId = errMsg;
+    if (errLower.includes("department"))     fieldErrors.departmentId = errMsg;
+    if (errLower.includes("role"))           fieldErrors.roleId = errMsg;
+    if (errLower.includes("phone") || errLower.includes("mobile")) fieldErrors.mobile = errMsg;
+    if (errLower.includes("timezone"))       fieldErrors.timezone = errMsg;
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
+    }
+
+    Swal.fire({
+      icon: "error",
+      title: t("error"),
+      text: errMsg || t("emp_registration_failed"),
+      confirmButtonColor: "#ef4444",
+    });
+  };
+
   const handleClose = (open) => {
-    if (!open) { reset(); setStatus(null); }
+    if (!open) reset();
     onOpenChange(open);
   };
 
@@ -89,12 +110,6 @@ export default function RegisterEmployeeModal({ open, onOpenChange, locations = 
             </div>
           </div>
         </DialogHeader>
-
-        {status && (
-          <div className={`mx-8 mt-4 px-4 py-2.5 rounded-xl text-[13px] font-medium ${status.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-            {status.msg}
-          </div>
-        )}
 
         <EmployeeFormBody
           form={form} set={set} errors={errors}
