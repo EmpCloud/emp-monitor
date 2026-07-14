@@ -855,6 +855,8 @@
   "emailReport.savedSuccess": "Informe guardado correctamente.",
   "emailReport.updatedSuccess": "Informe actualizado correctamente.",
   "emailReport.saveFailed": "No se pudo guardar el informe.",
+  "emailReport.deletedSuccess": "Informe eliminado correctamente.",
+  "emailReport.deleteFailed": "No se pudo eliminar el informe.",
   "emailReport.testEmailSuccess": "Correo de prueba enviado correctamente.",
   "emailReport.testEmailFailed": "No se pudo enviar el correo de prueba.",
   "emailReport.loadingReportData": "Cargando datos del informe...",

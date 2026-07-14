@@ -855,6 +855,8 @@
   "emailReport.savedSuccess": "Laporan berhasil disimpan.",
   "emailReport.updatedSuccess": "Laporan berhasil diperbarui.",
   "emailReport.saveFailed": "Gagal menyimpan laporan.",
+  "emailReport.deletedSuccess": "Laporan berhasil dihapus.",
+  "emailReport.deleteFailed": "Gagal menghapus laporan.",
   "emailReport.testEmailSuccess": "Email uji berhasil dikirim.",
   "emailReport.testEmailFailed": "Gagal mengirim email uji.",
   "emailReport.loadingReportData": "Memuat data laporan...",

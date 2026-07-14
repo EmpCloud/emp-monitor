@@ -855,6 +855,8 @@
   "emailReport.savedSuccess": "Relatório salvo com sucesso.",
   "emailReport.updatedSuccess": "Relatório atualizado com sucesso.",
   "emailReport.saveFailed": "Falha ao salvar o relatório.",
+  "emailReport.deletedSuccess": "Relatório excluído com sucesso.",
+  "emailReport.deleteFailed": "Falha ao excluir o relatório.",
   "emailReport.testEmailSuccess": "E-mail de teste enviado com sucesso.",
   "emailReport.testEmailFailed": "Falha ao enviar o e-mail de teste.",
   "emailReport.loadingReportData": "Carregando dados do relatorio...",

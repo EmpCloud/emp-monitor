@@ -860,6 +860,8 @@
   "emailReport.savedSuccess": "تم حفظ التقرير بنجاح.",
   "emailReport.updatedSuccess": "تم تحديث التقرير بنجاح.",
   "emailReport.saveFailed": "فشل حفظ التقرير.",
+  "emailReport.deletedSuccess": "تم حذف التقرير بنجاح.",
+  "emailReport.deleteFailed": "فشل حذف التقرير.",
   "emailReport.testEmailSuccess": "تم إرسال البريد الإلكتروني التجريبي بنجاح.",
   "emailReport.testEmailFailed": "فشل إرسال البريد الإلكتروني التجريبي.",
   "emailReport.loadingReportData": "جارٍ تحميل بيانات التقرير...",

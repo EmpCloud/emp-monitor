@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,25 @@ const DeleteReportDialog = ({ open, onOpenChange }) => {  const { t } = useTran
     const confirmDelete = useAutoEmailReportStore((s) => s.confirmDelete);
 
     const handleConfirm = async () => {
-        await confirmDelete();
+        // confirmDelete closes the dialog + refreshes the list on success but
+        // gave no feedback either way — surface the outcome with a swal.
+        const result = await confirmDelete();
+        if (result?.success) {
+            Swal.fire({
+                icon: "success",
+                title: t("success"),
+                text: result.message || t("emailReport.deletedSuccess"),
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: t("error"),
+                text: result?.message || t("emailReport.deleteFailed"),
+                confirmButtonColor: "#ef4444",
+            });
+        }
     };
 
     return (

@@ -853,6 +853,8 @@
   "emailReport.savedSuccess": "Report saved successfully.",
   "emailReport.updatedSuccess": "Report updated successfully.",
   "emailReport.saveFailed": "Failed to save the report.",
+  "emailReport.deletedSuccess": "Report deleted successfully.",
+  "emailReport.deleteFailed": "Failed to delete the report.",
   "emailReport.testEmailSuccess": "Test email sent successfully.",
   "emailReport.testEmailFailed": "Failed to send the test email.",
   "emailReport.loadingReportData": "Loading report data...",
