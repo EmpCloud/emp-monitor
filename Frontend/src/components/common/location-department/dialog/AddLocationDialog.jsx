@@ -97,10 +97,11 @@ const AddLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTrans
             timezoneOffset: tz?.offset || "",
         });
 
+        // On success the store closes the dialog and fires a success swal; on
+        // failure it fires an error swal. Only reset the local form here — don't
+        // also set formError (that would double up with the store's error swal).
         if (result.success) {
             resetForm();
-        } else {
-            setFormError(result.message);
         }
     };
 

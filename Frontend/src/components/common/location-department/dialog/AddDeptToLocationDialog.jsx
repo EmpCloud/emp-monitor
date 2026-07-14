@@ -77,11 +77,11 @@ const AddDeptToLocationDialog = ({ open, onOpenChange }) => {  const { t } = us
         const departmentIds = selectedDepts.filter((d) => !d.isNew).map((d) => d.id);
         const departmentNames = selectedDepts.filter((d) => d.isNew).map((d) => d.name);
 
+        // The store closes the dialog + fires a success swal on success, and an
+        // error swal on failure — only reset the local form here.
         const result = await saveAddDept({ departmentIds, departmentNames });
         if (result?.success) {
             resetForm();
-        } else {
-            setFormError(result?.message || t("locDept.failedAddDept"));
         }
     };
 

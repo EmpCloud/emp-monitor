@@ -54,16 +54,14 @@ const EditLocationDialog = ({ open, onOpenChange }) => {  const { t } = useTran
         }
         setFormError("");
 
-        const result = await saveEditLocation({
+        // The store closes the dialog + fires a success swal on success, and an
+        // error swal on failure — no local formError needed for the server result.
+        await saveEditLocation({
             locationId: editLocationData.location_id,
             name: locName.trim(),
             timezone: tz?.zone || "",
             timezoneOffset: tz?.offset || "",
         });
-
-        if (!result.success) {
-            setFormError(result.message);
-        }
     };
 
     return (

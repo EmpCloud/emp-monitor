@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { createPortal } from "react-dom";
 import {
     ChevronDown,
@@ -240,13 +241,33 @@ export default function EmpLocationDepartment() {
         loadInitialData();
     }, []);
 
-    // Auto-dismiss success message
+    // Surface store success/error via SweetAlert (add/edit/delete of locations
+    // and departments all funnel through successMsg/error), then clear the
+    // state so the same message can fire again on the next action.
     useEffect(() => {
         if (successMsg) {
-            const timer = setTimeout(clearSuccess, 4000);
-            return () => clearTimeout(timer);
+            Swal.fire({
+                icon: "success",
+                title: t("success"),
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false,
+            });
+            clearSuccess();
         }
     }, [successMsg]);
+
+    useEffect(() => {
+        if (error) {
+            Swal.fire({
+                icon: "error",
+                title: t("error"),
+                text: error,
+                confirmButtonColor: "#ef4444",
+            });
+            clearError();
+        }
+    }, [error]);
 
     // Filter + paginate
     const filtered = useMemo(() => {
@@ -273,20 +294,6 @@ export default function EmpLocationDepartment() {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-9 w-full">
-            {/* ── Alerts ──────────────────────────────────────────────── */}
-            {error && (
-                <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center justify-between">
-                    <span>{error}</span>
-                    <button onClick={clearError} className="text-red-400 hover:text-red-600 text-xs ml-4">{t("locDept.dismiss")}</button>
-                </div>
-            )}
-            {successMsg && (
-                <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700 flex items-center justify-between">
-                    <span>{successMsg}</span>
-                    <button onClick={clearSuccess} className="text-green-400 hover:text-green-600 text-xs ml-4">{t("locDept.dismiss")}</button>
-                </div>
-            )}
-
             {/* ── Header ─────────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
