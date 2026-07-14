@@ -52,6 +52,7 @@
   "empCode": "Código Empleado",
   "success": "éxito",
   "error": "Error",
+  "warning": "Advertencia",
   "on": "En",
   "off": "Apagada",
   "dashboard": "Tablero",

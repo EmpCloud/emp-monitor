@@ -523,7 +523,6 @@ export default function EmployeeDetailsTable({
         onOpenChange={setAssignManagerOpen}
         userIds={selectedRows}
         allRoles={filterData.roles ?? []}
-        onResult={(type, msg) => showToast(type, msg)}
         onSuccess={() => { setSelectedRows([]); onRefresh?.(); }}
       />
       <AssignedManagersDialog

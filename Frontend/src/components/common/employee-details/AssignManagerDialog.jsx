@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { UserCog, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,6 @@ export default function AssignManagerDialog({
   userIds = [],
   allRoles = [],
   onSuccess,
-  onResult,
 }) {
   const { t } = useTranslation();
   const [nonAdmins, setNonAdmins] = useState([]);
@@ -80,14 +80,32 @@ export default function AssignManagerDialog({
     const res = await assignManagerToMultiple({ userIds, managerId, roleId });
     setSubmitting(false);
     if (res?.code === 200) {
-      onResult?.("success", res?.message || t("emp_manager_assigned_success"));
       onSuccess?.();
       handleOpenChange(false);
+      Swal.fire({
+        icon: "success",
+        title: t("success"),
+        text: res?.message || t("emp_manager_assigned_success"),
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } else if (res?.code === 207) {
-      onResult?.("error", res?.message || t("emp_manager_assign_partial"));
+      // Partial success — some assignments landed, some failed. Refresh the
+      // list but keep the dialog open and warn rather than claim full success.
       onSuccess?.();
+      Swal.fire({
+        icon: "warning",
+        title: t("warning"),
+        text: res?.message || t("emp_manager_assign_partial"),
+        confirmButtonColor: "#f59e0b",
+      });
     } else {
-      onResult?.("error", res?.message || t("emp_manager_assign_failed"));
+      Swal.fire({
+        icon: "error",
+        title: t("error"),
+        text: res?.message || t("emp_manager_assign_failed"),
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
