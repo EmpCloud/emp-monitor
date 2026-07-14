@@ -1799,11 +1799,11 @@ class Controller {
 
             if (status === 2) {
                 if (type === 1) {
-                    result = await multiDeclineIdle({ ids, language, user_id });
+                    result = await multiDeclineIdle({ ids, language, user_id, organization_id });
                 }
 
                 if (type === 2) {
-                    result = await multiDeclineOffline({ ids, language, user_id, reason });
+                    result = await multiDeclineOffline({ ids, language, user_id, reason, organization_id });
                 }
                 
                 if (type === 3) {
@@ -3459,7 +3459,7 @@ const multiClaimBreak = async function ({ ids, language, user_id, reason, organi
     return { successArr, failedArr };
 }
 
-const multiDeclineIdle = async function ({ ids, language, user_id, reason }) {
+const multiDeclineIdle = async function ({ ids, language, user_id, reason, organization_id }) {
     const successArr = [], failedArr = [];
     await Promise.allSettled(ids.map(async id => {
         try {
@@ -3495,7 +3495,7 @@ const multiDeclineIdle = async function ({ ids, language, user_id, reason }) {
     return { successArr, failedArr };
 }
 
-const multiDeclineOffline = async function ({ ids, language, user_id, reason }) {
+const multiDeclineOffline = async function ({ ids, language, user_id, reason, organization_id }) {
     const successArr = [], failedArr = [];
     await Promise.allSettled(ids.map(async id => {
         try {
