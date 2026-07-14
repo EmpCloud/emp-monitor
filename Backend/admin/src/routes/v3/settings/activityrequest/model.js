@@ -1052,14 +1052,20 @@ class Model {
         return data.save();
     }
 
-    static getAttendanceByDate(date, employee_id) {
+    static getAttendanceByDate(date, employee_id, organization_id) {
+        // Parameterized to remove SQL-injection risk; organization_id is scoped
+        // when supplied (defence in depth — employees.id is a global PK, so the
+        // caller must already own the id, but scoping here makes the query safe
+        // on its own).
         let query = `
             SELECT e.id, ea.date, ea.start_time, ea.end_time
                 FROM employees e
                 JOIN employee_attendance ea ON ea.employee_id = e.id
-                WHERE ea.date = '${date}' AND e.id = ${employee_id};
-        `;
-        return mysql.query(query);
+                WHERE ea.date = ? AND e.id = ?`;
+        const params = [date, employee_id];
+        if (organization_id) { query += ` AND e.organization_id = ?`; params.push(organization_id); }
+        query += `;`;
+        return mysql.query(query, params);
     }
 
     static getExistingAttendanceRequest(employee_id, organization_id, date) {
@@ -1099,33 +1105,41 @@ class Model {
         return ActivityRequestModel.findOne({_id: new mongoose.Types.ObjectId(id), organization_id, type: 3});
     }
 
-    static updateEmployeeAttendance(date, employee_id, start_time, end_time) {
-        let query = `
-            UPDATE employee_attendance
-        `
-        if(start_time) query += ` SET start_time = '${start_time.split("T")[0]} ${start_time.split("T")[1].split('.')[0]}'`;
-        if (start_time && end_time) query += ` AND`; 
-        if(end_time) query += ` SET end_time = '${end_time.split("T")[0]} ${end_time.split("T")[1].split('.')[0]}'`;
-        query += ` WHERE date = '${date}' AND employee_id = ${employee_id}`;
-        return mysql.query(query);
+    static updateEmployeeAttendance(date, employee_id, start_time, end_time, organization_id) {
+        // Parameterized and org-scoped. Also fixes a malformed-SQL bug in the
+        // old version: when both start_time and end_time were present it emitted
+        // `SET ... AND SET ...` (invalid). Build a proper comma-separated SET
+        // clause from only the provided columns.
+        const toSqlTs = (t) => `${t.split("T")[0]} ${t.split("T")[1].split('.')[0]}`;
+        const sets = [];
+        const params = [];
+        if (start_time) { sets.push(`start_time = ?`); params.push(toSqlTs(start_time)); }
+        if (end_time) { sets.push(`end_time = ?`); params.push(toSqlTs(end_time)); }
+        if (sets.length === 0) return Promise.resolve({ affectedRows: 0 });
+        let query = `UPDATE employee_attendance SET ${sets.join(', ')} WHERE date = ? AND employee_id = ?`;
+        params.push(date, employee_id);
+        if (organization_id) { query += ` AND organization_id = ?`; params.push(organization_id); }
+        return mysql.query(query, params);
     }
 
     static insertEmployeeAttendance(date, start_time, end_time, employee_id, organization_id) {
         start_time = moment(start_time).toISOString();
         end_time = moment(end_time).toISOString();
-        
-        let query = `INSERT INTO employee_attendance (employee_id, organization_id, date, start_time, end_time) VALUES (${employee_id}, ${organization_id}, '${date}', '${start_time.split("T")[0]} ${start_time.split("T")[1].split('.')[0]}', '${end_time.split("T")[0]} ${end_time.split("T")[1].split('.')[0]}') ;`;
-        return mysql.query(query);
+        const toSqlTs = (t) => `${t.split("T")[0]} ${t.split("T")[1].split('.')[0]}`;
+        // Parameterized to remove SQL-injection risk.
+        let query = `INSERT INTO employee_attendance (employee_id, organization_id, date, start_time, end_time) VALUES (?, ?, ?, ?, ?);`;
+        return mysql.query(query, [employee_id, organization_id, date, toSqlTs(start_time), toSqlTs(end_time)]);
     }
 
     static getEmployeeDetailsById(employee_id, organization_id) {
-        let query = ` 
+        // Parameterized to remove SQL-injection risk (already org-scoped).
+        let query = `
             SELECT u.id as user_id, e.id as employee_id, e.timezone, u.first_name, u.last_name
                 FROM employees e
                 JOIN users u on u.id = e.user_id
-                WHERE e.id = ${employee_id} AND e.organization_id = ${organization_id}
+                WHERE e.id = ? AND e.organization_id = ?
         `;
-        return mysql.query(query);
+        return mysql.query(query, [employee_id, organization_id]);
     }
 
     static checkIfApplicationExist(organization_id) {
@@ -1185,8 +1199,9 @@ class Model {
     }
 
     static getEmployeeLocationDepartment(employee_id) {
-        let query = `SELECT e.id, e.department_id, e.location_id FROM employees e WHERE e.id = ${employee_id}`;
-        return mysql.query(query);
+        // Parameterized to remove SQL-injection risk.
+        let query = `SELECT e.id, e.department_id, e.location_id FROM employees e WHERE e.id = ?`;
+        return mysql.query(query, [employee_id]);
     }
 
     static updateEmployeeProductivityReport (application_id, organization_id, employee_id, durationSecond, department_id, location_id, date) {
@@ -1223,12 +1238,13 @@ class Model {
         return ExternalTeleworksModel.findOne({organization_id: +organization_id, date});
     }
     static getEmployeeDetail(employee_id) {
-        let query = `SELECT u.email 
+        // Parameterized to remove SQL-injection risk.
+        let query = `SELECT u.email
             from users u
             join employees e on e.user_id = u.id
-            where e.id = ${employee_id}
+            where e.id = ?
         `;
-        return mysql.query(query);
+        return mysql.query(query, [employee_id]);
     }
 
     static getOrganizationSettings(orgId) {
