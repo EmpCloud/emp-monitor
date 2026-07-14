@@ -811,27 +811,44 @@ const EmpTimeclaim = ({ isEmployee = false, isAdmin = false }) => {
 
   const handleView = (row) => setViewRow(row);
 
+  // Surface the outcome of an approve/decline. The store actions return the
+  // API result ({ code, ... }); failures previously produced no UI feedback at
+  // all, so a declined-already/validation/500 looked identical to success.
+  // Mirror handleAutoApproveToggle: toast success on 200, error otherwise.
+  const notifyResult = (result, successKey) => {
+    if (result?.code === 200 && !result?.error) {
+      showToast("success", t(successKey));
+    } else {
+      showToast("error", result?.error || result?.message || result?.msg || t("timeclaim.actionFailed"));
+    }
+  };
+
   const handleApprove = async (row) => {
-    if (filters.requestType === REQUEST_TYPES.IDLE) await approveRequest(row._id);
-    else if (filters.requestType === REQUEST_TYPES.OFFLINE) await approveOffline(row._id, row.employeeId, row.offlineTimeRaw, row.date);
-    else if (filters.requestType === REQUEST_TYPES.BREAK) await approveBreak(row._id);
-    else await approveRequest(row._id);
+    let result;
+    if (filters.requestType === REQUEST_TYPES.IDLE) result = await approveRequest(row._id);
+    else if (filters.requestType === REQUEST_TYPES.OFFLINE) result = await approveOffline(row._id, row.employeeId, row.offlineTimeRaw, row.date);
+    else if (filters.requestType === REQUEST_TYPES.BREAK) result = await approveBreak(row._id);
+    else result = await approveRequest(row._id);
     setViewRow(null);
+    notifyResult(result, "timeclaim.approveSuccess");
   };
 
   const handleDecline = async (row) => {
-    if (filters.requestType === REQUEST_TYPES.IDLE) await declineRequest(row._id);
-    else if (filters.requestType === REQUEST_TYPES.OFFLINE) await declineOffline(row._id, row.employeeId, row.offlineTimeRaw, row.date);
-    else if (filters.requestType === REQUEST_TYPES.BREAK) await declineBreak(row._id);
-    else await declineRequest(row._id);
+    let result;
+    if (filters.requestType === REQUEST_TYPES.IDLE) result = await declineRequest(row._id);
+    else if (filters.requestType === REQUEST_TYPES.OFFLINE) result = await declineOffline(row._id, row.employeeId, row.offlineTimeRaw, row.date);
+    else if (filters.requestType === REQUEST_TYPES.BREAK) result = await declineBreak(row._id);
+    else result = await declineRequest(row._id);
     setViewRow(null);
+    notifyResult(result, "timeclaim.declineSuccess");
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteRow) return;
     const forBreak = filters.requestType === REQUEST_TYPES.BREAK ? "ForBreak" : "";
-    await deleteRequest(deleteRow._id, forBreak);
+    const result = await deleteRequest(deleteRow._id, forBreak);
     setDeleteRow(null);
+    notifyResult(result, "timeclaim.deleteSuccess");
   };
 
   const handleAutoApproveToggle = async () => {

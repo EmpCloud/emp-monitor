@@ -2004,8 +2004,13 @@ class Controller {
     static deleteAttendanceRequest = async (req, res) => {
         let { language = 'en', employee_id, organization_id, user_id, timezone } = req.decoded;
         try {
+            // Accept either { ids: [...] } (bulk) or { id } (single) — the
+            // frontend sends the singular form. Normalise to an array, and
+            // check Array.isArray BEFORE reading .length (the old order threw a
+            // TypeError on a missing/undefined body).
             let ids = req.body.ids;
-            if (ids.length === 0 || !Array.isArray(ids)) return sendResponse(res, 400, null, translate(activityRequeat, "33", language), null);
+            if (ids == null && req.body.id != null) ids = [req.body.id];
+            if (!Array.isArray(ids) || ids.length === 0) return sendResponse(res, 400, null, translate(activityRequeat, "33", language), null);
             let response = await Model.deleteAttendanceRequest(organization_id, employee_id, ids);
             return sendResponse(res, 200, response, translate(activityRequeat, "32", language), null);
         }
@@ -2131,9 +2136,15 @@ class Controller {
                 return sendResponse(res, 200, null, translate(activityRequeat, "18", language), null);
             }
 
+            // The validator permits status 0 (pending), but there is nothing to
+            // do for a pending update here — only approve (1) / decline (2) are
+            // actionable. Without this branch the request fell through with no
+            // sendResponse and hung until socket timeout. Return an explicit
+            // 400 instead.
+            return sendResponse(res, 400, null, translate(activityRequeat, "2", language), null);
         }
-        catch (error) { 
-            console.log(error)
+        catch (error) {
+            Logger.error(`updateAttendanceRequest failed----${error}----${__filename}----`);
             return sendResponse(res, 400, null, translate(activityRequeat, "5", language), error.message);
         }
     }
@@ -3872,7 +3883,11 @@ const alterAttendanceTimeClaim = async ({ decoded, }, date, request) => {
         updateTeleworks(organization_id, request.employee_id, request.date);
     }
     catch (err) {
-        console.log(` ==========${err}============ `);
+        // Auto-approve side effect (attendance/productivity override) failed
+        // AFTER the request row was already saved. Log through the real logger
+        // so the silent failure is captured/alertable rather than lost to
+        // stdout; the request itself is intentionally left as succeeded.
+        Logger.error(`alterAttendanceTimeClaim failed----${err}----${__filename}----`);
     }
 }
 
@@ -3951,7 +3966,10 @@ const updateTeleworks = async (organization_id, employee_id, date) => {
         }
     }
     catch (err) {
-        console.log(` =====teleworksreportsubmit=====${err}============ `);
+        // Teleworks/Silah compliance sync failed. Surface via the real logger
+        // so the failed downstream submission is captured rather than lost to
+        // stdout (the local attendance write already succeeded).
+        Logger.error(`updateTeleworks failed----${err}----${__filename}----`);
     }
 }
 
@@ -3993,7 +4011,10 @@ const updateTaskAttendanceClaim = async (requestData) => {
         await task.save();
     }
     catch (err) {
-        console.log(` =====updateTaskAttendanceClaim=====${err}============ `);
+        // Task attendance/working-status bookkeeping failed. Log through the
+        // real logger so this secondary side-effect failure is captured rather
+        // than lost to stdout (the attendance approval itself succeeded).
+        Logger.error(`updateTaskAttendanceClaim failed----${err}----${__filename}----`);
     }
 }
 
