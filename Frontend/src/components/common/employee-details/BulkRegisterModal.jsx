@@ -1,39 +1,64 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { bulkRegisterEmployees } from "@/page/protected/admin/employee-details/service";
+
+// Escape user-independent but translated strings before dropping them into the
+// swal `html` body — defensive, since translations flow through i18n.
+const esc = (s) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
   const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null); // API response summary
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files?.[0] || null);
-    setResult(null);
   };
 
   const handleSubmit = async () => {
     if (!file) return;
     setSubmitting(true);
-    setResult(null);
     const res = await bulkRegisterEmployees(file);
     setSubmitting(false);
     if (res?.code === 200) {
-      setResult({ type: "success", added: res.data?.added_users ?? 0,
-        duplicateEmails: res.data?.already_email_exists_users ?? [],
-        duplicateCodes:  res.data?.already_empcode_exists ?? [],
-        failed:          res.data?.validation_failed_users ?? [],
-      });
+      const added          = res.data?.added_users ?? 0;
+      const duplicateEmails = res.data?.already_email_exists_users ?? [];
+      const duplicateCodes  = res.data?.already_empcode_exists ?? [];
+      const failed          = res.data?.validation_failed_users ?? [];
+
       onSuccess?.();
+      handleClose(false);
+
+      // Build a breakdown so the skipped/failed detail from the inline panel
+      // isn't lost. If anything was skipped or failed, it's a partial result —
+      // show a warning rather than a clean success.
+      const lines = [`<div>${esc(t("emp_count_registered", { count: added }))}</div>`];
+      if (duplicateEmails.length > 0) lines.push(`<div style="color:#d97706">${esc(t("emp_duplicate_emails_skipped", { count: duplicateEmails.length }))}</div>`);
+      if (duplicateCodes.length > 0)  lines.push(`<div style="color:#d97706">${esc(t("emp_duplicate_codes_skipped", { count: duplicateCodes.length }))}</div>`);
+      if (failed.length > 0)          lines.push(`<div style="color:#ef4444">${esc(t("emp_rows_failed_validation", { count: failed.length }))}</div>`);
+      const hasIssues = duplicateEmails.length > 0 || duplicateCodes.length > 0 || failed.length > 0;
+
+      Swal.fire({
+        icon: hasIssues ? "warning" : "success",
+        title: hasIssues ? t("warning") : t("success"),
+        html: `<div style="font-size:14px;line-height:1.6">${lines.join("")}</div>`,
+        confirmButtonColor: hasIssues ? "#f59e0b" : "#3b82f6",
+        ...(hasIssues ? {} : { timer: 2500, showConfirmButton: false }),
+      });
     } else {
-      // Backend returns { code, message, error, data } — prefer the human
-      // message; fall back to the generic translated string only if missing.
-      setResult({ type: "error", msg: res?.message || res?.msg || t("emp_bulk_registration_failed") });
+      Swal.fire({
+        icon: "error",
+        title: t("error"),
+        text: res?.message || res?.msg || t("emp_bulk_registration_failed"),
+        confirmButtonColor: "#ef4444",
+      });
       // code === -1 → browser-level upload abort (commonly Chromium's
       // ERR_UPLOAD_FILE_CHANGED, which happens if the user edits and re-saves
       // the picked XLSX between attempts). Force a fresh selection.
@@ -45,7 +70,7 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
   };
 
   const handleClose = (v) => {
-    if (!v) { setFile(null); setResult(null); }
+    if (!v) { setFile(null); }
     onOpenChange(v);
   };
 
@@ -82,25 +107,6 @@ export default function BulkRegisterModal({ open, onOpenChange, onSuccess }) {
               {t("emp_download")}
             </a>{" "}{t("emp_sample_template")}.
           </p>
-
-          {result && (
-            <div className={`rounded-xl p-4 text-[13px] space-y-1 ${result.type === "success" ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
-              {result.type === "success" ? (
-                <>
-                  <p className="flex items-center gap-2 text-green-700 font-semibold">
-                    <CheckCircle2 size={15} /> {t("emp_count_registered", { count: result.added })}
-                  </p>
-                  {result.duplicateEmails.length > 0 && <p className="text-amber-600">{t("emp_duplicate_emails_skipped", { count: result.duplicateEmails.length })}</p>}
-                  {result.duplicateCodes.length > 0 && <p className="text-amber-600">{t("emp_duplicate_codes_skipped", { count: result.duplicateCodes.length })}</p>}
-                  {result.failed.length > 0 && <p className="text-red-500">{t("emp_rows_failed_validation", { count: result.failed.length })}</p>}
-                </>
-              ) : (
-                <p className="flex items-center gap-2 text-red-600 font-semibold">
-                  <AlertCircle size={15} /> {result.msg}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="border-t border-gray-200 mx-7" />
