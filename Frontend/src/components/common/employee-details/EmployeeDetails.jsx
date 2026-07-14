@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import {
   UserPlus, Upload, RefreshCw, UserCheck, UserX, Trash2,
   Download, Search, Settings, ArrowUpDown, Eye, Edit, Trash,
@@ -122,12 +123,6 @@ export default function EmployeeDetailsTable({
   const [confirm, setConfirm] = useState(null); // { type, ids, label }
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Toast
-  const [toast, setToast] = useState(null);
-  const showToast = (type, msg) => {
-    setToast({ type, msg });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const perPage = Number(entriesPerPage);
   const routeBase = location.pathname.startsWith("/non-admin") ? "/non-admin" : "/admin";
@@ -204,13 +199,30 @@ export default function EmployeeDetailsTable({
       res = await activateMultipleEmployees(confirm.ids);
     }
     setActionLoading(false);
+    // Capture the action type before clearing `confirm` so the message stays
+    // correct regardless of render timing.
+    const actionType = confirm.type;
     setConfirm(null);
     if (res?.code === 200) {
-      showToast("success", `${confirm.type === "delete" ? t("emp_deleted") : confirm.type === "suspend" ? t("emp_suspended") : t("emp_restored")} ${t("emp_successfully")}.`);
+      const verb = actionType === "delete" ? t("emp_deleted")
+        : actionType === "suspend" ? t("emp_suspended")
+        : t("emp_restored");
       setSelectedRows([]);
       onRefresh?.();
+      Swal.fire({
+        icon: "success",
+        title: t("success"),
+        text: `${verb} ${t("emp_successfully")}.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } else {
-      showToast("error", res?.msg || t("emp_action_failed"));
+      Swal.fire({
+        icon: "error",
+        title: t("error"),
+        text: res?.msg || t("emp_action_failed"),
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
@@ -221,13 +233,6 @@ export default function EmployeeDetailsTable({
 
   return (
     <div className="space-y-4">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-[13px] font-medium text-white ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
-          {toast.msg}
-        </div>
-      )}
-
       <div className="emp-card p-4 sm:p-5">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
