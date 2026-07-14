@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   UserPlus, Upload, RefreshCw, UserCheck, UserX, Trash2,
   Download, Search, Settings, ArrowUpDown, Eye, Edit, Trash,
-  Monitor, FileDiff, FileBox, Loader2, UserCog, Clock3,
+  Monitor, FileDiff, FileBox, FileX, Loader2, UserCog, Clock3,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import RegisterEmployeeModal from "./RegisterEmployeeModal";
 import EditEmployeeModal from "./EditEmployeeModal";
 import BulkUpdateModal from "./BulkUpdateModal";
 import BulkRegisterModal from "./BulkRegisterModal";
+import BulkDeleteModal from "./BulkDeleteModal";
 import DeletedUsersModal from "./DeletedUsersModal";
 import AssignShiftDialog from "./AssignShiftDialog";
 import AssignManagerDialog from "./AssignManagerDialog";
@@ -112,6 +113,7 @@ export default function EmployeeDetailsTable({
   const [registerOpen, setRegisterOpen] = useState(false);
   const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false);
   const [bulkRegisterOpen, setBulkRegisterOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [deletedUsersOpen, setDeletedUsersOpen] = useState(false);
   const [assignShiftOpen, setAssignShiftOpen] = useState(false);
@@ -259,6 +261,11 @@ export default function EmployeeDetailsTable({
               className="gradient-btn group flex items-center gap-2 text-white text-[13px] h-12 px-3 py-2 rounded-xl border-none shadow-md hover:-translate-y-1 hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
               <FileBox size={20} className="transition-transform duration-300 group-hover:rotate-180 group-hover:scale-110" />
               <span className="hidden sm:inline">{t("emp_bulk_update")}</span>
+            </Button>
+            <Button onClick={() => setBulkDeleteOpen(true)}
+              className="group flex items-center gap-2 text-white text-[13px] h-12 px-3 py-2 rounded-xl border-none shadow-md bg-rose-500 hover:bg-rose-600 hover:-translate-y-1 hover:shadow-xl hover:scale-[1.03] active:scale-95 transition-all duration-300">
+              <FileX size={20} className="transition-transform duration-300 group-hover:scale-110" />
+              <span className="hidden sm:inline">{t("emp_bulk_delete")}</span>
             </Button>
           </div>
         </div>
@@ -509,6 +516,7 @@ export default function EmployeeDetailsTable({
       />
       <BulkRegisterModal open={bulkRegisterOpen} onOpenChange={setBulkRegisterOpen} onSuccess={onRefresh} />
       <BulkUpdateModal   open={bulkUpdateOpen}   onOpenChange={setBulkUpdateOpen}   onSuccess={onRefresh} />
+      <BulkDeleteModal   open={bulkDeleteOpen}   onOpenChange={setBulkDeleteOpen}   onSuccess={() => { setSelectedRows([]); onRefresh?.(); }} />
       <DeletedUsersModal isOpen={deletedUsersOpen} onClose={() => setDeletedUsersOpen(false)} />
 
       <AssignShiftDialog

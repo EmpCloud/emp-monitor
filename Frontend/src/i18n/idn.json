@@ -863,7 +863,8 @@
   "reportsDownload.generateCsv": "Buat CSV",
   "reportsDownload.generatingReport": "Membuat laporan, harap tunggu...",
   "reportsDownload.maxDaysRange": "Rentang maksimum 30 hari yang diizinkan dari tanggal mulai",
-  "reportsDownload.downloadOptionTooltip": "Pilih jenis data untuk diunduh. Pilih Aplikasi yang Digunakan, Riwayat Browser, atau Unduh Semua.",  "screenshotLogs.title": "Screenshot",
+  "reportsDownload.downloadOptionTooltip": "Pilih jenis data untuk diunduh. Pilih Aplikasi yang Digunakan, Riwayat Browser, atau Unduh Semua.",
+  "screenshotLogs.title": "Screenshot",
   "screenshotLogs.logs": "Logs",
   "screenshotLogs.description": "Lacak dan tinjau aktivitas tangkapan layar di seluruh sistem yang dipantau.",
   "screenshotLogs.employeeName": "Nama Karyawan",
@@ -1222,7 +1223,8 @@
   "rd_view_reports": "Lihat Laporan",
   "rd_print": "Cetak",
   "rd_role": "Peran",
-  "rd_download_option": "Opsi Unduhan",  "rd_pdf_note": "CATATAN PDF :",
+  "rd_download_option": "Opsi Unduhan",
+  "rd_pdf_note": "CATATAN PDF :",
   "rd_select_all": "Pilih Semua",
   "rd_submit": "Kirim",
   "email_sent_mails": "Email Terkirim",
@@ -1468,5 +1470,12 @@
   "statusLive": "Langsung",
   "statusDisconnected": "Terputus",
   "appLabel": "Aplikasi",
-  "analytics": "Analitik"
+  "analytics": "Analitik",
+  "error": "Kesalahan",
+  "warning": "Peringatan",
+  "emp_bulk_delete": "Hapus Massal",
+  "emp_bulk_delete_confirm": "Ini akan menghapus permanen karyawan yang tercantum dalam file yang diunggah. Tindakan ini tidak dapat dibatalkan.",
+  "emp_count_deleted": "{{count}} karyawan dihapus.",
+  "emp_invalid_emails_skipped": "{{count}} email tidak cocok dengan karyawan mana pun dan dilewati.",
+  "emp_bulk_delete_failed": "Hapus massal gagal."
 }

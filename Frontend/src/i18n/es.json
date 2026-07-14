@@ -863,7 +863,8 @@
   "reportsDownload.generateCsv": "Generar CSV",
   "reportsDownload.generatingReport": "Generando informe, por favor espere...",
   "reportsDownload.maxDaysRange": "Rango máximo de 30 días permitido desde la fecha de inicio",
-  "reportsDownload.downloadOptionTooltip": "Seleccione el tipo de datos a descargar. Elija Aplicación Usada, Historial de Navegación o Descargar Todo.",  "screenshotLogs.title": "Screenshot",
+  "reportsDownload.downloadOptionTooltip": "Seleccione el tipo de datos a descargar. Elija Aplicación Usada, Historial de Navegación o Descargar Todo.",
+  "screenshotLogs.title": "Screenshot",
   "screenshotLogs.logs": "Logs",
   "screenshotLogs.description": "Rastrear y revisar la actividad de captura de pantalla en los sistemas monitoreados.",
   "screenshotLogs.employeeName": "Nombre del Empleado",
@@ -1222,7 +1223,8 @@
   "rd_view_reports": "Ver Informes",
   "rd_print": "Imprimir",
   "rd_role": "Rol",
-  "rd_download_option": "Opción de Descarga",  "rd_pdf_note": "NOTA PDF :",
+  "rd_download_option": "Opción de Descarga",
+  "rd_pdf_note": "NOTA PDF :",
   "rd_select_all": "Seleccionar Todo",
   "rd_submit": "Enviar",
   "email_sent_mails": "Correos Enviados",
@@ -1468,5 +1470,12 @@
   "statusLive": "En vivo",
   "statusDisconnected": "Desconectado",
   "appLabel": "Aplicación",
-  "analytics": "Analíticas"
+  "analytics": "Analíticas",
+  "error": "Error",
+  "warning": "Advertencia",
+  "emp_bulk_delete": "Eliminación masiva",
+  "emp_bulk_delete_confirm": "Esto eliminará permanentemente a los empleados indicados en el archivo cargado. Esta acción no se puede deshacer.",
+  "emp_count_deleted": "{{count}} empleado(s) eliminado(s).",
+  "emp_invalid_emails_skipped": "{{count}} correo(s) no coincidieron con ningún empleado y se omitieron.",
+  "emp_bulk_delete_failed": "La eliminación masiva falló."
 }

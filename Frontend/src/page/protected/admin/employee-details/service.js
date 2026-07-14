@@ -248,6 +248,24 @@ export const bulkUpdateEmployees = async (file) => {
   }
 };
 
+// Bulk-delete employees by uploading an .xlsx of emails. The backend
+// (POST /user/user-delete-bulk) returns { code, data: { success_email,
+// invalid_email }, msg } — success_email are the addresses actually deleted,
+// invalid_email are rows whose email didn't match any employee.
+export const bulkDeleteEmployees = async (file) => {
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    const { data } = await apiService.apiInstance.post("/user/user-delete-bulk", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data ?? null;
+  } catch (error) {
+    console.error("Employee Details: bulkDeleteEmployees error", error);
+    return handleBulkUploadError(error);
+  }
+};
+
 export const fetchFilterOptions = async () => {
   try {
     const [rolesRes, locationsRes, deptsRes, shiftsRes] = await Promise.all([

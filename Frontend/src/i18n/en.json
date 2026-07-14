@@ -861,7 +861,8 @@
   "reportsDownload.generateCsv": "Generate CSV",
   "reportsDownload.generatingReport": "Generating report, please wait...",
   "reportsDownload.maxDaysRange": "Maximum 30 days range allowed from the start date",
-  "reportsDownload.downloadOptionTooltip": "Select the type of data to download. Choose Application Used, Browser History, or Download All.",  "screenshotLogs.title": "Screenshot",
+  "reportsDownload.downloadOptionTooltip": "Select the type of data to download. Choose Application Used, Browser History, or Download All.",
+  "screenshotLogs.title": "Screenshot",
   "screenshotLogs.logs": "Logs",
   "screenshotLogs.description": "Track and review screenshot capture activity across monitored systems.",
   "screenshotLogs.employeeName": "Employee Name",
@@ -1150,7 +1151,8 @@
   "rd_view_reports": "View Reports",
   "rd_print": "Print",
   "rd_role": "Role",
-  "rd_download_option": "Download Option",  "rd_pdf_note": "PDF NOTE :",
+  "rd_download_option": "Download Option",
+  "rd_pdf_note": "PDF NOTE :",
   "rd_select_all": "Select All",
   "rd_submit": "Submit",
   "email_sent_mails": "Sent Mails",
@@ -1468,5 +1470,12 @@
   "statusLive": "Live",
   "statusDisconnected": "Disconnected",
   "appLabel": "App",
-  "analytics": "Analytics"
+  "analytics": "Analytics",
+  "error": "Error",
+  "warning": "Warning",
+  "emp_bulk_delete": "Bulk Delete",
+  "emp_bulk_delete_confirm": "This will permanently delete the employees listed in the uploaded file. This action cannot be undone.",
+  "emp_count_deleted": "{{count}} employee(s) deleted.",
+  "emp_invalid_emails_skipped": "{{count}} email(s) did not match any employee and were skipped.",
+  "emp_bulk_delete_failed": "Bulk delete failed."
 }
