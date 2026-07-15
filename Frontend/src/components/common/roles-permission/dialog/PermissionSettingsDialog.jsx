@@ -122,9 +122,7 @@ const PermissionSettingsDialog = ({ open, onOpenChange }) => {
                 icon: "success",
                 title: "Permissions saved",
                 text: result.message || `Permissions updated for ${permissionRoleData.name}.`,
-                toast: true,
-                position: "top-end",
-                timer: 2500,
+                timer: 2000,
                 showConfirmButton: false,
             });
         } else {

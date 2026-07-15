@@ -74,6 +74,9 @@ const AddRoleDialog = ({ open, onOpenChange }) => {
         }
         setFormError("");
 
+        // The store closes the dialog + fires a success swal on success, and an
+        // error swal on failure — only reset the local form here (don't also set
+        // formError, which would double up with the store's error swal).
         const result = await saveRole({
             name: roleName.trim(),
             locationDept: locationDeptRows,
@@ -82,8 +85,6 @@ const AddRoleDialog = ({ open, onOpenChange }) => {
 
         if (result?.success) {
             resetForm();
-        } else if (result?.message) {
-            setFormError(result.message);
         }
     };
 

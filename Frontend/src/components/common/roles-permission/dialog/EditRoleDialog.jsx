@@ -144,10 +144,10 @@ const EditRoleDialog = ({ open, onOpenChange }) => {
             permission: editRoleData.permission,
         });
 
+        // Store closes the dialog + fires a success swal on success, error swal
+        // on failure — only reset the local form here.
         if (result?.success) {
             resetForm();
-        } else if (result?.message) {
-            setFormError(result.message);
         }
     };
 
