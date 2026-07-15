@@ -41,10 +41,13 @@ function TimelineBar({ days }) {
   if (!day) return null;
 
   const total = day.total_duration || 1;
+  // Keep the bar segment colors in sync with the legend (legendKeys) and the
+  // stacked chart below — same productive/neutral/idle/offline palette — so the
+  // same category isn't drawn in different colors across the three views.
   const segments = [
-    { key: "productive_duration", color: "bg-blue-500" },
-    { key: "neutral_duration",    color: "bg-indigo-400" },
-    { key: "idle_duration",       color: "bg-amber-400" },
+    { key: "productive_duration", color: "#818cf8" },
+    { key: "neutral_duration",    color: "#a78bfa" },
+    { key: "idle_duration",       color: "#c4b5fd" },
   ];
   const offlineSec = Math.max(0, day.total_duration - (day.computer_activities_time ?? 0));
 
@@ -68,11 +71,11 @@ function TimelineBar({ days }) {
           {segments.map(({ key, color }) => {
             const pct = ((day[key] ?? 0) / total * 100).toFixed(1);
             return pct > 0 ? (
-              <div key={key} className={`h-full ${color}`} style={{ width: `${pct}%` }} title={`${key}: ${secToHMS(day[key])}`} />
+              <div key={key} className="h-full" style={{ width: `${pct}%`, backgroundColor: color }} title={`${key}: ${secToHMS(day[key])}`} />
             ) : null;
           })}
           {offlineSec > 0 && (
-            <div className="h-full bg-gray-300" style={{ width: `${(offlineSec / total * 100).toFixed(1)}%` }} title={`${t("offlineKey")}: ${secToHMS(offlineSec)}`} />
+            <div className="h-full" style={{ width: `${(offlineSec / total * 100).toFixed(1)}%`, backgroundColor: "#e9d5ff" }} title={`${t("offlineKey")}: ${secToHMS(offlineSec)}`} />
           )}
         </div>
         <div className="flex justify-between mt-2.5 text-[11px] text-gray-400 font-medium">
