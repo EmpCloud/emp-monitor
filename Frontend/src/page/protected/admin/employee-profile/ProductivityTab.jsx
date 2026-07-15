@@ -207,7 +207,10 @@ export default function ProductivityTab({ employee, startDate, endDate }) {
 
   const totalUnproductive = days.reduce((s, d) => s + (d.non_productive_duration ?? 0), 0);
   const totalNeutral      = days.reduce((s, d) => s + (d.neutral_duration        ?? 0), 0);
-  const productivityPct   = totals ? `${(totals.total_productivity * 100).toFixed(2)}%` : "—";
+  // total_productivity already arrives as a percentage from the backend
+  // ((productive / custom_time) * 100, and capped at 100 for capping orgs). The
+  // extra * 100 here double-counted it (e.g. 9.19 → 919.32%). Use it directly.
+  const productivityPct   = totals ? `${(Number(totals.total_productivity) || 0).toFixed(2)}%` : "—";
 
   const statCards = [
     {
