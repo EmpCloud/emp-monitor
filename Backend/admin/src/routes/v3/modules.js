@@ -54,6 +54,7 @@ const syncRateLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: { cod
 const MobileModule = require('./mobile/mobile.module')
 
 const InternalAnalyticsRoutes = require('./internalAnalytics/internalAnalytics.routes');
+const InternalServiceRoutes = require('./internalService/internalService.routes');
 const APIManagementRoutes = require("./apiManagement/apiManagement.routes");
 const AdminManagementRoutes = require("./admin/admin.routes");
 const EmailMonitoringRoutes = require('./email-monitoring/routes');
@@ -84,6 +85,8 @@ class Modules {
         this.modules.use('/bio-metric',new BiometricRoutes().getRouters());
         this.modules.use('/amember', new AmemberModule().getRouters());
         this.modules.use('/internal-analytics', new InternalAnalyticsRoutes().getRouters());
+        // Secret-authenticated server-to-server reads for EmpCloud (AI chatbot / dashboard)
+        this.modules.use('/internal-service', new InternalServiceRoutes().getRouters());
 
 
 

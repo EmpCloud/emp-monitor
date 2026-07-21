@@ -25,6 +25,16 @@ const errorHandler = (err, req, res, next) => {
     const message = `${err.message}`;
     error = new ErrorResponse(message, 401);
   }
+  // Database connectivity/authentication is service configuration, not
+  // caller authentication. Never expose DB usernames, hosts, or SQL details.
+  if ([
+    'ER_ACCESS_DENIED_ERROR',
+    'ECONNREFUSED',
+    'PROTOCOL_CONNECTION_LOST',
+    'ER_CON_COUNT_ERROR'
+  ].includes(err.code)) {
+    error = new ErrorResponse('EmpMonitor data service is temporarily unavailable.', 503);
+  }
   // MySQL Parse error
   // if (err.code === 'ER_PARSE_ERROR') {
   //     const message = `${err.name}: ${err.message}`;
@@ -33,7 +43,7 @@ const errorHandler = (err, req, res, next) => {
 
   res.status(error.statusCode || 500).json({
     code: error.statusCode || 500,
-    error: err.name || 'Server Error',
+    error: error.statusCode === 503 ? 'SERVICE_UNAVAILABLE' : (err.name || 'Server Error'),
     data: null,
     message: error.message
   });

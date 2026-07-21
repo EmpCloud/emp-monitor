@@ -4,7 +4,18 @@ if (process.env.IS_DEBUGGING) console.log(`= server.js loaded => ${process.env.N
 // configuring .env file 
 // every varibale in .env will be available in process.env object 
 const dotenv = require('dotenv');
-dotenv.config();
+const dotenvResult = dotenv.config();
+
+// An inherited empty variable masks the value in .env because dotenv does
+// not overwrite existing keys. Fill only missing/empty values while keeping
+// every non-empty PM2 or container environment override authoritative.
+if (dotenvResult.parsed) {
+    for (const [key, value] of Object.entries(dotenvResult.parsed)) {
+        if (process.env[key] === undefined || process.env[key] === '') {
+            process.env[key] = value;
+        }
+    }
+}
 
 // initialising often used paths in Global
 require('./src/utils/globalPaths');
