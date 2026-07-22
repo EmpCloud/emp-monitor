@@ -110,8 +110,13 @@ class App {
                 stream: stream
             }))
         }
-        // Added security headers
-        app.use(helmet());
+        // Added security headers.
+        // crossOriginResourcePolicy is relaxed to "cross-origin" because this API
+        // serves media (e.g. /api/v3/*-http-proxy screenshots) that the frontend
+        // embeds via <img> from a different origin. Helmet's default of
+        // "same-origin" makes the browser block those embeds with
+        // ERR_BLOCKED_BY_RESPONSE.NotSameOrigin even though the request returns 200.
+        app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
         // handling DDOS attacks by stopeing req after specified time with specific req calls
         // app.use(new rateLimit({ windowMs: parseInt(process.env.RATE_LIMIT_DURATION) * 60 * 1000, max: parseInt(process.env.RATE_LIMIT_REQUEST_ALLOWED) }));
