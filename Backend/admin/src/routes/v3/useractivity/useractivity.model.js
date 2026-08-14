@@ -143,7 +143,7 @@ class UserActivityModel {
         let user_ids = [];
         query = `SELECT e.id As id,u.id AS u_id,u.first_name,u.first_name AS name,u.last_name,u.a_email as email,u.contact_number AS phone,u.date_join, orgs.name as shift_name,
                     u.address,u.photo_path,u.status, e.organization_id,e.location_id,ol.name AS location,e.department_id,e.emp_code,e.shift_id,e.timezone,
-                    e.tracking_mode,e.tracking_rule_type,od.name AS department, JSON_EXTRACT(os.rules,'$.ideal_time') as ideal_time,
+                    e.tracking_mode,e.tracking_rule_type,od.name AS department,od.name AS department_name, JSON_EXTRACT(os.rules,'$.ideal_time') as ideal_time,
                     (COUNT( e.id ) OVER()) AS total_count,CONCAT(u.first_name,' ', u.last_name) AS full_name,
                     u.password,JSON_EXTRACT(os.rules,'$.offline_time') as offline_time,e.software_version, u.computer_name,u.username,u.domain,
                     (SELECT COUNT(id) FROM employees WHERE organization_id=` + Number(admin_id) + `) as org_total_count, e.geolocation, count(e.emp_code) AS expand_count,
@@ -196,7 +196,7 @@ class UserActivityModel {
                 params = [];
                 query = `SELECT e.id As id,u.id AS u_id,u.first_name,u.first_name AS name,u.last_name,u.a_email as email,u.contact_number AS phone,u.date_join, orgs.name as shift_name,
                         u.address,u.photo_path,u.status, e.organization_id,e.location_id,ol.name AS location,e.department_id,e.emp_code,e.shift_id,e.timezone,
-                        e.tracking_mode,e.tracking_rule_type,od.name AS department, JSON_EXTRACT(os.rules,'$.ideal_time') as ideal_time,
+                        e.tracking_mode,e.tracking_rule_type,od.name AS department,od.name AS department_name, JSON_EXTRACT(os.rules,'$.ideal_time') as ideal_time,
                         (COUNT( e.id ) OVER()) AS total_count,CONCAT(u.first_name,' ', u.last_name) AS full_name,
                         u.password,JSON_EXTRACT(os.rules,'$.offline_time') as offline_time,e.software_version, u.computer_name,u.username,u.domain,
                         (SELECT COUNT(id) FROM employees WHERE organization_id=` + Number(admin_id) + `) as org_total_count, e.geolocation, count(e.emp_code) AS expand_count,
