@@ -30,6 +30,7 @@ export default function EmployeeFormBody({
   locations = [], roles = [], shifts = [],
   departments = [], deptLoading = false,
   existingPhoto = "",
+  hasStoredPassword = false,
   isEdit = false,
 }) {
   const { t } = useTranslation();
@@ -88,19 +89,24 @@ export default function EmployeeFormBody({
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              placeholder={t("emp_password")}
+              placeholder={isEdit && hasStoredPassword && !form.password ? "••••••••" : t("emp_password")}
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
               name="emp-password"
               autoComplete="new-password"
+              aria-label={isEdit ? t("emp_new_password_keep") : t("emp_password")}
+              data-password-configured={isEdit && hasStoredPassword && !form.password ? "true" : "false"}
               data-form-type="other"
               data-lpignore="true"
-              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11"
+              className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11 placeholder:text-gray-500"
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+            {(!isEdit || form.password) && (
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? t("auth_hide_password") : t("auth_show_password")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
           </div>
           {!isEdit && (
             <p className="text-[10px] text-gray-400 leading-[1.4] mt-1 px-1 italic">
@@ -126,6 +132,7 @@ export default function EmployeeFormBody({
               className="h-11 rounded-xl border-gray-300 text-[13px] px-5 pr-11"
             />
             <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? t("auth_hide_password") : t("auth_show_password")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
