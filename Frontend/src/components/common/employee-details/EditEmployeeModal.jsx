@@ -19,6 +19,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [originalUid, setOriginalUid] = useState("");
   const [existingPhoto, setExistingPhoto] = useState("");
+  const [hasStoredPassword, setHasStoredPassword] = useState(false);
 
   const { form, set, reset, errors, setErrors, departments, deptLoading, validate, buildFormData } = useEmployeeForm(locations);
 
@@ -33,6 +34,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
       if (!d) return;
       setOriginalUid(d.uid ?? "");
       setExistingPhoto(d.photo_path ?? "");
+      setHasStoredPassword(Boolean(d.password_configured ?? d.password ?? d.encriptedpassword));
 
       const tzMatch = TIMEZONES.find((tz) => tz.value.startsWith(d.timezone ?? ""))?.value ?? "";
 
@@ -131,7 +133,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
   };
 
   const handleClose = (open) => {
-    if (!open) { reset(); setExistingPhoto(""); }
+    if (!open) { reset(); setExistingPhoto(""); setHasStoredPassword(false); }
     onOpenChange(open);
   };
 
@@ -170,6 +172,7 @@ export default function EditEmployeeModal({ open, onOpenChange, employeeId, loca
             locations={locations} roles={roles} shifts={shifts}
             departments={departments} deptLoading={deptLoading}
             existingPhoto={existingPhoto}
+            hasStoredPassword={hasStoredPassword}
             isEdit
           />
         )}

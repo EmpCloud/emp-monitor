@@ -719,13 +719,13 @@ class UserActivity {
                 return sendResponse(res, 200, to_assigned_details, userMessages.find(x => x.id === "8")[language] || userMessages.find(x => x.id === "8")["en"], null);
 
 
-            let decriptedPassword = null;
-            if (data[0].password && data[0].password !== '' && data[0].password !== 'null') {
-                decriptedPassword = PasswordEncodeDecoder.decryptText(data[0].password, process.env.CRYPTO_PASSWORD);
-            }
-
-            data[0].encriptedpassword = data[0].password;
-            data[0].password = decriptedPassword;  // ✅ Return plain text password to frontend
+            // Do not return a stored password from an employee-details endpoint.
+            // The frontend only needs to know whether it should render a fixed
+            // mask; an empty edit value continues to preserve the stored value.
+            data[0].password_configured = Boolean(
+                data[0].password && data[0].password !== '' && data[0].password !== 'null'
+            );
+            delete data[0].password;
 
             delete data[0].custom_tracking_rule;
 
