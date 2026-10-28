@@ -114,7 +114,7 @@ class UserActivityValidation {
             location_id: Joi.number().positive().allow(null),
             department_id: Joi.number().positive().allow(null),
             role_ids: Joi.array().items(Joi.number()),
-            address: Joi.string().allow(null).max(512).regex(/[$\(\)<>]/, { invert: true }).error((errors) => {
+            address: Joi.string().allow(null, "").max(512).regex(/[$\(\)<>]/, { invert: true }).error((errors) => {
                 return Common.joiErrorMessage(errors)
             }),
             project_name: Joi.string().optional().allow(null, ""),
