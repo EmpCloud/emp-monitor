@@ -2,6 +2,7 @@ const MAC_ADDRESS = require('is-mac-address');
 const moment = require('moment');
 const _ = require('underscore');
 const lodash = require('lodash');
+const SqlString = require('sqlstring');
 var XLSX = require('xlsx')
 const async = require('async');
 const multer = require('multer');
@@ -69,15 +70,15 @@ class UserActivity {
                 reseller, admin_email, facebookHide, footerHide, twitterHide;
 
 
-            const first_name = req.body.first_name ? req.body.first_name.replace(/'/g, "''").replace(/"/g, '""') : null;
-            const last_name = req.body.last_name ? req.body.last_name.replace(/'/g, "''").replace(/"/g, '""') : null;
-            const email = req.body.email.toLowerCase();
+            const first_name = req.body.first_name ?? null;
+            const last_name = req.body.last_name ?? null;
+            const email = typeof req.body.email === 'string' ? req.body.email.toLowerCase().trim() : req.body.email;
             let password = req.body.password;
             const emp_code = req.body.emp_code;
             const project_name = req.body.project_name || '';
             const location_id = parseInt(req.body.location_id);
             const department_id = parseInt(req.body.department_id);
-            const role_ids = req.body.role_id.split(',');
+            const role_ids = typeof req.body.role_id === 'string' ? req.body.role_id.split(',') : req.body.role_id;
             const date_join = req.body.date_join ? moment(req.body.date_join, 'MM/DD/YYYY').format('YYYY-MM-DD') : null;
             const address = req.body.address || null;
             const status = parseInt(req.body.status) || 1;
@@ -111,9 +112,9 @@ class UserActivity {
             });
             if (validate.error) return sendResponse(res, 404, null, userMessages.find(x => x.id === "2")[language] || userMessages.find(x => x.id === "2")["en"], validate.error.details[0].message);
 
-            const userByEmpCode = await UserActivityModel.getEmployee('id', `emp_code='${emp_code}' AND organization_id=${organization_id}`);
+            const userByEmpCode = await UserActivityModel.getEmployee('id', `emp_code=${SqlString.escape(emp_code)} AND organization_id=${organization_id}`);
             if (userByEmpCode.length > 0) return sendResponse(res, 400, null, userMessages.find(x => x.id === "1")[language] || userMessages.find(x => x.id === "1")["en"], 'User emp code exists error');
-            const userByEmail = await UserActivityModel.getUser('id', `email='${email}' OR a_email='${email}'`);
+            const userByEmail = await UserActivityModel.getUser('id', `email=${SqlString.escape(email)} OR a_email=${SqlString.escape(email)}`);
             if (userByEmail.length > 0) {
                 let [userDetail] = await UserActivityModel.getUserDetails({ email: email });
                 if (!userDetail){
@@ -433,13 +434,13 @@ class UserActivity {
         if (user_details.length === 0) return sendResponse(res, 400, null, userMessages.find(x => x.id === "10")[language] || userMessages.find(x => x.id === "10")["en"], 'User Not Found Error.');
         const first_name = req.body.first_name || user_details[0].first_name;
         const last_name = req.body.last_name || user_details[0].last_name;
-        let email = req.body.email ? req.body.email.toLowerCase().trim() : user_details[0].email;
-        let password = req.body.password;
-        let address = req.body.address || user_details[0].address;
-        let phone = req.body.phone || user_details[0].phone;
+        let email = req.body.email ? (typeof req.body.email === 'string' ? req.body.email.toLowerCase().trim() : req.body.email) : user_details[0].email;
+        let password = req.body.password === '' ? null : req.body.password;
+        let address = req.body.address ?? user_details[0].address;
+        let phone = req.body.phone ?? user_details[0].phone;
         let location_id = req.body.location_id || user_details[0].location_id;
         let project_name=req.body.project_name || '';
-        let role_ids = req.body.role_id ? req.body.role_id.split(',') : [];
+        let role_ids = req.body.role_id ? (typeof req.body.role_id === 'string' ? req.body.role_id.split(',') : req.body.role_id) : [];
         let emp_code = req.body.emp_code || user_details[0].emp_code;
         let department_id = req.body.department_id || user_details[0].department_id;
         let joinDate = req.body.joinDate ? moment(req.body.joinDate, 'MM/DD/YYYY').format('YYYY-MM-DD') : user_details[0].date_join ? moment(user_details[0].date_join).format('YYYY-MM-DD') : null;
@@ -457,7 +458,7 @@ class UserActivity {
         // let manager_role_id = req.body.manager_role_id;
         // let assigned_manager = req.body.assigned_manager;
 
-        const shift_id = req.body.shift_id || user_details[0].shift_id;
+        const shift_id = req.body.shift_id ?? user_details[0].shift_id;
         const encriptedpassword = req.body.encriptedpassword || null;
         let findMoreLink = {
             development: process.env.WEB_DEV, production: process.env.WEB_PRODUCTION
@@ -468,12 +469,12 @@ class UserActivity {
             if (validate.error) return sendResponse(res, 404, null, userMessages.find(x => x.id === "2")[language] || userMessages.find(x => x.id === "2")["en"], validate.error.details[0].message);
 
             if (req.body.email && req.body.email.toLowerCase().trim() !== user_details[0].email?.toLowerCase()) {
-                const userByEmail = await UserActivityModel.getUser('id', `email='${email}' OR a_email='${email}'`);
+                const userByEmail = await UserActivityModel.getUser('id', `email=${SqlString.escape(email)} OR a_email=${SqlString.escape(email)}`);
                 if (userByEmail.length > 0) return sendResponse(res, 400, null, userMessages.find(x => x.id === "3")[language] || userMessages.find(x => x.id === "3")["en"], 'Email exists error.');
             }
 
             if (req.body.emp_code && req.body.emp_code !== user_details[0].emp_code) {
-                const userByEmpCode = await UserActivityModel.getEmployee('id', `emp_code='${emp_code}' AND organization_id=${organization_id}`);
+                const userByEmpCode = await UserActivityModel.getEmployee('id', `emp_code=${SqlString.escape(emp_code)} AND organization_id=${organization_id}`);
                 if (userByEmpCode.length > 0) return sendResponse(res, 400, null, userMessages.find(x => x.id === "1")[language] || userMessages.find(x => x.id === "1")["en"], 'Employee Code exists error.');
             }
             if (encriptedpassword) {
@@ -963,7 +964,7 @@ class UserActivity {
                         let department_id;
                         let date_join = user.DOJ ? `'${moment(user.DOJ).format('YYYY-MM-DD')}'` : null;
                         if (moment().diff(moment(date_join).format("YYYY-MM-DD"), 'days') < 0 ) date_join = `'${moment().format('YYYY-MM-DD')}'`;
-                        const address = user.Address ? `'${user.Address.replace(/'/g, "''").replace(/"/g, '""')}'` : null;
+                        const address = user.Address || null;
                         const status = 1;
                         const phone = (user.Phone && user.CountryCode) ? `'${user.CountryCode}-${user.Phone}'` : null;
                         let photo_path = '/default/profilePic/user.png';
@@ -982,7 +983,7 @@ class UserActivity {
                             validation.push({ user: user, message: 'Role not found' });
                             continue;
                         }
-                        const user_by_email = await UserActivityModel.getUser('id', `email='${email}' OR a_email='${email}'`);
+                        const user_by_email = await UserActivityModel.getUser('id', `email=${SqlString.escape(email)} OR a_email=${SqlString.escape(email)}`);
                         if (user_by_email.length > 0) {            
                             let [userDetail] = await UserActivityModel.getUserDetails({ email: email });
                             if (!userDetail){
@@ -997,7 +998,7 @@ class UserActivity {
                             }
                         }
 
-                        const user_by_empcode = await UserActivityModel.getEmployee('id', `emp_code='${emp_code}' AND organization_id=${organization_id}`);
+                        const user_by_empcode = await UserActivityModel.getEmployee('id', `emp_code=${SqlString.escape(emp_code)} AND organization_id=${organization_id}`);
                         if (user_by_empcode.length > 0) {
                             emp_code_users.push(user);
                             continue;
@@ -1024,7 +1025,7 @@ class UserActivity {
                             const new_dept_loc = await UserActivityModel.addDeptToLoc(location_id, department_id);
                         }
 
-                        const data = await UserActivityModel.userRegister(first_name.replace(/'/g, "''").replace(/"/g, '""'), last_name.replace(/'/g, "''").replace(/"/g, '""'), email, encripted, phone, date_join, address, photo_path, status);
+                        const data = await UserActivityModel.userRegister(first_name, last_name, email, encripted, phone, date_join, address, photo_path, status);
                         const emp = await UserActivityModel.addUserToEmp(data.insertId, organization_id, department_id, location_id, emp_code, 0, timezone, 1, 1, orgSetting.rules,project_name);
                         const userToRole = await UserActivityModel.addMultiRoleToUser(data.insertId, _.unique(role_ids), req.decoded.user_id);
 
@@ -1243,7 +1244,7 @@ class UserActivity {
                     let e = usersData.find(x => x.employee_unique_id === user.EmployeeUniqueId)
                     if (e) {
                         if (user.Email && user.Email != e.a_email) {
-                            newMails.push(`"${user.Email}"`);
+                            newMails.push(SqlString.escape(user.Email));
                         }
                     }
                 });
@@ -1256,10 +1257,10 @@ class UserActivity {
                     let e = usersData.find(x => x.employee_unique_id === user.EmployeeUniqueId)
                     if (e) {
                         if (user.EmployeeCode.toString().toLowerCase() != e.emp_code.toString().toLowerCase()) {
-                            newEmpCodes.push(`"${user.EmployeeCode}"`);
+                            newEmpCodes.push(SqlString.escape(user.EmployeeCode));
                         }
                         if (user.Email && user.Email != e?.a_email) {
-                            newMails.push(`"${user.Email}"`);
+                            newMails.push(SqlString.escape(user.Email));
                             dataMergingUserData.push(user);
                         }
                     }
@@ -1269,7 +1270,7 @@ class UserActivity {
                     newMails = [];
                     for (const user of dataMergingUserData) {
                         let [userWithSameEmpCodeEmail] = await UserActivityModel.findUserBySameEmpCodeEmail(user.Email, user['Employee Code']);
-                        if(!userWithSameEmpCodeEmail) newMails.push(`"${user.Email}"`);
+                        if(!userWithSameEmpCodeEmail) newMails.push(SqlString.escape(user.Email));
                     }
                 }
 
@@ -1335,9 +1336,6 @@ class UserActivity {
                     }
                     if (Department == null || Department == "null") Department = "Default";
                     if (Location == null || Location == "null") Location = "Default";
-                    FirstName = FirstName ? FirstName.replace(/'/g, "''").replace(/"/g, '""') : FirstName;
-                    LastName = LastName ? LastName.replace(/'/g, "''").replace(/"/g, '""') : LastName;
-                    Address = Address ? Address.replace(/'/g, "''").replace(/"/g, '""') : Address;
 
                     // const roleSearch = roles.find(x => x.name === Role);
                     let role_ids = [];
