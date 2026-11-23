@@ -57,26 +57,36 @@ export class ScreenRecordService {
   ) {
     const provider = new Provider();
     try {
-      await provider.initConnection(storage, 1);
-      await provider.prepareFolderPath(email, mainFolderNames.screenRecords,"");
-    } catch (error) {
-      console.log(error.stack);
-      return files;
-    }
-
-    for (const file of files) {
-      if (file.uploaded) continue;
-
       try {
-        await provider.uploadFile(file);
-        file.uploaded = true;
-        await deleteFileFromLocal(file);
+        await provider.initConnection(storage, 1);
+        await provider.prepareFolderPath(email, mainFolderNames.screenRecords,"");
       } catch (error) {
         console.log(error.stack);
-        break;
+        return files;
+      }
+
+      for (const file of files) {
+        if (file.uploaded) continue;
+
+        try {
+          await provider.uploadFile(file);
+          file.uploaded = true;
+          await deleteFileFromLocal(file);
+        } catch (error) {
+          console.log(error.stack);
+          break;
+        }
+      }
+      return files;
+    } finally {
+      if (provider instanceof SFtpUtils) {
+        try {
+          await provider.closeConnection();
+        } catch (error) {
+          console.log('Failed to close SFTP connection', error.stack);
+        }
       }
     }
-    return files;
   }
 
   async endRequest(

@@ -110,25 +110,119 @@ export class ScreenshotService {
         userDetails: any,
     ) {
         const provider = new Provider();
+        try {
+            if (ConfigFile?.CUSTOM_DATE_EMAIL_SCREEN_FORMAT?.split(",")?.includes(String(userDetails.organization_id)) && providerCode == "MO") {
+                try {
+                    // Create A New Connections
+                    await provider.initConnection(storage , userDetails.organization_id);
+                } catch (error) {
+                    logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
+                    return files;
+                }
 
-        if (ConfigFile?.CUSTOM_DATE_EMAIL_SCREEN_FORMAT?.split(",")?.includes(String(userDetails.organization_id)) && providerCode == "MO") {
+                for (const file of files) {
+                    if (file.uploaded) continue;
+                    const day: string = file.originalname.substr(3, 10);
+                    try {
+                        await provider.prepareFolderPath(email, mainFolderNames.screenshots, { type: "CUSTOM_DATE_EMAIL_SCREEN_FORMAT", day  });
+                    } catch (error) {
+                        logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
+                        break;
+                    }
+
+                    try {
+                        await provider.uploadFile(file);
+                        file.uploaded = true;
+                        await deleteFileFromLocal(file);
+                    } catch (error) {
+                        logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
+                        break;
+                    }
+                }
+                return files;
+            }
+
             try {
-                // Create A New Connections
+                if (process?.env?.ORG_OFFICE_AGENT_TRANSFORMED?.split(",").includes(String(userDetails.organization_id)) && userDetails?.system_type === 0 && userDetails?.a_email) {
+                    if (userDetails.a_email) email = userDetails.a_email;
+                }
                 await provider.initConnection(storage , userDetails.organization_id);
+                try {
+                    if (providerCode === "GD" && process?.env?.UPDATE_IN_SCREENSHOT_OFFICE_USER?.split(",").includes(String(userDetails.organization_id)) && userDetails.system_type == 0) {
+                        //! Get user alternative email if present based on office mail id
+                        let userRedisEmailScreenshot = await this.redisService.getClient().get(`${userDetails.email}_screenshot`);
+                        let storedUserEmail = userDetails.email
+
+                        let userDrivePattern: any;
+                        if(userDetails.system_type === 0) {
+                            userDrivePattern =`${userDetails.first_name}_${userDetails.last_name}_${userDetails.id}`
+                        }
+
+                        //! If userRedis email exist and its didn't match with alternative email then update email with new redis email
+                        if ( userRedisEmailScreenshot && userRedisEmailScreenshot !== userDrivePattern) {
+                            userDetails.a_email = userDrivePattern;
+                            userDetails.email = userRedisEmailScreenshot;
+
+                            //! Rename email in google drive
+                            let response: any = await provider.checkIfOfficeAgentFolderExist(userDetails);
+                            if (response == false) return files;
+                            if (userDrivePattern) email = userDrivePattern;
+                            //! If Rename is success then update email with alternative email
+
+                            //! Save new alternative email to redis
+                            await this.redisService.getClient().set(`${storedUserEmail}_screenshot`, `${userDrivePattern}`);
+                        }
+                        else {
+                            if(userRedisEmailScreenshot) {
+                                email = userDrivePattern;
+                            }
+                            await this.redisService.getClient().set(`${storedUserEmail}_screenshot`, `${storedUserEmail}`);
+                        }
+                    }
+                } catch (error) {
+                    console.log("Error while rename folder", error);
+                }
+                await provider.prepareFolderPath(email, mainFolderNames.screenshots, "");
             } catch (error) {
                 logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
+                try {
+                    // userDetails.organization_id
+                    if(providerCode == "MO") {
+                        // let resp = await sequelize.query(`SELECT opc.id, opc.status
+                        //     FROM organization_provider_credentials opc
+                        //     JOIN organization_providers op on op.id = opc.org_provider_id
+                        //     WHERE op.organization_id = ${userDetails?.organization_id} AND opc.status = 1`, { type: sequelize.QueryTypes.SELECT }
+                        // )
+                        // await sequelize.query(`
+                        //     UPDATE organization_provider_credentials SET status = 0
+                        //         where id = ${resp[0].id}`, { type: sequelize.QueryTypes.UPDATE }
+                        // )
+                        logger.logger.error(`------${new Date}------${error.stack}------${email}---${userDetails?.organization_id}---`);
+                    }
+                } catch (error) {
+
+                }
+                return files;
+            }
+
+            if(ConfigFile?.CUSTOM_DATE_EMAIL_SCREEN_FORMAT_S3?.split(",").includes(String(userDetails.organization_id)) && providerCode == "S3") {
+                for (const file of files) {
+                    if (file.uploaded) continue;
+                    await provider.prepareFolderPath(email, mainFolderNames.screenshots, {type: "CUSTOM_DATE_EMAIL_SCREEN_FORMAT_S3", date: file.originalname.substr(3, 10)});
+                    try {
+                        await provider.uploadFile(file);
+                        file.uploaded = true;
+                        await deleteFileFromLocal(file);
+                    } catch (error) {
+                        logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
+                        break;
+                    }
+                }
                 return files;
             }
 
             for (const file of files) {
                 if (file.uploaded) continue;
-                const day: string = file.originalname.substr(3, 10);
-                try {
-                    await provider.prepareFolderPath(email, mainFolderNames.screenshots, { type: "CUSTOM_DATE_EMAIL_SCREEN_FORMAT", day  });
-                } catch (error) {
-                    logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
-                    break;
-                }
 
                 try {
                     await provider.uploadFile(file);
@@ -139,106 +233,19 @@ export class ScreenshotService {
                     break;
                 }
             }
-            return files;
-        }
-        
-        try {
-            if (process?.env?.ORG_OFFICE_AGENT_TRANSFORMED?.split(",").includes(String(userDetails.organization_id)) && userDetails?.system_type === 0 && userDetails?.a_email) {
-                if (userDetails.a_email) email = userDetails.a_email;
-            }
-            await provider.initConnection(storage , userDetails.organization_id);
-            try {
-                if (providerCode === "GD" && process?.env?.UPDATE_IN_SCREENSHOT_OFFICE_USER?.split(",").includes(String(userDetails.organization_id)) && userDetails.system_type == 0) {
-                    //! Get user alternative email if present based on office mail id
-                    let userRedisEmailScreenshot = await this.redisService.getClient().get(`${userDetails.email}_screenshot`);
-                    let storedUserEmail = userDetails.email
-
-                    let userDrivePattern: any;
-                    if(userDetails.system_type === 0) {
-                        userDrivePattern =`${userDetails.first_name}_${userDetails.last_name}_${userDetails.id}`
-                    }
-
-                    //! If userRedis email exist and its didn't match with alternative email then update email with new redis email
-                    if ( userRedisEmailScreenshot && userRedisEmailScreenshot !== userDrivePattern) {
-                        userDetails.a_email = userDrivePattern;
-                        userDetails.email = userRedisEmailScreenshot;
-
-                        //! Rename email in google drive
-                        let response: any = await provider.checkIfOfficeAgentFolderExist(userDetails);
-                        if (response == false) return files;
-                        if (userDrivePattern) email = userDrivePattern;
-                        //! If Rename is success then update email with alternative email
-    
-                        //! Save new alternative email to redis
-                        await this.redisService.getClient().set(`${storedUserEmail}_screenshot`, `${userDrivePattern}`);
-                    } 
-                    else {
-                        if(userRedisEmailScreenshot) {
-                            email = userDrivePattern;
-                        }
-                        await this.redisService.getClient().set(`${storedUserEmail}_screenshot`, `${storedUserEmail}`);
-                    }
-                }
-            } catch (error) {
-                console.log("Error while rename folder", error);
-            }
-            await provider.prepareFolderPath(email, mainFolderNames.screenshots, "");
-        } catch (error) {
-            logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
-            try {
-                // userDetails.organization_id  
-                if(providerCode == "MO") {
-                    // let resp = await sequelize.query(`SELECT opc.id, opc.status
-                    //     FROM organization_provider_credentials opc 
-                    //     JOIN organization_providers op on op.id = opc.org_provider_id 
-                    //     WHERE op.organization_id = ${userDetails?.organization_id} AND opc.status = 1`, { type: sequelize.QueryTypes.SELECT }
-                    // )
-                    // await sequelize.query(`
-                    //     UPDATE organization_provider_credentials SET status = 0 
-                    //         where id = ${resp[0].id}`, { type: sequelize.QueryTypes.UPDATE }
-                    // )
-                    logger.logger.error(`------${new Date}------${error.stack}------${email}---${userDetails?.organization_id}---`);
-                }
-            } catch (error) {
-                
+            if (providerCode == 'FTP') {
+                await provider.closeConnection()
             }
             return files;
-        }
-
-        if(ConfigFile?.CUSTOM_DATE_EMAIL_SCREEN_FORMAT_S3?.split(",").includes(String(userDetails.organization_id)) && providerCode == "S3") {
-            for (const file of files) {
-                if (file.uploaded) continue;
-                await provider.prepareFolderPath(email, mainFolderNames.screenshots, {type: "CUSTOM_DATE_EMAIL_SCREEN_FORMAT_S3", date: file.originalname.substr(3, 10)});
+        } finally {
+            if (providerCode === providerCodes.SFTP) {
                 try {
-                    await provider.uploadFile(file);
-                    file.uploaded = true;
-                    await deleteFileFromLocal(file);
+                    await provider.closeConnection();
                 } catch (error) {
-                    logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
-                    break;
+                    logger.logger.info(`------${new Date}------Failed to close SFTP connection: ${error.stack}------${email}------`);
                 }
             }
-            return files;
         }
-
-        for (const file of files) {
-            if (file.uploaded) continue;
-
-            try {
-                await provider.uploadFile(file);
-                file.uploaded = true;
-                await deleteFileFromLocal(file);
-            } catch (error) {
-                if (providerCode === "SFTP") await provider.deleteCreds(userDetails.organization_id);
-                logger.logger.info(`------${new Date}------${error.stack}------${email}------`);
-                break;
-            }
-        }
-        if (providerCode == 'FTP') {
-            await provider.closeConnection()
-        }
-        if(providerCode == 'SFTP') await provider.deleteCreds(userDetails.organization_id);
-        return files;
     }
 
     async endRequest(statusCode: number, message: string, files: UploadDto[], error = null) {
