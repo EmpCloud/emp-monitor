@@ -1,4 +1,3 @@
-import * as ftp from 'basic-ftp';
 import * as _ from 'underscore';
 
 import { StorageUtilInterface } from '../interfaces/storage-util.interface';
@@ -6,16 +5,9 @@ import { UploadDto } from '../dto/upload.dto';
 import { IEnsureFolder } from '../interfaces/storage-folders-cache.interface';
 
 import SftpClient from "ssh2-sftp-client";
-import NodeCache from "node-cache";
-import fs from "fs";
-import path from "path";
-
-const nodeCache = new NodeCache();
-
-let sftpConnections = {};
 
 export class SFtpUtils implements StorageUtilInterface {
-    private client;
+    private client: SftpClient;
     private clientPath;
     private dirClient;
     private delimiter: string = '/';
@@ -23,12 +15,9 @@ export class SFtpUtils implements StorageUtilInterface {
     private dayFolderEnsure: IEnsureFolder = {};
 
     async initConnection(storage: any, organization_id: any): Promise<void> {
-        if(Object.keys(sftpConnections).includes(`Storage_${organization_id}`)) {
-            this.client = sftpConnections[`Storage_${organization_id}`]
-            this.clientPath = storage.ftp_path;
-            return this.client;
-        }
-        const sftp = new SftpClient();
+        // Each upload attempt owns its connection, including cleanup after a failed connect.
+        this.client = new SftpClient();
+        this.clientPath = storage.ftp_path;
 
         let tempConnectionData: any = {
             host: storage.host,
@@ -39,24 +28,8 @@ export class SFtpUtils implements StorageUtilInterface {
         if(storage.pemPath) tempConnectionData.privateKey = Buffer.from(storage.pemPath.replace(/\\n/g, '\n'), 'utf-8');
         else tempConnectionData.password = storage.password;
         
-        await sftp.connect(tempConnectionData);
-        sftpConnections[`Storage_${organization_id}`] = sftp;
-        this.client = sftp;
-        this.clientPath = storage.ftp_path;
-        return this.client;
+        await this.client.connect(tempConnectionData);
     };
-
-
-    deleteCreds(organization_id) {
-        if(Object.keys(sftpConnections).includes(`Storage_${organization_id}`)) {
-            try {
-                sftpConnections[`Storage_${organization_id}`].end();
-            } catch (error) {
-            }
-            delete sftpConnections[`Storage_${organization_id}`];
-        }
-        return true;
-    }
 
     async prepareFolderPath(email: string, main: string): Promise<void> {
         // user email is in email
@@ -96,7 +69,9 @@ export class SFtpUtils implements StorageUtilInterface {
     };
 
     async closeConnection(): Promise<void> {
-
+        const client = this.client;
+        this.client = undefined;
+        if (client) await client.end();
     };
 
     get main() {
