@@ -216,7 +216,7 @@ class AdminDashboardController {
             if (assigned_non_admin_users?.length) assigned_non_admin_users = Array.from(new Set(assigned_non_admin_users));
             if (assigned_users?.length) assigned_users = Array.from(new Set(assigned_users));
 
-            let isExist = await Model.findProject({ _id });
+            let isExist = await Model.findProject({ _id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
 
             let sameNameProject = await Model.findProjectSameName({ title, organization_id });
@@ -252,7 +252,7 @@ class AdminDashboardController {
             let { organization_id, user_id, language } = req.decoded;
             let { _id } = await Validation.validateDeleteProject().validateAsync(req.body);
 
-            let isExist = await Model.findProject({ _id });
+            let isExist = await Model.findProject({ _id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
             isExist.is_deleted = true;
             await isExist.save();
@@ -330,7 +330,7 @@ class AdminDashboardController {
 
             let [employeeData] = await Model.fetchEmployees([employee_id], organization_id);
             if (!employeeData) return res.status(404).json({ code: 404, data: null, error: null, message: translate.find(i => i.id == 7)[language || 'en'] });
-            let isExist = await Model.findProject({ _id });
+            let isExist = await Model.findProject({ _id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
 
             if (!isExist.assigned_users.includes(+employee_id)) {
@@ -350,7 +350,7 @@ class AdminDashboardController {
 
             let [employeeData] = await Model.fetchEmployees([employee_id], organization_id);
             if (!employeeData) return res.status(404).json({ code: 404, data: null, error: null, message: translate.find(i => i.id == 7)[language || 'en'] });
-            let isExist = await Model.findProject({ _id });
+            let isExist = await Model.findProject({ _id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
 
             if (isExist.assigned_users.includes(+employee_id)) {
@@ -367,7 +367,7 @@ class AdminDashboardController {
         try {
             let { organization_id, user_id, language } = req.decoded;
             let { _id } = await Validation.validateDeleteProject().validateAsync(req.query);
-            let isExist = await Model.findProject({ _id });
+            let isExist = await Model.findProject({ _id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
             let employeeDetails = await Model.fetchEmployeeDetails(organization_id, isExist.assigned_users);
             res.status(200).json({ code: 200, data: employeeDetails, error: null, message: translate.find(i => i.id == 1)[language || 'en'] });
@@ -457,7 +457,7 @@ class AdminDashboardController {
             let isExist = await Model.findProjectFolderSameName({ title, organization_id, project_id });
             if (isExist !== null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 9)[language || 'en'] });
 
-            isExist = await Model.findProject({ _id: project_id });
+            isExist = await Model.findProject({ _id: project_id, organization_id });
             if (isExist === null) return res.status(400).json({ code: 400, data: null, error: null, message: translate.find(i => i.id == 4)[language || 'en'] });
 
             let projectFolder = await Model.createProjectFolder({ organization_id, title, project_id, created_by: user_id });
@@ -802,7 +802,7 @@ class AdminDashboardController {
             let { organization_id, user_id, language, timezone } = req.decoded;
             let { _id: task_id } = await Validation.validateDeleteProject().validateAsync(req.query);
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, error: null, data: null, message: translate.find(i => i.id == 19)[language || 'en'] });
             if(projectTask.status == 1) return res.status(200).json({ code: 200, message: translate.find(i => i.id == 55)[language || 'en'], data: projectTask, error: null });
             let finishedFolder = await Model.findProjectFolderSameName({ title: "Finished Task", project_id: projectTask.project_id, organization_id, })
@@ -1574,7 +1574,7 @@ class AdminDashboardController {
             let isRunningTask = await Model.findRunningTask(employee_id);
             if (isRunningTask !== null) return res.status(400).json({ code: 400, message: translate.find(i => i.id == 40)[language || 'en'], data: null, error: null });
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, error: null, data: null, message: translate.find(i => i.id == 19)[language || 'en'] });
 
             if(projectTask.is_desktop_running) return res.status(400).json({ code: 400, message: translate.find(i => i.id == 27)[language || 'en'], data: null, error: null });
@@ -2565,7 +2565,7 @@ class AdminDashboardController {
             let { timezone, employee_id, organization_id, department_id, location_id, user_id, language } = req.decoded;
             let { title, project_id, folder_name, task_id, is_start, description } = await Validation.validateUpdateProjectTaskMobileNew().validateAsync(req.body);
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, error: null, data: null, message: translate.find(i => i.id == 19)[language || 'en'] });
 
             // let isExist = await Model.findProjectTaskSameName({ title, organization_id, project_id, task_id });
@@ -2600,7 +2600,7 @@ class AdminDashboardController {
             let { organization_id, user_id, language, timezone } = req.decoded;
             let { _id: task_id } = await Validation.validateDeleteProject().validateAsync(req.query);
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, error: null, data: null, message: translate.find(i => i.id == 19)[language || 'en'] });
 
             let finishedFolder = await Model.findProjectFolderSameName({ title: "Finished Task", project_id: projectTask.project_id, organization_id, })
@@ -2664,7 +2664,7 @@ class AdminDashboardController {
             let isRunningTask = await Model.findRunningTask(employee_id);
             if (isRunningTask !== null) return res.status(400).json({ code: 400, message: translate.find(i => i.id == 40)[language || 'en'], data: null, error: null });
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 19)[language || 'en'], data: null, error: null });
             if (projectTask.is_mobile_running) return res.status(400).json({ code: 400, message: translate.find(i => i.id == 55)[language || 'en'], data: null, error: null });
             if ([3].includes(projectTask.status)) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 27)[language || 'en'], data: null, error: null });
@@ -2695,7 +2695,7 @@ class AdminDashboardController {
             let task_id = req.query.task_id;
             if (!task_id) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 39)[language || 'en'], data: null, error: null });
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 19)[language || 'en'], data: null, error: null });
             if (projectTask.is_mobile_running) return res.status(400).json({ code: 400, message: translate.find(i => i.id == 55)[language || 'en'], data: null, error: null });
             if ([0, 2, 3].includes(projectTask.status)) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 27)[language || 'en'], data: null, error: null });
@@ -2737,7 +2737,7 @@ class AdminDashboardController {
             let task_id = req.query.task_id;
             if (!task_id) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 39)[language || 'en'], data: null, error: null });
 
-            let projectTask = await Model.findTaskById({ _id: task_id });
+            let projectTask = await Model.findTaskById({ _id: task_id, organization_id });
             if (!projectTask) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 19)[language || 'en'], data: null, error: null });
             if(projectTask.status == 1 && projectTask.is_mobile_running) return res.status(401).json({ code: 401, data: null, error: null, message: translate.find(i=> i.id == 55)[language || 'en']})
             if ([0].includes(projectTask.status)) return res.status(404).json({ code: 404, message: translate.find(i => i.id == 56)[language || 'en'], data: null, error: null });
